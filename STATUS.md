@@ -2,36 +2,36 @@
 
 # Current Phase
 
-Phase 5: RSI Strategy
+Phase 7: Paper Trader
 
 # Current Step
 
-Task 003: RSI Strategy
+Task 005: Paper Trader
 
 # Current Goal
 
-Implement an RSI strategy that returns BUY, SELL, or HOLD from standard candle data.
+Record fake trades from signals without calling any exchange order APIs.
 
 # Current Active Task
 
-Task 003: RSI Strategy.
+Task 005: Paper Trader.
 
 # Last Completed Step
 
-Task 002: CSV Data Provider.
+Task 004: Basic Backtest.
 
-Verified on 2026-05-07 with `pytest`: 9 passed.
+Verified on 2026-05-07 with `pytest`: 31 passed.
 
 # Next Step
 
-Read `tasks/003_RSI_STRATEGY.md`, define the test cases, implement the strategy, run verification, and perform Codex self-review.
+Read `tasks/005_PAPER_TRADER.md`, define the test cases, implement the paper trader, run verification, and perform Codex self-review.
 
 # Parallel Work Status
 
 Parallel work is allowed only for independent leaf tasks.
 
 Reason:
-The documentation workflow, Python project setup, market data contract, and CSV provider have been verified. Shared contract changes must still not be parallelized.
+The documentation workflow, Python project setup, market data contract, CSV provider, RSI strategy, and basic backtest have been verified. Shared contract changes must still not be parallelized.
 
 # Phase Checklist
 
@@ -40,11 +40,13 @@ The documentation workflow, Python project setup, market data contract, and CSV 
 - [x] Market data contract complete and verified
 - [x] CSV data provider complete and verified
 - [x] Parallel work rules reviewed after foundation completion
-- [ ] RSI strategy complete and verified
+- [x] RSI strategy complete and verified
+- [x] Basic backtest complete and verified
+- [ ] Paper trader complete and verified
 
 # Open Questions
 
-- Should the RSI strategy use only the latest RSI value, or require a threshold crossing from the previous RSI value?
+None currently recorded.
 
 # Blockers
 
