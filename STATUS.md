@@ -2,38 +2,36 @@
 
 # Current Phase
 
-Phase 7: Paper Trader
+Phase 8: Binance Candle Downloader
 
 # Current Step
 
-Task 005: Paper Trader
+Task 006: Binance Candle Downloader
 
 # Current Goal
 
-Record fake trades from signals without calling any exchange order APIs.
+Fetch Binance historical candle data and normalize it to the standard candle schema without order execution.
 
 # Current Active Task
 
-Task 005: Paper Trader.
+Task 006: Binance Candle Downloader.
 
 # Last Completed Step
 
-Task 004: Basic Backtest.
+Task 005: Paper Trader.
 
-Verified on 2026-05-07 with `pytest`: 31 passed.
+Verified on 2026-05-07 with `pytest`: 46 passed.
 
 # Next Step
 
-Read `tasks/005_PAPER_TRADER.md`, define the test cases, implement the paper trader, run verification, and perform Codex self-review.
-
+Read `tasks/006_BINANCE_CANDLE_DOWNLOADER.md`, define the test cases, implement the Binance historical candle downloader, run verification, and perform Codex self-review.
 
 # Parallel Work Status
 
 Parallel work is allowed only for independent leaf tasks.
 
 Reason:
-
-The documentation workflow, Python project setup, market data contract, CSV provider, RSI strategy, and basic backtest have been verified. Shared contract changes must still not be parallelized.
+The documentation workflow, Python project setup, market data contract, CSV provider, RSI strategy, basic backtest, and paper trader have been verified. Shared contract changes must still not be parallelized.
 
 # Phase Checklist
 
@@ -44,8 +42,8 @@ The documentation workflow, Python project setup, market data contract, CSV prov
 - [x] Parallel work rules reviewed after foundation completion
 - [x] RSI strategy complete and verified
 - [x] Basic backtest complete and verified
-- [ ] Paper trader complete and verified
-
+- [x] Paper trader complete and verified
+- [ ] Binance candle downloader complete and verified
 
 # Open Questions
 
