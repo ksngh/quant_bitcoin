@@ -1,0 +1,1 @@
+"""Bitcoin quantitative trading package."""
