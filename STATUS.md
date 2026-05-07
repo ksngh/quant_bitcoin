@@ -2,36 +2,36 @@
 
 # Current Phase
 
-Phase 5: RSI Strategy
+Phase 9: Scope Review
 
 # Current Step
 
-Task 003: RSI Strategy
+Awaiting next assigned task
 
 # Current Goal
 
-Implement an RSI strategy that returns BUY, SELL, or HOLD from standard candle data.
+Review completed initial scope and decide the next documented task before implementation continues.
 
 # Current Active Task
 
-Task 003: RSI Strategy.
+None currently assigned.
 
 # Last Completed Step
 
-Task 002: CSV Data Provider.
+Task 006: Binance Candle Downloader.
 
-Verified on 2026-05-07 with `pytest`: 9 passed.
+Verified on 2026-05-07 with `pytest`: 66 passed.
 
 # Next Step
 
-Read `tasks/003_RSI_STRATEGY.md`, define the test cases, implement the strategy, run verification, and perform Codex self-review.
+Review the completed initial scope, update or add a task document for the next safe step, and do not implement more application code until a new task is assigned.
 
 # Parallel Work Status
 
 Parallel work is allowed only for independent leaf tasks.
 
 Reason:
-The documentation workflow, Python project setup, market data contract, and CSV provider have been verified. Shared contract changes must still not be parallelized.
+The documentation workflow, Python project setup, market data contract, CSV provider, RSI strategy, basic backtest, paper trader, and Binance candle downloader have been verified. Shared contract changes must still not be parallelized.
 
 # Phase Checklist
 
@@ -40,11 +40,15 @@ The documentation workflow, Python project setup, market data contract, and CSV 
 - [x] Market data contract complete and verified
 - [x] CSV data provider complete and verified
 - [x] Parallel work rules reviewed after foundation completion
-- [ ] RSI strategy complete and verified
+- [x] RSI strategy complete and verified
+- [x] Basic backtest complete and verified
+- [x] Paper trader complete and verified
+- [x] Binance candle downloader complete and verified
+- [ ] Next task document selected or created
 
 # Open Questions
 
-- Should the RSI strategy use only the latest RSI value, or require a threshold crossing from the previous RSI value?
+- What is the next assigned task after completing the current initial scope?
 
 # Blockers
 
