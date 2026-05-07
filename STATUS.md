@@ -2,19 +2,19 @@
 
 # Current Phase
 
-Phase 9: Scope Review
+Phase 9: Improved Backtesting
 
 # Current Step
 
-Awaiting next assigned task
+Task 007: Improved Backtesting
 
 # Current Goal
 
-Review completed initial scope and decide the next documented task before implementation continues.
+Improve historical backtest result reporting with deterministic scenarios while preserving strategy and candle-data boundaries.
 
 # Current Active Task
 
-None currently assigned.
+Task 007: Improved Backtesting.
 
 # Last Completed Step
 
@@ -24,7 +24,7 @@ Verified on 2026-05-07 with `pytest`: 66 passed.
 
 # Next Step
 
-Review the completed initial scope, update or add a task document for the next safe step, and do not implement more application code until a new task is assigned.
+Read `tasks/007_IMPROVED_BACKTESTING.md`, define the test cases, implement only the improved backtesting changes, run verification, and perform Codex self-review.
 
 # Parallel Work Status
 
@@ -44,11 +44,12 @@ The documentation workflow, Python project setup, market data contract, CSV prov
 - [x] Basic backtest complete and verified
 - [x] Paper trader complete and verified
 - [x] Binance candle downloader complete and verified
-- [ ] Next task document selected or created
+- [x] Next task document selected or created
+- [ ] Improved backtesting complete and verified
 
 # Open Questions
 
-- What is the next assigned task after completing the current initial scope?
+None currently recorded.
 
 # Blockers
 
