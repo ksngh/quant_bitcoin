@@ -2,50 +2,53 @@
 
 # Current Phase
 
-Phase 1: Codex working documents
+Phase 5: RSI Strategy
 
 # Current Step
 
-Step 1.1: Create Codex workflow documentation
+Task 003: RSI Strategy
 
 # Current Goal
 
-Create the documentation system that allows Codex to work safely and consistently.
+Implement an RSI strategy that returns BUY, SELL, or HOLD from standard candle data.
 
 # Current Active Task
 
-Update Codex workflow documentation to include project status tracking.
+Task 003: RSI Strategy.
 
 # Last Completed Step
 
-None recorded for this status file.
+Task 002: CSV Data Provider.
+
+Verified on 2026-05-07 with `pytest`: 9 passed.
 
 # Next Step
 
-Define the next task only after Step 1.1 acceptance criteria and verification are satisfied.
+Read `tasks/003_RSI_STRATEGY.md`, define the test cases, implement the strategy, run verification, and perform Codex self-review.
 
 # Parallel Work Status
 
-Parallel work is currently not allowed.
+Parallel work is allowed only for independent leaf tasks.
 
 Reason:
-The project foundation is not ready yet. Do not run parallel tasks until Codex working documents, Python project setup, and market data contract are complete.
+The documentation workflow, Python project setup, market data contract, and CSV provider have been verified. Shared contract changes must still not be parallelized.
 
 # Phase Checklist
 
-- [ ] Step 1.1: Create Codex workflow documentation
-- [ ] Python project setup complete and verified
-- [ ] Market data contract complete and verified
-- [ ] Parallel work rules reviewed after foundation completion
+- [x] Step 1.1: Create Codex workflow documentation
+- [x] Python project setup complete and verified
+- [x] Market data contract complete and verified
+- [x] CSV data provider complete and verified
+- [x] Parallel work rules reviewed after foundation completion
+- [ ] RSI strategy complete and verified
 
 # Open Questions
 
-- What exact acceptance criteria should mark Phase 1 complete?
-- What task should follow Step 1.1 after documentation verification?
+- Should the RSI strategy use only the latest RSI value, or require a threshold crossing from the previous RSI value?
 
 # Blockers
 
-- Parallel work is blocked until Codex working documents, Python project setup, and market data contract are complete.
+None currently recorded.
 
 # Rules for Next Codex Task
 
