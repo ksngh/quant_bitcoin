@@ -1,10 +1,10 @@
 # Project Brief
 
-## Project Goal
+# Project Goal
 
 Build a Python Bitcoin quant trading application that can eventually support backtesting, paper trading, and live trading.
 
-## First Version Scope
+# First-Version Scope
 
 - market data contract
 - CSV/local candle loading
@@ -12,7 +12,7 @@ Build a Python Bitcoin quant trading application that can eventually support bac
 - basic backtest
 - paper trader
 
-## First Version Non-Goals
+# First-Version Non-Goals
 
 - live trading
 - real order execution
@@ -24,7 +24,7 @@ Build a Python Bitcoin quant trading application that can eventually support bac
 - futures
 - leverage
 
-## High-Level Project Evolution
+# High-Level Evolution Path
 
 1. Codex working documents
 2. Python project setup

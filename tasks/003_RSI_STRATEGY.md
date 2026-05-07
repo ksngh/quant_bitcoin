@@ -1,30 +1,26 @@
 # Task 003: RSI Strategy
 
-## Goal
+# Goal
 
-Implement an RSI-based strategy.
+Implement an RSI strategy that returns BUY, SELL, or HOLD.
 
-## Source Requirement
+# Source Requirement
 
-- `requirements/000_INITIAL_SCOPE.md`
+`requirements/000_INITIAL_SCOPE.md`
 
-## Extracted Roles
+# Extracted Roles
 
 - Owner role: Strategy
-- Supporting roles: Test Designer, Reviewer
-- Forbidden roles: Market Data Provider, Backtest Engine, Execution
+- Supporting roles: Test Designer
+- Forbidden roles: Market Data Provider, Execution, Configuration for secrets
 
-## Context
-
-This is the first technical-analysis strategy. It should prove the strategy boundary without execution behavior.
-
-## Scope
+# Scope
 
 - Signal enum with BUY / SELL / HOLD
 - RSI calculation
 - RSI strategy using configurable window, buy threshold, and sell threshold
 
-## Out of Scope
+# Out of Scope
 
 - order execution
 - quantity calculation
@@ -33,59 +29,23 @@ This is the first technical-analysis strategy. It should prove the strategy boun
 - database
 - live trading
 
-## Requirements
+# Acceptance Criteria
 
-- Return BUY when RSI <= buy threshold.
-- Return SELL when RSI >= sell threshold.
-- Return HOLD otherwise.
-- Strategy must not fetch data.
-- Strategy must not place orders.
+- Strategy returns BUY when RSI crosses or is below the buy condition defined in the task.
+- Strategy returns SELL when RSI crosses or is above the sell condition defined in the task.
+- Strategy returns HOLD when neither condition is met.
+- Strategy uses standard candle data only.
 
-## Acceptance Criteria
+# Required Tests
 
-- BUY test
-- SELL test
-- HOLD test
-- no external API calls
-- no order execution
+- Unit Tests: BUY, SELL, HOLD.
+- Integration Tests: none required unless wired into backtest later.
+- Contract Tests: consumes standard candle schema.
+- Safety Tests: no external API calls, no order execution.
 
-## Verification
-
-- Run relevant tests.
-
-## Required Tests
-
-### Unit Tests
-
-- BUY
-- SELL
-- HOLD
-
-### Integration Tests
-
-- not required unless a strategy interface already exists
-
-### Contract Tests
-
-- strategy consumes normalized candle data
-
-### Safety Tests
-
-- no external API calls
-- no order execution
-
-## Review Checklist
+# Review Checklist
 
 - Strategy does not fetch data.
+- Strategy does not call Binance.
 - Strategy does not place orders.
 - Strategy does not decide quantity.
-- Strategy does not read API keys.
-
-## Completion Summary Required
-
-- files changed
-- implementation summary
-- tests added or updated
-- tests run
-- known limitations
-- recommended next task

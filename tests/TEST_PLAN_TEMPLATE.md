@@ -1,49 +1,61 @@
 # Test Plan Template
 
-## Feature Under Test
+# Feature Under Test
+
+
+# Source Requirement
+
+
+# Owner Role
+
+
+# Test Scope
 
 - 
 
-## Source Requirement
+# Unit Tests
 
 - 
 
-## Owner Role
+# Integration Tests
 
 - 
 
-## Test Scope
+# Contract Tests
 
 - 
 
-## Unit Tests
+# Safety Tests
 
 - 
 
-## Integration Tests
+# Test Data
 
-- 
+- Local fixtures:
+- Mock responses:
+- Edge cases:
 
-## Contract Tests
+# Mocking Strategy
 
-- 
+- Mock external HTTP calls.
+- Do not require real API keys for unit tests.
+- Do not call exchange order endpoints.
 
-## Safety Tests
+# Verification Commands
 
-- 
+```bash
+pytest
+```
 
-## Test Data
+If configured later:
 
-- 
+```bash
+ruff check .
+mypy .
+```
 
-## Mocking Strategy
+# Exit Criteria
 
-- 
-
-## Verification Commands
-
-- `pytest`
-
-## Exit Criteria
-
-- 
+- Required tests pass.
+- Safety tests prove no real exchange order behavior.
+- Contract tests prove standard candle schema where applicable.

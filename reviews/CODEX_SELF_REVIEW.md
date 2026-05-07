@@ -1,55 +1,68 @@
 # Codex Self-Review
 
-## Scope
+# Scope
 
-- Did I only address the assigned task?
-- Did I avoid unrelated files?
+- Did I implement only the assigned task?
+- Did I modify unrelated files?
 - Did I avoid future-phase features?
 
-## Requirement Match
+# Requirement Match
 
 - Did the change satisfy the clean requirement?
 - Did I document assumptions?
 - Did I meet the acceptance criteria?
 
-## Role Ownership
+# Role Ownership
 
+- Did I violate role ownership?
 - Did the owner role own the behavior?
 - Did supporting roles stay limited?
 - Did forbidden roles remain untouched?
 
-## Architecture
+# Architecture
 
+- Did I violate architecture boundaries?
 - Did strategy avoid data fetching and order execution?
 - Did market data avoid signals and quantity decisions?
 - Did execution avoid indicator calculations and strategy rules?
 - Did app wiring avoid embedded business logic?
 
-## Tests
+# Tests
 
-- Did I add or update tests for changed code?
+- Did I add or update tests?
 - Did I include unit, integration, contract, or safety tests as required?
-- Did I run verification commands when possible?
+- Did I run verification?
 - Did I explain failures?
 
-## Safety
+# Safety
 
-- Did I avoid hardcoded API keys?
+- Did I hardcode secrets?
 - Did I avoid committing `.env` files?
-- Did I avoid real order APIs unless explicitly requested?
+- Did I accidentally add real trading behavior?
+- Did I accidentally call exchange order APIs?
 - Did paper trading avoid real exchange calls?
+- Did Binance candle downloading avoid order endpoints?
+- Did tests avoid real exchange order endpoints?
 
-## Simplicity
+# Simplicity
 
-- Is the change small?
-- Did I avoid unnecessary abstractions?
-- Did I avoid adding unrequested frameworks or services?
+- Did I add unnecessary abstractions?
+- Did I avoid unrequested frameworks or services?
+- Did I keep the change small?
 
-## Completion Summary
+# Documentation Updates
+
+- Did I update docs or decisions if behavior changed?
+- Did I keep requirement, task, test, and review documents consistent?
+
+# Completion Summary
+
+The final task summary must include:
 
 - files changed
 - implementation summary
 - tests added or updated
 - tests run
+- Codex self-review result
 - known limitations
 - recommended next task

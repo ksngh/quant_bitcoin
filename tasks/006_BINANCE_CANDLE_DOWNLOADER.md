@@ -1,83 +1,50 @@
 # Task 006: Binance Candle Downloader
 
-## Goal
+# Goal
 
-Fetch historical candle data from Binance.
+Fetch Binance historical candle data and normalize it to the standard candle schema.
 
-## Source Requirement
+# Source Requirement
 
-- `requirements/000_INITIAL_SCOPE.md`
+`requirements/000_INITIAL_SCOPE.md`
 
-## Extracted Roles
+# Extracted Roles
 
 - Owner role: Market Data Provider
-- Supporting roles: Configuration, Test Designer, Reviewer
+- Supporting roles: Configuration, Test Designer
 - Forbidden roles: Strategy, Backtest Engine, Execution
 
-## Context
-
-This task is only for historical candle collection. It must not introduce order execution.
-
-## Scope
+# Scope
 
 - fetch historical candles
 - support minute-level candles
 - normalize to standard candle schema
 - no order execution
 
-## Out of Scope
+# Out of Scope
 
 - live trading
 - real order placement
 - risk management
 - strategy logic
 
-## Requirements
+# Acceptance Criteria
 
-- Binance raw responses must not be passed directly to strategy.
-- Output must follow `docs/02_DATA_CONTRACT.md`.
-- API keys must not be hardcoded.
+- Downloader supports historical candle retrieval.
+- Minute-level candles are supported.
+- Returned data follows standard candle schema.
+- Unit tests do not require real API keys.
+- No order endpoint is called.
 
-## Acceptance Criteria
+# Required Tests
 
-- historical candles can be fetched or mocked in tests
-- output follows standard schema
-- no real order endpoint is used
+- Unit Tests: mock Binance response normalization.
+- Integration Tests: optional mocked HTTP integration.
+- Contract Tests: output standard candle schema.
+- Safety Tests: reject or prove absence of order endpoint usage.
 
-## Verification
+# Review Checklist
 
-- Run relevant tests.
-
-## Required Tests
-
-### Unit Tests
-
-- mocked Binance response is normalized
-
-### Integration Tests
-
-- optional mocked downloader integration if useful
-
-### Contract Tests
-
-- output follows `docs/04_DATA_CONTRACT.md`
-
-### Safety Tests
-
-- no real order endpoint is used
-- unit tests do not require real API keys
-
-## Review Checklist
-
-- Binance raw responses are normalized before strategy use.
-- No order execution was added.
-- API keys are not hardcoded.
-
-## Completion Summary Required
-
-- files changed
-- implementation summary
-- tests added or updated
-- tests run
-- known limitations
-- recommended next task
+- Downloader does not generate signals.
+- Downloader does not place orders.
+- Downloader does not decide quantity.

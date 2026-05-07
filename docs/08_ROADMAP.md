@@ -1,270 +1,85 @@
 # Roadmap
 
-## Phase 1: Codex Working Documents
+# Phase 1: Codex Working Documents
 
-Goal:
+- Goal: establish requirement, task, test, self-review, and PR review workflow.
+- Features: docs, templates, role map, review checklist.
+- Out of scope: application code and trading logic.
+- Exit criteria: all workflow documents exist and define safety rules.
 
-- establish working documents for requirements, roles, tasks, tests, reviews, and decisions
+# Phase 2: Python Project Setup
 
-Features:
+- Goal: create a minimal importable Python package with runnable tests.
+- Features: package structure, test runner configuration, minimal README update if needed.
+- Out of scope: trading logic, Binance integration, live trading, risk management.
+- Exit criteria: package imports and tests run.
 
-- `AGENTS.md`
-- `docs/`
-- `requirements/`
-- `roles/`
-- `tasks/`
-- `tests/`
-- `reviews/`
+# Phase 3: Market Data Contract
 
-Out of scope:
+- Goal: define the standard candle schema.
+- Features: `timestamp`, `open`, `high`, `low`, `close`, `volume` contract.
+- Out of scope: Binance API, strategy, backtest, execution.
+- Exit criteria: contract is documented and covered by contract tests when implemented.
 
-- application code
-- trading logic
-- dependency installation
+# Phase 4: CSV/Local Data Provider
 
-Exit criteria:
+- Goal: load local candle data.
+- Features: read CSV, normalize columns, sort by timestamp, return standard schema.
+- Out of scope: Binance API, strategy logic, execution.
+- Exit criteria: provider passes unit and contract tests.
 
-- requested documentation structure exists
-- future tasks have clear templates and boundaries
+# Phase 5: RSI Strategy
 
-## Phase 2: Python Project Setup
+- Goal: generate BUY / SELL / HOLD from RSI.
+- Features: signal enum, RSI calculation, configurable thresholds.
+- Out of scope: quantity decisions, order execution, Binance API, database.
+- Exit criteria: BUY, SELL, HOLD, and safety tests pass.
 
-Goal:
+# Phase 6: Basic Backtest
 
-- create the minimal Python project structure later
+- Goal: simulate strategy execution over historical data.
+- Features: iterate candles, call strategy, simulate simple trades, return basic result.
+- Out of scope: live trading, order APIs, fees, slippage, optimization.
+- Exit criteria: deterministic local backtest test passes.
 
-Features:
+# Phase 7: Paper Trader
 
-- package structure
-- test folder
-- minimal project metadata
-- optional README if needed
+- Goal: record fake trades from signals.
+- Features: fake BUY and SELL records, HOLD ignored.
+- Out of scope: real exchange APIs, risk management, strategy logic.
+- Exit criteria: paper trader tests prove no external API calls.
 
-Out of scope:
+# Phase 8: Binance Historical Candle Downloader
 
-- trading logic
-- Binance integration
-- live trading
+- Goal: collect historical Binance candles.
+- Features: minute-level candle fetching, normalization to standard schema.
+- Out of scope: order placement, live trading, risk management.
+- Exit criteria: mock Binance response tests pass and no order endpoints are used.
 
-Exit criteria:
+# Phase 9: Improved Backtesting
 
-- package can be imported
-- tests can run
-- no trading logic exists
+- Goal: improve historical simulation after the basic version works.
+- Features: better result reporting and deterministic scenarios.
+- Out of scope: portfolio optimization, live trading, advanced risk management unless assigned.
+- Exit criteria: expanded backtest tests pass without changing strategy responsibilities.
 
-## Phase 3: Market Data Contract
+# Phase 10: Paper Trading With State
 
-Goal:
+- Goal: maintain paper trading state across actions.
+- Features: positions, balances, and trade history for paper mode only.
+- Out of scope: live exchange order execution and real account state.
+- Exit criteria: state transitions are tested without external calls.
 
-- define the standard candle data contract in code later
+# Phase 11: Later Risk Management
 
-Features:
+- Goal: add explicit risk controls in a future phase.
+- Features: to be defined by future requirement.
+- Out of scope: first-version implementation.
+- Exit criteria: future task defines ownership, tests, and review criteria.
 
-- standard candle schema
-- validation expectations
-- provider interface
+# Phase 12: Later Live Trading
 
-Out of scope:
-
-- Binance API
-- strategy
-- execution
-
-Exit criteria:
-
-- contract is defined
-- tests verify expected schema if code is implemented
-
-## Phase 4: CSV/local Data Provider
-
-Goal:
-
-- load local candle data for testing and backtesting
-
-Features:
-
-- CSV loading
-- schema normalization
-- timestamp sorting
-- basic validation
-
-Out of scope:
-
-- Binance API
-- strategy logic
-- execution
-
-Exit criteria:
-
-- provider returns standard candle data
-- valid and invalid CSV cases are tested
-
-## Phase 5: RSI Strategy
-
-Goal:
-
-- create the first technical-analysis strategy
-
-Features:
-
-- Signal enum
-- RSI calculation
-- BUY / SELL / HOLD signal
-
-Out of scope:
-
-- order quantity
-- execution
-- risk management
-
-Exit criteria:
-
-- BUY, SELL, and HOLD are tested
-- strategy makes no external API calls
-
-## Phase 6: Basic Backtest
-
-Goal:
-
-- simulate a strategy on historical data
-
-Features:
-
-- simple historical loop
-- strategy calls
-- simple trade simulation
-- basic result summary
-
-Out of scope:
-
-- live trading
-- advanced analytics
-- fees
-- slippage
-- optimization
-
-Exit criteria:
-
-- backtest runs on local historical data
-- no live exchange calls occur
-
-## Phase 7: Paper Trader
-
-Goal:
-
-- simulate execution without real orders
-
-Features:
-
-- fake BUY records
-- fake SELL records
-- HOLD creates no trade
-
-Out of scope:
-
-- real exchange API
-- Binance order execution
-- risk management
-
-Exit criteria:
-
-- BUY, SELL, and HOLD behavior is tested
-- no external order API is called
-
-## Phase 8: Binance Historical Candle Downloader
-
-Goal:
-
-- fetch historical minute-level candle data from Binance
-
-Features:
-
-- historical candle fetch
-- minute-level interval support
-- standard schema normalization
-
-Out of scope:
-
-- placing orders
-- live trading
-- strategy logic
-
-Exit criteria:
-
-- mocked or fetched historical candles normalize correctly
-- no order endpoint is used
-
-## Phase 9: Improved Backtesting
-
-Goal:
-
-- improve backtest usefulness after the basic loop works
-
-Features:
-
-- to be defined later
-
-Out of scope:
-
-- live trading
-- real order execution
-
-Exit criteria:
-
-- to be defined in a future task
-
-## Phase 10: Paper Trading With State
-
-Goal:
-
-- add fake balance and fake positions after simple paper trading works
-
-Features:
-
-- to be defined later
-
-Out of scope:
-
-- real balances
-- real positions
-- real exchange order execution
-
-Exit criteria:
-
-- to be defined in a future task
-
-## Phase 11: Later Risk Management
-
-Goal:
-
-- add risk controls only after the basic trading flow exists
-
-Features:
-
-- to be defined later
-
-Out of scope:
-
-- all risk management implementation for now
-
-Exit criteria:
-
-- to be defined in a future task
-
-## Phase 12: Later Live Trading
-
-Goal:
-
-- add live trading only after paper trading and safety rules are proven
-
-Features:
-
-- to be defined later
-
-Out of scope:
-
-- all real order execution for now
-
-Exit criteria:
-
-- to be defined in a future task
+- Goal: add live trading only after explicit approval and risk controls.
+- Features: to be defined by future requirement.
+- Out of scope: all current first-version work.
+- Exit criteria: future task explicitly permits live order execution and defines safety gates.

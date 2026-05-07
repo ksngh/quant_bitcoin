@@ -12,7 +12,7 @@ Testing verifies requirements, architecture boundaries, data contracts, and safe
 
 # Required Tests by Area
 
-## Market Data
+# Market Data
 
 - returns `timestamp`, `open`, `high`, `low`, `close`, `volume`
 - sorts rows by `timestamp` ascending
@@ -20,7 +20,7 @@ Testing verifies requirements, architecture boundaries, data contracts, and safe
 - rejects or handles missing required columns
 - normalizes Binance raw response before strategy sees it
 
-## Strategy
+# Strategy
 
 - BUY signal
 - SELL signal
@@ -29,21 +29,21 @@ Testing verifies requirements, architecture boundaries, data contracts, and safe
 - no order execution
 - no quantity decision
 
-## Backtest
+# Backtest
 
 - runs on local historical data
 - reuses strategy without modifying it
 - does not call live exchange APIs
 - returns basic result
 
-## Paper Trader
+# Paper Trader
 
 - BUY records fake trade
 - SELL records fake trade
 - HOLD records no trade
 - no external API calls
 
-## Binance Candle Downloader
+# Binance Candle Downloader
 
 - normalizes mock Binance response
 - returns standard candle schema

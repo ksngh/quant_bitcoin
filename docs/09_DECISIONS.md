@@ -1,135 +1,71 @@
-# Decision Log
+# Architecture Decision Log
 
-## Decision 0001: Strategy Returns Signal, Not Order
+# 1. Strategy Returns Signal, Not Order
 
-Status:
+- Status: accepted
+- Context: Strategy should express market opinion without owning execution.
+- Decision: Strategy returns BUY, SELL, or HOLD, not an order.
+- Consequences: Execution decides how to handle signals; strategy cannot place orders or decide quantity.
 
-- accepted
+# 2. Use PaperTrader Before LiveTrader
 
-Context:
+- Status: accepted
+- Context: The project must validate workflows before any real order execution.
+- Decision: Paper trading is implemented before live trading.
+- Consequences: Early execution code records fake trades only and must not call exchange order APIs.
 
-- Strategies need a clear boundary.
-- A strategy can decide market direction, but execution details require separate rules.
+# 3. Use Standard Candle Schema
 
-Decision:
+- Status: accepted
+- Context: Strategy and backtest code should not depend on provider-specific raw data.
+- Decision: Candle data uses `timestamp`, `open`, `high`, `low`, `close`, `volume`.
+- Consequences: Providers normalize data before strategy code sees it.
 
-- Strategy returns Signal, not Order.
+# 4. Keep Risk Management Out of First Version
 
-Consequences:
+- Status: accepted
+- Context: Risk management is important but broad.
+- Decision: Do not implement risk management in the first version.
+- Consequences: Quantity sizing, exposure rules, and stop rules require future tasks.
 
-- Strategy decides direction only.
-- Order quantity and execution belong outside strategy.
+# 5. Keep Live Trading Out of First Implementation Phase
 
-## Decision 0002: Use PaperTrader Before LiveTrader
+- Status: accepted
+- Context: Live trading creates safety risk and requires explicit gates.
+- Decision: No live order execution in first implementation phase.
+- Consequences: Tests and reviews must reject accidental exchange order calls.
 
-Status:
+# 6. Use Requirement and Role Extraction Before Implementation Tasks
 
-- accepted
+- Status: accepted
+- Context: The project needs strict scope control.
+- Decision: Convert raw requirements into clean requirements and role ownership before coding.
+- Consequences: Each implementation task should identify owner, supporting, and forbidden roles.
 
-Context:
+# 7. Every Implementation Task Should Define Tests and Review Criteria
 
-- Real-money trading must not be introduced before simulated execution is tested.
+- Status: accepted
+- Context: Trading code has safety and boundary risks.
+- Decision: Each task must include required tests and PR review checks.
+- Consequences: Missing tests or review criteria should block completion.
 
-Decision:
+# 8. Codex Self-Review Is Required Before Task Completion
 
-- Use PaperTrader before LiveTrader.
+- Status: accepted
+- Context: Codex must check its own scope and safety before finishing.
+- Decision: Use `reviews/CODEX_SELF_REVIEW.md` before completing implementation tasks.
+- Consequences: Final task summaries must include Codex self-review result.
 
-Consequences:
+# 9. Codex PR Review Is Required Before Merge
 
-- The system is tested safely before real-money trading.
-- Paper trading must not call real exchange order APIs.
+- Status: accepted
+- Context: PR review catches scope expansion and architecture boundary violations.
+- Decision: Codex review must run before merge.
+- Consequences: PR summaries must include requirement, task, tests, safety notes, and limitations.
 
-## Decision 0003: Use Standard Candle Schema
+# 10. Parallelism Is Allowed Only for Independent Leaf Tasks
 
-Status:
-
-- accepted
-
-Context:
-
-- Exchange APIs return provider-specific data.
-- Strategy code should remain independent from provider-specific raw fields.
-
-Decision:
-
-- Use the standard candle schema: `timestamp`, `open`, `high`, `low`, `close`, `volume`.
-
-Consequences:
-
-- Strategy does not depend on Binance raw fields.
-- Data providers must normalize raw data before returning it.
-
-## Decision 0004: Keep Risk Management Out of First Version
-
-Status:
-
-- accepted
-
-Context:
-
-- The first version should stay focused on data, strategy, backtest, and paper trading.
-
-Decision:
-
-- Keep risk management out of the first version.
-
-Consequences:
-
-- The first version remains small.
-- Risk controls will be added after the basic flow works.
-
-## Decision 0005: Keep Live Trading Out of First Implementation Phase
-
-Status:
-
-- accepted
-
-Context:
-
-- Real order execution has safety implications.
-- Data, strategy, backtest, and paper trading should be tested first.
-
-Decision:
-
-- Keep live trading out of the first implementation phase.
-
-Consequences:
-
-- Real order execution is added only after the earlier phases are working and reviewed.
-
-## Decision 0006: Use Requirement and Role Extraction Before Implementation Tasks
-
-Status:
-
-- accepted
-
-Context:
-
-- Raw requirements can mix responsibilities across market data, strategy, backtest, and execution.
-
-Decision:
-
-- Use requirement cleanup and role extraction before implementation tasks.
-
-Consequences:
-
-- Tasks have clearer owners, boundaries, out-of-scope items, tests, and review checks.
-
-## Decision 0007: Every Implementation Task Should Define Tests and Review Criteria
-
-Status:
-
-- accepted
-
-Context:
-
-- Future changes need visible verification and review expectations.
-
-Decision:
-
-- Every implementation task should define tests and review criteria.
-
-Consequences:
-
-- Tasks are easier to complete and review.
-- Missing tests or review criteria should be treated as incomplete task definition.
+- Status: accepted
+- Context: Parallel work can corrupt shared contracts if used incorrectly.
+- Decision: Parallelism is allowed only for independent leaf tasks.
+- Consequences: Shared contract changes, public interfaces, and package layout changes must not be parallelized.

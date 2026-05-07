@@ -1,62 +1,68 @@
 # Requirement Template
 
-## Raw Requirement
+# Raw Requirement
+
+
+# Clean Requirement
+
+
+# Problem
+
+
+# User Goal
+
+
+# Functional Requirements
 
 - 
 
-## Clean Requirement
+# Non-Functional Requirements
 
 - 
 
-## Problem
+# Explicitly Out of Scope
 
 - 
 
-## User Goal
+# Ambiguities
 
 - 
 
-## Functional Requirements
+# Assumptions
 
 - 
 
-## Non-Functional Requirements
+# Acceptance Criteria
 
 - 
 
-## Explicitly Out of Scope
-
-- 
-
-## Ambiguities
-
-- 
-
-## Assumptions
-
-- 
-
-## Acceptance Criteria
-
-- 
-
-## Extracted Roles
+# Extracted Roles
 
 - Owner role:
 - Supporting roles:
 - Forbidden roles:
 
-## Required Tests
+# Required Tests
 
 - Unit tests:
 - Integration tests:
 - Contract tests:
 - Safety tests:
 
-## PR Review Checks
+# PR Review Checks
 
-- 
+- Scope:
+- Requirement match:
+- Role ownership:
+- Architecture boundaries:
+- Data contract:
+- Safety:
+- Documentation:
 
-## Related Documents
+# Related Documents
 
-- 
+- `AGENTS.md`
+- `docs/01_REQUIREMENT_PROCESS.md`
+- `docs/02_ROLE_EXTRACTION.md`
+- `docs/03_ARCHITECTURE_RULES.md`
+- `docs/05_TEST_STRATEGY.md`

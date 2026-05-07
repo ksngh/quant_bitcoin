@@ -1,31 +1,27 @@
 # Task 004: Basic Backtest
 
-## Goal
+# Goal
 
-Implement the simplest useful backtest loop.
+Run a basic historical simulation using candle data and a strategy.
 
-## Source Requirement
+# Source Requirement
 
-- `requirements/000_INITIAL_SCOPE.md`
+`requirements/000_INITIAL_SCOPE.md`
 
-## Extracted Roles
+# Extracted Roles
 
 - Owner role: Backtest Engine
-- Supporting roles: Strategy, Market Data Provider, Test Designer, Reviewer
-- Forbidden roles: Execution for live orders
+- Supporting roles: Strategy, Market Data Provider, Test Designer
+- Forbidden roles: Live Execution, Binance order client
 
-## Context
-
-Backtesting should reuse the strategy and historical candle data without live exchange interaction.
-
-## Scope
+# Scope
 
 - iterate through historical candle data
 - call strategy
 - simulate trades
 - return basic result
 
-## Out of Scope
+# Out of Scope
 
 - live trading
 - Binance real orders
@@ -34,53 +30,21 @@ Backtesting should reuse the strategy and historical candle data without live ex
 - slippage
 - optimization
 
-## Requirements
+# Acceptance Criteria
 
-- Reuse the existing strategy interface.
-- Use normalized candle data.
-- Keep results simple and easy to inspect.
+- Backtest runs on local historical data.
+- Backtest reuses strategy without modifying it.
+- Backtest returns a basic result.
+- Backtest does not call live exchange APIs.
 
-## Acceptance Criteria
+# Required Tests
 
-- backtest can run on local data
-- strategy is reused without modification
-- no real exchange calls
+- Unit Tests: result calculation for simple scenarios.
+- Integration Tests: run with local candle fixture and simple strategy.
+- Contract Tests: input uses standard candle schema.
+- Safety Tests: no live exchange calls and no real order execution.
 
-## Verification
+# Review Checklist
 
-- Run relevant tests.
-
-## Required Tests
-
-### Unit Tests
-
-- simple backtest result behavior
-
-### Integration Tests
-
-- backtest can run on local historical data
-- strategy is reused without modification
-
-### Contract Tests
-
-- backtest consumes normalized candle data
-
-### Safety Tests
-
-- no real exchange calls
-- no real order placement
-
-## Review Checklist
-
-- Backtest does not implement live trading.
-- Backtest does not call Binance real order APIs.
-- Strategy rules are not modified to fit the backtest.
-
-## Completion Summary Required
-
-- files changed
-- implementation summary
-- tests added or updated
-- tests run
-- known limitations
-- recommended next task
+- Backtest does not contain strategy formulas unless explicitly assigned.
+- Backtest does not place real orders.

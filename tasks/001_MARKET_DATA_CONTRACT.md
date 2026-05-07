@@ -1,30 +1,30 @@
 # Task 001: Market Data Contract
 
-## Goal
+# Goal
 
-Define the market data provider contract.
+Define the first market data contract for standard candle data.
 
-## Source Requirement
+# Source Requirement
 
-- `requirements/000_INITIAL_SCOPE.md`
+`requirements/000_INITIAL_SCOPE.md`
 
-## Extracted Roles
+# Extracted Roles
 
-- Owner role: Market Data Provider
-- Supporting roles: Architect, Test Designer, Reviewer
+- Owner role: Architect
+- Supporting roles: Market Data Provider, Test Designer
 - Forbidden roles: Strategy, Backtest Engine, Execution
 
-## Context
+# Context
 
-Strategy and backtest code need a stable candle format before providers are implemented.
+Must follow `docs/04_DATA_CONTRACT.md`.
 
-## Scope
+# Scope
 
-- standard candle schema
-- provider interface
-- validation expectations
+- Define standard candle fields.
+- Define validation expectations if implementation requires them.
+- Keep the first implementation simple.
 
-## Out of Scope
+# Out of Scope
 
 - Binance API
 - strategy
@@ -32,49 +32,21 @@ Strategy and backtest code need a stable candle format before providers are impl
 - execution
 - live trading
 
-## Requirements
+# Acceptance Criteria
 
-- Follow `docs/04_DATA_CONTRACT.md`.
-- Strategy must receive normalized candle data only.
+- Standard schema uses `timestamp`, `open`, `high`, `low`, `close`, `volume`.
+- Timestamp represents candle open time.
+- Numeric fields are numeric.
+- Rows are sorted ascending by timestamp.
 
-## Acceptance Criteria
+# Required Tests
 
-- contract is defined
-- tests verify expected schema if code is implemented
+- Unit Tests: schema helper behavior if code is added.
+- Integration Tests: none required.
+- Contract Tests: standard schema accepted, missing required fields rejected or handled.
+- Safety Tests: no exchange API calls.
 
-## Required Tests
+# Review Checklist
 
-### Unit Tests
-
-- validate required candle fields if code is implemented
-
-### Integration Tests
-
-- not required
-
-### Contract Tests
-
-- standard candle schema is enforced or documented in code
-
-### Safety Tests
-
-- strategy does not receive provider-specific raw fields
-
-## Review Checklist
-
-- Contract follows `docs/04_DATA_CONTRACT.md`.
-- No Binance API implementation was added.
-- No strategy, backtest, execution, or live trading behavior was added.
-
-## Verification
-
-- Run relevant tests if code is implemented.
-
-## Completion Summary Required
-
-- files changed
-- implementation summary
-- tests added or updated
-- tests run
-- known limitations
-- recommended next task
+- Contract does not include Binance-specific raw fields.
+- No strategy or execution behavior added.

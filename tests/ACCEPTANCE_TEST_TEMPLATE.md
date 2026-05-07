@@ -1,29 +1,23 @@
 # Acceptance Test Template
 
-## Scenario
+# Scenario
 
-- 
 
-## Given
+# Given
 
-- 
 
-## When
+# When
 
-- 
 
-## Then
+# Then
 
-- 
 
-## Related Requirement
+# Related Requirement
 
-- 
 
-## Related Task
+# Related Task
 
-- 
 
-## Notes
+# Notes
 
 - 

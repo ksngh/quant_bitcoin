@@ -1,34 +1,15 @@
-# Role Extraction
+# Role Extraction Guide
 
-Role extraction makes requirements easier to scope before implementation.
+# Role Types
 
-## Role Types
+- Product role: defines the user goal, scope, and non-goals.
+- System role: owns a system behavior or module responsibility.
+- Quality role: defines tests, safety checks, and review criteria.
+- Owner role: the only role allowed to own the main behavior.
+- Supporting role: a role that may assist without owning the behavior.
+- Forbidden role: a role that must not participate in the behavior.
 
-Product role:
-
-- Defines user goal, requirement value, and acceptance criteria.
-
-System role:
-
-- Owns a runtime responsibility such as market data, strategy, backtest, execution, or configuration.
-
-Quality role:
-
-- Defines required tests, safety checks, and review criteria.
-
-Owner role:
-
-- The primary role responsible for the requested behavior.
-
-Supporting role:
-
-- A role that provides input, validation, or integration support without owning the behavior.
-
-Forbidden role:
-
-- A role that must not be changed or given responsibility for the requirement.
-
-## Extraction Checklist
+# Extraction Checklist
 
 For each requirement, Codex should identify:
 
@@ -43,221 +24,54 @@ For each requirement, Codex should identify:
 - required tests
 - PR review checks
 
-## Example: RSI Strategy
-
-Raw requirement:
-
-- Add RSI trading signals.
-
-Clean requirement:
-
-- Implement an RSI strategy that returns BUY, SELL, or HOLD from normalized candle data.
-
-Owner role:
-
-- Strategy
-
-Supporting roles:
-
-- Test Designer
-- Reviewer
-
-Forbidden roles:
-
-- Market Data Provider
-- Execution
-- Configuration, except for local strategy parameters if needed
-
-Inputs:
-
-- normalized candle data with close prices
-- RSI window
-- buy threshold
-- sell threshold
-
-Outputs:
-
-- BUY, SELL, or HOLD
-- optional signal reason
-
-Acceptance criteria:
-
-- BUY is returned when RSI is below or equal to the buy threshold.
-- SELL is returned when RSI is above or equal to the sell threshold.
-- HOLD is returned otherwise.
-
-Required tests:
-
-- BUY case
-- SELL case
-- HOLD case
-- no external API calls
-- no order execution
-
-PR review checks:
-
-- Strategy does not fetch data.
-- Strategy does not place orders.
-- Strategy does not decide quantity.
-
-## Example: Binance Candle Downloader
-
-Raw requirement:
-
-- Fetch Binance candles.
-
-Clean requirement:
-
-- Implement a historical candle downloader that fetches Binance candle data and normalizes it to the standard candle schema.
-
-Owner role:
-
-- Market Data Provider
-
-Supporting roles:
-
-- Configuration, if local settings are needed
-- Test Designer
-- Reviewer
-
-Forbidden roles:
-
-- Strategy
-- Backtest Engine
-- Execution
-
-Inputs:
-
-- symbol
-- interval
-- start/end range if required
-
-Outputs:
-
-- normalized candle data
-
-Acceptance criteria:
-
-- Historical candles are fetched or mocked in tests.
-- Output uses `timestamp`, `open`, `high`, `low`, `close`, `volume`.
-- No order endpoint is used.
-
-Required tests:
-
-- mock response normalization
-- schema contract test
-- safety test for no order endpoint
-
-PR review checks:
-
-- Binance raw fields do not reach strategy code.
-- API keys are not hardcoded.
-- No order execution was added.
-
-## Example: Basic Backtest
-
-Raw requirement:
-
-- Backtest a strategy.
-
-Clean requirement:
-
-- Implement a simple backtest loop that runs a strategy over historical candle data and returns a basic result.
-
-Owner role:
-
-- Backtest Engine
-
-Supporting roles:
-
-- Strategy
-- Market Data Provider
-- Test Designer
-- Reviewer
-
-Forbidden roles:
-
-- Execution for live orders
-- Configuration, except local test settings if needed
-
-Inputs:
-
-- historical candle data
-- strategy instance or function
-
-Outputs:
-
-- basic backtest result
-
-Acceptance criteria:
-
-- Backtest runs on local historical data.
-- Strategy is reused without modification.
-- No live exchange API is called.
-
-Required tests:
-
-- local-data backtest test
-- strategy reuse test
-- safety test for no real exchange calls
-
-PR review checks:
-
-- Backtest does not place real orders.
-- Backtest does not change strategy rules.
-
-## Example: Paper Trader
-
-Raw requirement:
-
-- Add paper trading.
-
-Clean requirement:
-
-- Implement fake execution that records BUY and SELL actions and ignores HOLD.
-
-Owner role:
-
-- Execution
-
-Supporting roles:
-
-- Strategy for signal input
-- Test Designer
-- Reviewer
-
-Forbidden roles:
-
-- Market Data Provider
-- Strategy rule owner
-- Live order execution
-
-Inputs:
-
-- symbol
-- signal
-- quantity
-
-Outputs:
-
-- fake trade record for BUY or SELL
-- no trade for HOLD
-
-Acceptance criteria:
-
-- BUY creates a fake buy record.
-- SELL creates a fake sell record.
-- HOLD creates no trade.
-- No external API calls occur.
-
-Required tests:
-
-- BUY fake trade
-- SELL fake trade
-- HOLD no trade
-- no external API calls
-
-PR review checks:
-
-- Paper trader does not call exchange order APIs.
-- Paper trader does not calculate indicators.
+# Example: RSI Strategy
+
+- Raw requirement: Implement RSI strategy.
+- Clean requirement: Create strategy logic that calculates RSI and returns BUY, SELL, or HOLD.
+- Owner role: Strategy.
+- Supporting roles: Test Designer.
+- Forbidden roles: Market Data Provider, Execution, Configuration for secrets.
+- Inputs: standard candle data, RSI window, buy threshold, sell threshold.
+- Outputs: BUY / SELL / HOLD signal and optional reason.
+- Acceptance criteria: returns all three signal types under deterministic test data.
+- Required tests: BUY, SELL, HOLD, no external API calls, no order execution.
+- PR review checks: strategy does not fetch data, place orders, decide quantity, or read API keys.
+
+# Example: Binance Candle Downloader
+
+- Raw requirement: Fetch Binance candles.
+- Clean requirement: Fetch historical candles and normalize them to the standard candle schema.
+- Owner role: Market Data Provider.
+- Supporting roles: Configuration, Test Designer.
+- Forbidden roles: Strategy, Backtest Engine, Execution.
+- Inputs: symbol, interval, start/end time.
+- Outputs: normalized candle rows.
+- Acceptance criteria: produces standard schema from mocked Binance responses.
+- Required tests: mock response normalization, no order endpoint calls, no real API keys.
+- PR review checks: downloader does not generate signals, execute orders, or calculate quantities.
+
+# Example: Basic Backtest
+
+- Raw requirement: Run basic backtest.
+- Clean requirement: Iterate through historical candles, call a strategy, simulate trades, and return a basic result.
+- Owner role: Backtest Engine.
+- Supporting roles: Strategy, Market Data Provider, Test Designer.
+- Forbidden roles: Live Execution, Binance order client.
+- Inputs: standard candle data, strategy instance, initial cash or simple starting state if required by task.
+- Outputs: basic backtest result.
+- Acceptance criteria: runs on local historical data and returns deterministic result.
+- Required tests: local historical data run, strategy reuse, no live exchange calls.
+- PR review checks: backtest does not place real orders or modify strategy internals.
+
+# Example: Paper Trader
+
+- Raw requirement: Add paper trader.
+- Clean requirement: Record fake BUY and SELL actions from signals and ignore HOLD.
+- Owner role: Execution.
+- Supporting roles: Test Designer.
+- Forbidden roles: Strategy, Market Data Provider, live exchange client.
+- Inputs: symbol, signal, quantity.
+- Outputs: fake trade record or no action for HOLD.
+- Acceptance criteria: BUY and SELL record fake trades; HOLD records none.
+- Required tests: BUY fake trade, SELL fake trade, HOLD no trade, no external API calls.
+- PR review checks: paper trader never calls exchange order APIs and does not calculate RSI.

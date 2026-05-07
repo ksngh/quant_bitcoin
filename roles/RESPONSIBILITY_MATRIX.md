@@ -2,16 +2,17 @@
 
 | Behavior | Owner Role | Supporting Role | Forbidden Role | Required Tests | PR Review Check |
 | --- | --- | --- | --- | --- | --- |
-| Define candle schema | Architect | Market Data Provider, Test Designer | Strategy, Execution | Contract tests for required fields | Schema matches `docs/04_DATA_CONTRACT.md` |
-| Load CSV candle data | Market Data Provider | Test Designer | Strategy, Execution | Unit tests for valid and invalid CSV | Provider returns normalized schema |
-| Fetch Binance historical candles | Market Data Provider | Configuration, Test Designer | Strategy, Execution | Mocked fetch test, safety test | No order endpoint is used |
-| Normalize Binance raw response | Market Data Provider | Test Designer | Strategy, Execution | Contract test for normalized output | Raw Binance fields do not reach strategy |
-| Generate BUY / SELL / HOLD | Strategy | Test Designer | Market Data Provider, Execution | BUY, SELL, HOLD unit tests | Strategy does not fetch data or place orders |
-| Calculate RSI | Strategy | Test Designer | Market Data Provider, Execution | RSI behavior tests | RSI formula is inside strategy area only |
-| Simulate historical trading | Backtest Engine | Strategy, Market Data Provider, Test Designer | Live order execution | Backtest integration test | No live exchange API calls |
-| Record fake trade | Execution | Strategy, Test Designer | Market Data Provider | BUY/SELL/HOLD paper trader tests | Fake trades only; no exchange calls |
-| Place real order | Later live execution only | Reviewer, Configuration | Current first version | Not allowed now | Must be rejected unless explicitly requested later |
-| Decide task scope | Requirement Owner | Architect, Reviewer | Implementer alone | Documentation review | Scope matches requirement and task |
-| Define acceptance criteria | Requirement Owner | Test Designer, Reviewer | Runtime components | Requirement review | Criteria are testable |
-| Define required tests | Test Designer | Requirement Owner, Reviewer | Runtime components alone | Test plan review | Tests cover behavior, contract, and safety |
-| Review PR | Reviewer | Architect, Test Designer | Implementer alone | Review checklist | Findings cover scope, tests, safety, and docs |
+| Define candle schema | Architect | Market Data Provider, Test Designer | Strategy, Execution | contract tests | schema is standard and not provider-specific |
+| Load CSV candle data | Market Data Provider | Test Designer | Strategy, Execution | unit, contract | returns standard schema and sorted rows |
+| Fetch Binance historical candles | Market Data Provider | Configuration, Test Designer | Strategy, Execution | unit with mocks, safety | uses data endpoints only |
+| Normalize Binance raw response | Market Data Provider | Test Designer | Strategy, Execution | contract | strategy never sees Binance raw fields |
+| Generate BUY / SELL / HOLD | Strategy | Test Designer | Market Data Provider, Execution | unit | no data fetching or order execution |
+| Calculate RSI | Strategy | Test Designer | Market Data Provider, Execution | unit | formula stays in strategy layer |
+| Simulate historical trading | Backtest Engine | Strategy, Market Data Provider, Test Designer | Live Execution | integration, safety | no live exchange calls |
+| Record fake trade | Execution | Test Designer | Strategy, Market Data Provider | unit, safety | fake trade only, no exchange order API |
+| Place real order | Future Live Execution | Risk Management when later approved | Current first-version work | future explicit safety tests | rejected unless future task explicitly requests it |
+| Decide task scope | Requirement Owner | Architect | Implementer alone | requirement review | scope matches assigned task |
+| Define acceptance criteria | Requirement Owner | Test Designer, Reviewer | Implementer alone | acceptance tests | criteria are observable |
+| Define required tests | Test Designer | Architect, Reviewer | Market Data Provider alone | test plan | test types match risk |
+| Review PR | Reviewer | Architect, Test Designer | Implementer alone | review checklist | scope, tests, architecture, safety checked |
+| Perform Codex self-review | Implementer | Reviewer | none | self-review checklist | summary included before completion |

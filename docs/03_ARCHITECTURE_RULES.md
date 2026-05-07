@@ -1,8 +1,6 @@
 # Architecture Rules
 
-These boundaries apply to future implementation tasks.
-
-## Market Data
+# Market Data
 
 Allowed:
 
@@ -17,7 +15,7 @@ Forbidden:
 - decide quantity
 - perform risk management
 
-## Strategy
+# Strategy
 
 Allowed:
 
@@ -35,7 +33,7 @@ Forbidden:
 - write files or database records
 - send notifications
 
-## Backtest
+# Backtest
 
 Allowed:
 
@@ -48,7 +46,7 @@ Forbidden:
 - call live exchange order APIs
 - place real orders
 
-## Execution
+# Execution
 
 Allowed:
 
@@ -61,7 +59,7 @@ Forbidden:
 - define strategy rules
 - fetch market data
 
-## App Layer
+# App Layer
 
 Allowed:
 
@@ -74,7 +72,7 @@ Forbidden:
 - parse raw Binance responses directly
 - contain real order logic directly
 
-## Configuration
+# Configuration
 
 Allowed:
 
@@ -86,31 +84,20 @@ Forbidden:
 - hardcode secrets
 - contain business logic
 
-## Tests
+# Tests
 
 Allowed:
 
-- verify behavior for the assigned task
-- verify architecture boundaries
-- verify data contracts
-- verify safety rules
+- verify behavior with local fixtures and mocks
+- verify standard candle schema
+- verify no unsafe exchange order calls
 
 Forbidden:
 
+- call real exchange order endpoints
 - require real API keys for unit tests
-- call real order endpoints
-- depend on unrelated future features
+- depend on live market availability for deterministic tests
 
-## Review
+# Review
 
-Allowed:
-
-- check requirement match
-- check role ownership
-- check architecture boundaries
-- check safety and tests
-
-Forbidden:
-
-- approve scope expansion without a task update
-- ignore missing tests for changed behavior
+PR review must reject changes that cross owner boundaries, add forbidden responsibilities, skip required tests, or introduce live trading behavior outside an explicit future task.

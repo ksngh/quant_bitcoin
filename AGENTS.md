@@ -2,11 +2,9 @@
 
 This is a Python Bitcoin quantitative trading project.
 
-The project starts small and evolves gradually. The current focus is candle data, technical-analysis strategies, basic backtesting, and paper trading.
+The project starts small and evolves gradually. The current focus is candle data, technical-analysis strategies, basic backtesting, and paper trading. Live trading and risk management are later phases.
 
 # Current Scope
-
-The current scope is:
 
 - project setup
 - market data contract
@@ -18,7 +16,7 @@ The current scope is:
 
 # Out of Scope by Default
 
-Do not implement the following unless explicitly requested in an assigned task:
+Codex must not implement the following unless an assigned future task explicitly requests them:
 
 - live trading
 - real Binance order execution
@@ -37,7 +35,7 @@ Do not implement the following unless explicitly requested in an assigned task:
 # Working Rules
 
 - Read `AGENTS.md` before working.
-- Read the relevant docs before working.
+- Read relevant docs before working.
 - Read the assigned task file before coding.
 - If the requirement is unclear, extract roles and write assumptions before implementation.
 - Make small, incremental changes.
@@ -60,6 +58,28 @@ Raw requirement
 -> PR review
 -> Decision/doc update if needed
 
+# Parallel Work Rule
+
+- Codex may use parallelism only for independent leaf tasks.
+- Codex must not parallelize shared contract changes.
+- Codex must not rename or redesign public interfaces during a parallel batch.
+- If a shared contract change seems necessary, Codex must stop and report it instead of silently changing it.
+
+Safe parallel examples:
+
+- CSV provider
+- RSI strategy
+- PaperTrader
+- isolated documentation review
+
+Unsafe parallel examples:
+
+- market data contract changes
+- signal contract changes
+- base strategy interface changes
+- backtest result model changes
+- project package layout changes
+
 # Safety Rules
 
 - Do not hardcode API keys.
@@ -68,6 +88,53 @@ Raw requirement
 - Paper trading must never call real exchange order APIs.
 - Binance candle downloading is allowed only for data collection, not order execution.
 - Strategy code must never call exchange APIs.
+- Tests must not call real exchange order endpoints.
+- Do not create `ENABLE_LIVE_TRADING=true` defaults.
+
+# Codex Self-Review Requirement
+
+Before finishing any implementation task, Codex must perform a self-review using `reviews/CODEX_SELF_REVIEW.md`.
+
+Codex must check:
+
+- Did I implement only the assigned task?
+- Did I modify unrelated files?
+- Did I violate role ownership?
+- Did I violate architecture boundaries?
+- Did I add unnecessary abstractions?
+- Did I add or update tests?
+- Did I run verification commands?
+- Did I hardcode secrets?
+- Did I accidentally add real trading behavior?
+- Did I accidentally call exchange order APIs?
+- Did I update docs or decisions if behavior changed?
+
+Codex must include a self-review summary before completing the task.
+
+# Pull Request Review Requirement
+
+When a pull request is opened, Codex review should check:
+
+- scope expansion
+- requirement mismatch
+- missing tests
+- architecture boundary violations
+- role ownership violations
+- data contract violations
+- hardcoded secrets
+- unsafe live trading behavior
+- accidental exchange order calls
+- unnecessary abstractions
+- documentation updates when behavior changed
+
+For trading-related changes, review must be strict around:
+
+- API keys
+- `.env` files
+- live order execution
+- exchange order endpoints
+- paper trading accidentally using live clients
+- Binance data downloader accidentally using order endpoints
 
 # Completion Rules
 
@@ -77,5 +144,6 @@ Every implementation task must end with:
 - implementation summary
 - tests added or updated
 - tests run
+- Codex self-review result
 - known limitations
 - recommended next task

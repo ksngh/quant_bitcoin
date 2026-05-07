@@ -1,31 +1,26 @@
 # Task 000: Project Setup
 
-## Goal
+# Goal
 
-Set up the initial Python project structure later.
+Create a minimal Python project structure that can be imported and tested.
 
-## Source Requirement
+# Source Requirement
 
-- `requirements/000_INITIAL_SCOPE.md`
+`requirements/000_INITIAL_SCOPE.md`
 
-## Extracted Roles
+# Extracted Roles
 
 - Owner role: Implementer
-- Supporting roles: Requirement Owner, Test Designer, Reviewer
-- Forbidden roles: Market Data Provider, Strategy, Backtest Engine, Execution
+- Supporting roles: Architect, Test Designer
+- Forbidden roles: Strategy, Market Data Provider, Execution
 
-## Context
+# Scope
 
-This task prepares the repository for future implementation. It should create only the minimum structure needed to import code and run tests.
+- Create minimal package structure.
+- Configure tests.
+- Keep setup small and local.
 
-## Scope
-
-- create basic Python package structure later
-- create test folder later
-- create minimal `pyproject.toml` later
-- create `README` later if needed
-
-## Out of Scope
+# Out of Scope
 
 - trading logic
 - Binance integration
@@ -35,52 +30,27 @@ This task prepares the repository for future implementation. It should create on
 - database
 - scheduler
 
-## Requirements
-
-- Keep the setup minimal.
-- Do not add trading behavior.
-- Do not add exchange integration.
-- Do not create unused framework structure.
-
-## Acceptance Criteria
+# Acceptance Criteria
 
 - package can be imported
 - tests can run
 - no trading logic exists yet
 
-## Verification
+# Required Tests
 
-- `pytest`
+- Unit Tests: import test for package.
+- Integration Tests: none required.
+- Contract Tests: none required.
+- Safety Tests: verify no exchange order code exists.
 
-## Required Tests
+# Review Checklist
 
-### Unit Tests
+- No trading behavior added.
+- No unrequested framework added.
+- No dependency installation required unless separately approved.
 
-- package import test, if package structure is created
+# Verification
 
-### Integration Tests
-
-- test runner can execute the test suite
-
-### Contract Tests
-
-- not required
-
-### Safety Tests
-
-- verify no trading logic exists yet
-
-## Review Checklist
-
-- No trading logic was added.
-- No exchange integration was added.
-- Project structure is minimal.
-
-## Completion Summary Required
-
-- files changed
-- implementation summary
-- tests added or updated
-- tests run
-- known limitations
-- recommended next task
+```bash
+pytest
+```

@@ -1,41 +1,49 @@
 # PR Template
 
-## Requirement
+# Requirement
 
 - 
 
-## Task
+# Task
 
 - 
 
-## What Changed
+# What Changed
 
 - 
 
-## What Did Not Change
+# What Did Not Change
 
 - 
 
-## Tests Run
+# Tests Run
 
 - 
 
-## Architecture Boundary Check
+# Codex Self-Review Result
 
 - 
 
-## Safety Check
+# Architecture Boundary Check
 
 - 
 
-## Documentation Updates
+# Safety Check
+
+- API keys:
+- `.env` files:
+- Real order execution:
+- Exchange order endpoints:
+- Paper trading live-client usage:
+
+# Documentation Updates
 
 - 
 
-## Known Limitations
+# Known Limitations
 
 - 
 
-## Follow-Up Tasks
+# Follow-Up Tasks
 
 - 
