@@ -45,6 +45,14 @@ Codex must not implement the following unless an assigned future task explicitly
 - Run verification commands when possible.
 - Summarize changed files, behavior added, tests run, and known limitations.
 
+# Project Status Tracking
+
+- Codex must read `STATUS.md` before starting implementation tasks.
+- Codex must use `STATUS.md` as the current project-state ledger for phase, step, active task, blockers, open questions, and parallel work status.
+- Codex must update `STATUS.md` when project state changes.
+- Codex must not mark phases, steps, or checklist items complete unless acceptance criteria and verification are satisfied.
+- If completion is uncertain, Codex must leave the item open and record the uncertainty in `STATUS.md`.
+
 # Requirement-to-Implementation Workflow
 
 Raw requirement

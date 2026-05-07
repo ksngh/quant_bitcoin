@@ -22,6 +22,13 @@
 
 - 
 
+# Status Update
+
+- [ ] `STATUS.md` was read before implementation.
+- [ ] Project phase, step, active task, blockers, open questions, and completion state were checked.
+- [ ] `STATUS.md` was updated if project state changed.
+- [ ] Uncertain items were left open instead of marked complete.
+
 # Architecture Boundary Check
 
 - 

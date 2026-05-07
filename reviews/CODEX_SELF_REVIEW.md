@@ -12,6 +12,12 @@
 - Did I document assumptions?
 - Did I meet the acceptance criteria?
 
+# Status Tracking
+
+- Did I read `STATUS.md`?
+- Did I update `STATUS.md` if the project state changed?
+- Did I avoid marking uncertain items as complete?
+
 # Role Ownership
 
 - Did I violate role ownership?

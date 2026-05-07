@@ -24,6 +24,13 @@
 
 - 
 
+# Status Update
+
+- Was `STATUS.md` read before implementation?
+- Did this PR change project phase, step, active task, blockers, open questions, or completion state?
+- Was `STATUS.md` updated if project state changed?
+- Were uncertain items left open instead of marked complete?
+
 # Architecture Boundary Check
 
 - 
