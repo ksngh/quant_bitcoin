@@ -2,36 +2,36 @@
 
 # Current Phase
 
-Phase 5: RSI Strategy
+Phase 6: Basic Backtest
 
 # Current Step
 
-Task 003: RSI Strategy
+Task 004: Basic Backtest
 
 # Current Goal
 
-Implement an RSI strategy that returns BUY, SELL, or HOLD from standard candle data.
+Run a basic historical simulation using candle data and a strategy.
 
 # Current Active Task
 
-Task 003: RSI Strategy.
+Task 004: Basic Backtest.
 
 # Last Completed Step
 
-Task 002: CSV Data Provider.
+Task 003: RSI Strategy.
 
-Verified on 2026-05-07 with `pytest`: 9 passed.
+Verified on 2026-05-07 with `pytest`: 21 passed.
 
 # Next Step
 
-Read `tasks/003_RSI_STRATEGY.md`, define the test cases, implement the strategy, run verification, and perform Codex self-review.
+Read `tasks/004_BASIC_BACKTEST.md`, define the test cases, implement the basic backtest, run verification, and perform Codex self-review.
 
 # Parallel Work Status
 
 Parallel work is allowed only for independent leaf tasks.
 
 Reason:
-The documentation workflow, Python project setup, market data contract, and CSV provider have been verified. Shared contract changes must still not be parallelized.
+The documentation workflow, Python project setup, market data contract, CSV provider, and RSI strategy have been verified. Shared contract changes must still not be parallelized.
 
 # Phase Checklist
 
@@ -40,11 +40,12 @@ The documentation workflow, Python project setup, market data contract, and CSV 
 - [x] Market data contract complete and verified
 - [x] CSV data provider complete and verified
 - [x] Parallel work rules reviewed after foundation completion
-- [ ] RSI strategy complete and verified
+- [x] RSI strategy complete and verified
+- [ ] Basic backtest complete and verified
 
 # Open Questions
 
-- Should the RSI strategy use only the latest RSI value, or require a threshold crossing from the previous RSI value?
+None currently recorded.
 
 # Blockers
 
