@@ -2,36 +2,36 @@
 
 # Current Phase
 
-Phase 5: RSI Strategy
+Phase 8: Binance Candle Downloader
 
 # Current Step
 
-Task 003: RSI Strategy
+Task 006: Binance Candle Downloader
 
 # Current Goal
 
-Implement an RSI strategy that returns BUY, SELL, or HOLD from standard candle data.
+Fetch Binance historical candle data and normalize it to the standard candle schema without order execution.
 
 # Current Active Task
 
-Task 003: RSI Strategy.
+Task 006: Binance Candle Downloader.
 
 # Last Completed Step
 
-Task 002: CSV Data Provider.
+Task 005: Paper Trader.
 
-Verified on 2026-05-07 with `pytest`: 9 passed.
+Verified on 2026-05-07 with `pytest`: 46 passed.
 
 # Next Step
 
-Read `tasks/003_RSI_STRATEGY.md`, define the test cases, implement the strategy, run verification, and perform Codex self-review.
+Read `tasks/006_BINANCE_CANDLE_DOWNLOADER.md`, define the test cases, implement the Binance historical candle downloader, run verification, and perform Codex self-review.
 
 # Parallel Work Status
 
 Parallel work is allowed only for independent leaf tasks.
 
 Reason:
-The documentation workflow, Python project setup, market data contract, and CSV provider have been verified. Shared contract changes must still not be parallelized.
+The documentation workflow, Python project setup, market data contract, CSV provider, RSI strategy, basic backtest, and paper trader have been verified. Shared contract changes must still not be parallelized.
 
 # Phase Checklist
 
@@ -40,11 +40,14 @@ The documentation workflow, Python project setup, market data contract, and CSV 
 - [x] Market data contract complete and verified
 - [x] CSV data provider complete and verified
 - [x] Parallel work rules reviewed after foundation completion
-- [ ] RSI strategy complete and verified
+- [x] RSI strategy complete and verified
+- [x] Basic backtest complete and verified
+- [x] Paper trader complete and verified
+- [ ] Binance candle downloader complete and verified
 
 # Open Questions
 
-- Should the RSI strategy use only the latest RSI value, or require a threshold crossing from the previous RSI value?
+None currently recorded.
 
 # Blockers
 
