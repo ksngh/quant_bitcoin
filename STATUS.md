@@ -2,36 +2,38 @@
 
 # Current Phase
 
-Phase 6: Basic Backtest
+Phase 7: Paper Trader
 
 # Current Step
 
-Task 004: Basic Backtest
+Task 005: Paper Trader
 
 # Current Goal
 
-Run a basic historical simulation using candle data and a strategy.
+Record fake trades from signals without calling any exchange order APIs.
 
 # Current Active Task
 
-Task 004: Basic Backtest.
+Task 005: Paper Trader.
 
 # Last Completed Step
 
-Task 003: RSI Strategy.
+Task 004: Basic Backtest.
 
-Verified on 2026-05-07 with `pytest`: 21 passed.
+Verified on 2026-05-07 with `pytest`: 31 passed.
 
 # Next Step
 
-Read `tasks/004_BASIC_BACKTEST.md`, define the test cases, implement the basic backtest, run verification, and perform Codex self-review.
+Read `tasks/005_PAPER_TRADER.md`, define the test cases, implement the paper trader, run verification, and perform Codex self-review.
+
 
 # Parallel Work Status
 
 Parallel work is allowed only for independent leaf tasks.
 
 Reason:
-The documentation workflow, Python project setup, market data contract, CSV provider, and RSI strategy have been verified. Shared contract changes must still not be parallelized.
+
+The documentation workflow, Python project setup, market data contract, CSV provider, RSI strategy, and basic backtest have been verified. Shared contract changes must still not be parallelized.
 
 # Phase Checklist
 
@@ -41,7 +43,9 @@ The documentation workflow, Python project setup, market data contract, CSV prov
 - [x] CSV data provider complete and verified
 - [x] Parallel work rules reviewed after foundation completion
 - [x] RSI strategy complete and verified
-- [ ] Basic backtest complete and verified
+- [x] Basic backtest complete and verified
+- [ ] Paper trader complete and verified
+
 
 # Open Questions
 
