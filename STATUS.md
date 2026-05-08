@@ -2,36 +2,36 @@
 
 # Current Phase
 
-Phase 5: RSI Strategy
+Phase 12: Later Live Trading
 
 # Current Step
 
-Task 003: RSI Strategy
+Task 011: Live Trading Safety Gates
 
 # Current Goal
 
-Implement an RSI strategy that returns BUY, SELL, or HOLD from standard candle data.
+Define live-trading safety gates before any live order execution code is implemented.
 
 # Current Active Task
 
-Task 003: RSI Strategy.
+Task 011: Live Trading Safety Gates.
 
 # Last Completed Step
 
-Task 002: CSV Data Provider.
+Task 010: Basic Paper Risk Checks.
 
-Verified on 2026-05-07 with `pytest`: 9 passed.
+Verified on 2026-05-08 with `pytest`: 113 passed.
 
 # Next Step
 
-Read `tasks/003_RSI_STRATEGY.md`, define the test cases, implement the strategy, run verification, and perform Codex self-review.
+Read `tasks/011_LIVE_TRADING_SAFETY_GATES.md`, define the future live-trading safety gates and next safe task or blocker, run verification, and perform Codex self-review without implementing application code.
 
 # Parallel Work Status
 
 Parallel work is allowed only for independent leaf tasks.
 
 Reason:
-The documentation workflow, Python project setup, market data contract, and CSV provider have been verified. Shared contract changes must still not be parallelized.
+The documentation workflow, Python project setup, market data contract, CSV provider, RSI strategy, basic backtest, paper trader, Binance candle downloader, improved backtesting, paper trading with state, risk-management task definition, and basic paper risk checks have been verified. Shared contract changes must still not be parallelized.
 
 # Phase Checklist
 
@@ -40,11 +40,23 @@ The documentation workflow, Python project setup, market data contract, and CSV 
 - [x] Market data contract complete and verified
 - [x] CSV data provider complete and verified
 - [x] Parallel work rules reviewed after foundation completion
-- [ ] RSI strategy complete and verified
+- [x] RSI strategy complete and verified
+- [x] Basic backtest complete and verified
+- [x] Paper trader complete and verified
+- [x] Binance candle downloader complete and verified
+- [x] Next task document selected or created
+- [x] Improved backtesting complete and verified
+- [x] Paper trading with state task document selected or created
+- [x] Paper trading with state complete and verified
+- [x] Later risk management task document selected or created
+- [x] First concrete risk-management implementation task defined
+- [x] Basic paper risk checks complete and verified
+- [x] Later live trading safety-gates task document selected or created
+- [ ] Live trading safety gates defined
 
 # Open Questions
 
-- Should the RSI strategy use only the latest RSI value, or require a threshold crossing from the previous RSI value?
+None currently recorded.
 
 # Blockers
 

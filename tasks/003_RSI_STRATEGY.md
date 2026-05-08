@@ -29,6 +29,14 @@ Implement an RSI strategy that returns BUY, SELL, or HOLD.
 - database
 - live trading
 
+
+# Implementation Assumption
+
+The task does not choose between latest-RSI evaluation and previous-threshold crossing.
+The first implementation uses the latest available RSI value only: BUY when the
+latest RSI is at or below the buy threshold, SELL when it is at or above the
+sell threshold, and HOLD otherwise.
+
 # Acceptance Criteria
 
 - Strategy returns BUY when RSI crosses or is below the buy condition defined in the task.
