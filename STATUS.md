@@ -2,36 +2,36 @@
 
 # Current Phase
 
-Phase 10: Paper Trading With State
+Phase 11: Later Risk Management
 
 # Current Step
 
-Task 008: Paper Trading With State
+Task document needed for Later Risk Management
 
 # Current Goal
 
-Extend paper trading to maintain local paper-mode state across actions without exchange APIs.
+Select or create the next task document for later risk management before implementation continues.
 
 # Current Active Task
 
-Task 008: Paper Trading With State.
+None currently assigned.
 
 # Last Completed Step
 
-Task 007: Improved Backtesting.
+Task 008: Paper Trading With State.
 
-Verified on 2026-05-07 with `pytest`: 70 passed.
+Verified on 2026-05-08 with `pytest`: 84 passed.
 
 # Next Step
 
-Read `tasks/008_PAPER_TRADING_WITH_STATE.md`, define the test cases, implement only paper trading state changes, run verification, and perform Codex self-review.
+Review `docs/08_ROADMAP.md` Phase 11, create or select the next task document for later risk management, and do not implement more application code until that task is assigned.
 
 # Parallel Work Status
 
 Parallel work is allowed only for independent leaf tasks.
 
 Reason:
-The documentation workflow, Python project setup, market data contract, CSV provider, RSI strategy, basic backtest, paper trader, Binance candle downloader, and improved backtesting have been verified. Shared contract changes must still not be parallelized.
+The documentation workflow, Python project setup, market data contract, CSV provider, RSI strategy, basic backtest, paper trader, Binance candle downloader, improved backtesting, and paper trading with state have been verified. Shared contract changes must still not be parallelized.
 
 # Phase Checklist
 
@@ -47,7 +47,8 @@ The documentation workflow, Python project setup, market data contract, CSV prov
 - [x] Next task document selected or created
 - [x] Improved backtesting complete and verified
 - [x] Paper trading with state task document selected or created
-- [ ] Paper trading with state complete and verified
+- [x] Paper trading with state complete and verified
+- [ ] Later risk management task document selected or created
 
 # Open Questions
 
