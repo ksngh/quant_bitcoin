@@ -6,15 +6,15 @@ Phase 11: Later Risk Management
 
 # Current Step
 
-Task document needed for Later Risk Management
+Task 009: Risk Management Task Definition
 
 # Current Goal
 
-Select or create the next task document for later risk management before implementation continues.
+Define the first concrete risk-management implementation task before any risk-management code is written.
 
 # Current Active Task
 
-None currently assigned.
+Task 009: Risk Management Task Definition.
 
 # Last Completed Step
 
@@ -24,7 +24,7 @@ Verified on 2026-05-08 with `pytest`: 84 passed.
 
 # Next Step
 
-Review `docs/08_ROADMAP.md` Phase 11, create or select the next task document for later risk management, and do not implement more application code until that task is assigned.
+Read `tasks/009_RISK_MANAGEMENT_TASK_DEFINITION.md`, define the next risk-management implementation task document, run verification, and perform Codex self-review without implementing application code.
 
 # Parallel Work Status
 
@@ -48,7 +48,8 @@ The documentation workflow, Python project setup, market data contract, CSV prov
 - [x] Improved backtesting complete and verified
 - [x] Paper trading with state task document selected or created
 - [x] Paper trading with state complete and verified
-- [ ] Later risk management task document selected or created
+- [x] Later risk management task document selected or created
+- [ ] First concrete risk-management implementation task defined
 
 # Open Questions
 
