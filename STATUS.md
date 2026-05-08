@@ -6,32 +6,32 @@ Phase 12: Later Live Trading
 
 # Current Step
 
-Task 011: Live Trading Safety Gates
+Blocked after Task 011: Live Trading Safety Gates
 
 # Current Goal
 
-Define live-trading safety gates before any live order execution code is implemented.
+Stop live-trading implementation until explicit human approval and required safety policies are documented.
 
 # Current Active Task
 
-Task 011: Live Trading Safety Gates.
+None currently assigned.
 
 # Last Completed Step
 
-Task 010: Basic Paper Risk Checks.
+Task 011: Live Trading Safety Gates.
 
 Verified on 2026-05-08 with `pytest`: 113 passed.
 
 # Next Step
 
-Read `tasks/011_LIVE_TRADING_SAFETY_GATES.md`, define the future live-trading safety gates and next safe task or blocker, run verification, and perform Codex self-review without implementing application code.
+Do not implement live trading or additional application code. Review `tasks/012_LIVE_TRADING_IMPLEMENTATION_BLOCKER.md` and provide explicit human direction if live trading should ever proceed.
 
 # Parallel Work Status
 
-Parallel work is allowed only for independent leaf tasks.
+Parallel work is not currently recommended.
 
 Reason:
-The documentation workflow, Python project setup, market data contract, CSV provider, RSI strategy, basic backtest, paper trader, Binance candle downloader, improved backtesting, paper trading with state, risk-management task definition, and basic paper risk checks have been verified. Shared contract changes must still not be parallelized.
+The project has reached the live-trading phase, which is blocked pending explicit human approval and safety policy documentation. Shared contract changes must still not be parallelized.
 
 # Phase Checklist
 
@@ -52,15 +52,20 @@ The documentation workflow, Python project setup, market data contract, CSV prov
 - [x] First concrete risk-management implementation task defined
 - [x] Basic paper risk checks complete and verified
 - [x] Later live trading safety-gates task document selected or created
-- [ ] Live trading safety gates defined
+- [x] Live trading safety gates defined
+- [x] Live trading implementation blocker documented
 
 # Open Questions
 
-None currently recorded.
+- Has the project owner explicitly approved live trading and real order execution?
+- What credential policy should be used for API keys and secrets?
+- Should future live trading use Binance testnet/sandbox first?
+- What real-order endpoints, if any, are allowed?
+- What kill-switch or disable mechanism is required?
 
 # Blockers
 
-None currently recorded.
+- Live trading implementation is blocked until explicit human approval, credential policy, sandbox/testnet policy, real-order endpoint allowlist, kill-switch design, and safety tests are documented.
 
 # Rules for Next Codex Task
 
@@ -70,7 +75,7 @@ None currently recorded.
 - Do not implement application code unless the assigned task explicitly requires it.
 - Do not create trading logic unless the assigned task explicitly requires it.
 - Do not mark a phase or step complete unless acceptance criteria and verification are satisfied.
-- Update this file when the project phase, step, goal, active task, blocker, or completion state changes.
+- Update this file when the project phase, step, goal, active task, blocker, open question, or completion state changes.
 
 # Status Update Rule
 
