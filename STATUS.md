@@ -2,36 +2,36 @@
 
 # Current Phase
 
-Phase 11: Later Risk Management
+Phase 12: Later Live Trading
 
 # Current Step
 
-Task 010: Basic Paper Risk Checks
+Task document needed for Later Live Trading
 
 # Current Goal
 
-Implement deterministic paper-only risk checks for proposed paper trades without exchange APIs or state mutation.
+Select or create the next task document for later live trading safety gates before implementation continues.
 
 # Current Active Task
 
-Task 010: Basic Paper Risk Checks.
+None currently assigned.
 
 # Last Completed Step
 
-Task 009: Risk Management Task Definition.
+Task 010: Basic Paper Risk Checks.
 
-Verified on 2026-05-08 with `pytest`: 84 passed.
+Verified on 2026-05-08 with `pytest`: 113 passed.
 
 # Next Step
 
-Read `tasks/010_BASIC_RISK_CHECKS.md`, define the test cases, implement only basic paper risk checks, run verification, and perform Codex self-review.
+Review `docs/08_ROADMAP.md` Phase 12, create or select the next task document for live trading safety gates, and do not implement live trading or more application code until that task explicitly permits it.
 
 # Parallel Work Status
 
 Parallel work is allowed only for independent leaf tasks.
 
 Reason:
-The documentation workflow, Python project setup, market data contract, CSV provider, RSI strategy, basic backtest, paper trader, Binance candle downloader, improved backtesting, paper trading with state, and risk-management task definition have been verified. Shared contract changes must still not be parallelized.
+The documentation workflow, Python project setup, market data contract, CSV provider, RSI strategy, basic backtest, paper trader, Binance candle downloader, improved backtesting, paper trading with state, risk-management task definition, and basic paper risk checks have been verified. Shared contract changes must still not be parallelized.
 
 # Phase Checklist
 
@@ -50,7 +50,8 @@ The documentation workflow, Python project setup, market data contract, CSV prov
 - [x] Paper trading with state complete and verified
 - [x] Later risk management task document selected or created
 - [x] First concrete risk-management implementation task defined
-- [ ] Basic paper risk checks complete and verified
+- [x] Basic paper risk checks complete and verified
+- [ ] Later live trading safety-gates task document selected or created
 
 # Open Questions
 
