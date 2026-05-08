@@ -6,15 +6,15 @@ Phase 10: Paper Trading With State
 
 # Current Step
 
-Task document needed for Paper Trading With State
+Task 008: Paper Trading With State
 
 # Current Goal
 
-Select or create the next task document for paper trading state before implementation continues.
+Extend paper trading to maintain local paper-mode state across actions without exchange APIs.
 
 # Current Active Task
 
-None currently assigned.
+Task 008: Paper Trading With State.
 
 # Last Completed Step
 
@@ -24,7 +24,7 @@ Verified on 2026-05-07 with `pytest`: 70 passed.
 
 # Next Step
 
-Review `docs/08_ROADMAP.md` Phase 10, create or select the next task document for paper trading state, and do not implement more application code until that task is assigned.
+Read `tasks/008_PAPER_TRADING_WITH_STATE.md`, define the test cases, implement only paper trading state changes, run verification, and perform Codex self-review.
 
 # Parallel Work Status
 
@@ -46,7 +46,8 @@ The documentation workflow, Python project setup, market data contract, CSV prov
 - [x] Binance candle downloader complete and verified
 - [x] Next task document selected or created
 - [x] Improved backtesting complete and verified
-- [ ] Paper trading with state task document selected or created
+- [x] Paper trading with state task document selected or created
+- [ ] Paper trading with state complete and verified
 
 # Open Questions
 
