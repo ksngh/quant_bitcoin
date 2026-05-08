@@ -30,6 +30,15 @@ Run a basic historical simulation using candle data and a strategy.
 - slippage
 - optimization
 
+
+# Implementation Assumption
+
+The task does not define position sizing or portfolio accounting rules. The first
+implementation uses a long-only, fixed-quantity simulation: BUY opens one
+position when flat and cash is sufficient, SELL closes the open position, and
+HOLD or duplicate signals do not create trades. Fees, slippage, optimization,
+and advanced metrics remain out of scope.
+
 # Acceptance Criteria
 
 - Backtest runs on local historical data.
