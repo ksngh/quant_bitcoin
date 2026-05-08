@@ -5,7 +5,7 @@ import socket
 import pandas as pd
 import pytest
 
-from quant_bitcoin.backtesting import BasicBacktester
+from quant_bitcoin.backtesting import BasicBacktester, BacktestResult, BacktestSummary
 from quant_bitcoin.market_data import CsvCandleDataProvider
 from quant_bitcoin.strategies import Signal
 
@@ -66,6 +66,81 @@ def test_backtest_keeps_open_position_in_final_equity():
     assert result.final_price == 125
     assert result.final_equity == 1_025
     assert len(result.trades) == 1
+
+
+def test_backtest_result_includes_deterministic_summary_for_closed_trade():
+    candles = make_candles([100, 110, 125])
+    strategy = SequenceStrategy([Signal.BUY, Signal.HOLD, Signal.SELL])
+
+    result = BasicBacktester(starting_cash=1_000, trade_quantity=2).run(
+        candles, strategy
+    )
+
+    assert result.summary == BacktestSummary(
+        starting_cash=1_000,
+        ending_cash=1_050,
+        ending_position=0.0,
+        final_price=125.0,
+        final_equity=1_050.0,
+        total_return=0.05,
+        trade_count=2,
+        buy_count=1,
+        sell_count=1,
+    )
+
+
+def test_backtest_summary_reports_open_position_and_trade_counts():
+    candles = make_candles([100, 115, 125])
+    strategy = SequenceStrategy([Signal.BUY, Signal.HOLD, Signal.HOLD])
+
+    result = BasicBacktester(starting_cash=1_000, trade_quantity=2).run(
+        candles, strategy
+    )
+
+    assert result.summary.starting_cash == 1_000
+    assert result.summary.ending_cash == 800
+    assert result.summary.ending_position == 2
+    assert result.summary.final_price == 125
+    assert result.summary.final_equity == 1_050
+    assert result.summary.total_return == pytest.approx(0.05)
+    assert result.summary.trade_count == 1
+    assert result.summary.buy_count == 1
+    assert result.summary.sell_count == 0
+
+
+def test_backtest_summary_handles_zero_starting_cash_without_division_error():
+    candles = make_candles([100, 101])
+    strategy = SequenceStrategy([Signal.HOLD, Signal.HOLD])
+
+    result = BasicBacktester(starting_cash=0, trade_quantity=1).run(candles, strategy)
+
+    assert result.summary.starting_cash == 0
+    assert result.summary.final_equity == 0
+    assert result.summary.total_return == 0
+    assert result.summary.trade_count == 0
+
+
+def test_backtest_result_can_be_constructed_with_original_fields():
+    result = BacktestResult(
+        starting_cash=1_000,
+        ending_cash=1_000,
+        ending_position=0,
+        final_price=None,
+        final_equity=1_000,
+        trades=(),
+    )
+
+    assert result.summary == BacktestSummary(
+        starting_cash=0.0,
+        ending_cash=0.0,
+        ending_position=0.0,
+        final_price=None,
+        final_equity=0.0,
+        total_return=0.0,
+        trade_count=0,
+        buy_count=0,
+        sell_count=0,
+    )
 
 
 def test_backtest_calls_strategy_with_incremental_candle_history():

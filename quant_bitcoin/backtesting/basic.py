@@ -8,7 +8,7 @@ call exchange APIs.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 import pandas as pd
@@ -46,6 +46,35 @@ class BacktestTrade:
 
 
 @dataclass(frozen=True)
+class BacktestSummary:
+    """Deterministic summary values for a completed backtest."""
+
+    starting_cash: float
+    ending_cash: float
+    ending_position: float
+    final_price: float | None
+    final_equity: float
+    total_return: float
+    trade_count: int
+    buy_count: int
+    sell_count: int
+
+
+def _empty_summary() -> BacktestSummary:
+    return BacktestSummary(
+        starting_cash=0.0,
+        ending_cash=0.0,
+        ending_position=0.0,
+        final_price=None,
+        final_equity=0.0,
+        total_return=0.0,
+        trade_count=0,
+        buy_count=0,
+        sell_count=0,
+    )
+
+
+@dataclass(frozen=True)
 class BacktestResult:
     """Basic result returned by a historical backtest."""
 
@@ -55,6 +84,7 @@ class BacktestResult:
     final_price: float | None
     final_equity: float
     trades: tuple[BacktestTrade, ...]
+    summary: BacktestSummary = field(default_factory=_empty_summary)
 
 
 @dataclass(frozen=True)
@@ -136,14 +166,54 @@ class BasicBacktester:
             position * final_price if final_price is not None else 0.0
         )
 
-        return BacktestResult(
-            starting_cash=float(self.starting_cash),
+        completed_trades = tuple(trades)
+        starting_cash = float(self.starting_cash)
+        summary = _build_summary(
+            starting_cash=starting_cash,
             ending_cash=cash,
             ending_position=position,
             final_price=final_price,
             final_equity=final_equity,
-            trades=tuple(trades),
+            trades=completed_trades,
         )
+
+        return BacktestResult(
+            starting_cash=starting_cash,
+            ending_cash=cash,
+            ending_position=position,
+            final_price=final_price,
+            final_equity=final_equity,
+            trades=completed_trades,
+            summary=summary,
+        )
+
+
+def _build_summary(
+    *,
+    starting_cash: float,
+    ending_cash: float,
+    ending_position: float,
+    final_price: float | None,
+    final_equity: float,
+    trades: tuple[BacktestTrade, ...],
+) -> BacktestSummary:
+    buy_count = sum(1 for trade in trades if trade.signal is Signal.BUY)
+    sell_count = sum(1 for trade in trades if trade.signal is Signal.SELL)
+    total_return = (
+        (final_equity - starting_cash) / starting_cash if starting_cash != 0 else 0.0
+    )
+
+    return BacktestSummary(
+        starting_cash=starting_cash,
+        ending_cash=ending_cash,
+        ending_position=ending_position,
+        final_price=final_price,
+        final_equity=final_equity,
+        total_return=total_return,
+        trade_count=len(trades),
+        buy_count=buy_count,
+        sell_count=sell_count,
+    )
 
 
 def _validate_strategy(strategy: Any) -> None:
