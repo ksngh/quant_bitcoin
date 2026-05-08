@@ -2,36 +2,36 @@
 
 # Current Phase
 
-Phase 5: RSI Strategy
+Phase 10: Paper Trading With State
 
 # Current Step
 
-Task 003: RSI Strategy
+Task document needed for Paper Trading With State
 
 # Current Goal
 
-Implement an RSI strategy that returns BUY, SELL, or HOLD from standard candle data.
+Select or create the next task document for paper trading state before implementation continues.
 
 # Current Active Task
 
-Task 003: RSI Strategy.
+None currently assigned.
 
 # Last Completed Step
 
-Task 002: CSV Data Provider.
+Task 007: Improved Backtesting.
 
-Verified on 2026-05-07 with `pytest`: 9 passed.
+Verified on 2026-05-07 with `pytest`: 70 passed.
 
 # Next Step
 
-Read `tasks/003_RSI_STRATEGY.md`, define the test cases, implement the strategy, run verification, and perform Codex self-review.
+Review `docs/08_ROADMAP.md` Phase 10, create or select the next task document for paper trading state, and do not implement more application code until that task is assigned.
 
 # Parallel Work Status
 
 Parallel work is allowed only for independent leaf tasks.
 
 Reason:
-The documentation workflow, Python project setup, market data contract, and CSV provider have been verified. Shared contract changes must still not be parallelized.
+The documentation workflow, Python project setup, market data contract, CSV provider, RSI strategy, basic backtest, paper trader, Binance candle downloader, and improved backtesting have been verified. Shared contract changes must still not be parallelized.
 
 # Phase Checklist
 
@@ -40,11 +40,17 @@ The documentation workflow, Python project setup, market data contract, and CSV 
 - [x] Market data contract complete and verified
 - [x] CSV data provider complete and verified
 - [x] Parallel work rules reviewed after foundation completion
-- [ ] RSI strategy complete and verified
+- [x] RSI strategy complete and verified
+- [x] Basic backtest complete and verified
+- [x] Paper trader complete and verified
+- [x] Binance candle downloader complete and verified
+- [x] Next task document selected or created
+- [x] Improved backtesting complete and verified
+- [ ] Paper trading with state task document selected or created
 
 # Open Questions
 
-- Should the RSI strategy use only the latest RSI value, or require a threshold crossing from the previous RSI value?
+None currently recorded.
 
 # Blockers
 
