@@ -6,15 +6,15 @@ Phase 12: Later Live Trading
 
 # Current Step
 
-Task document needed for Later Live Trading
+Task 011: Live Trading Safety Gates
 
 # Current Goal
 
-Select or create the next task document for later live trading safety gates before implementation continues.
+Define live-trading safety gates before any live order execution code is implemented.
 
 # Current Active Task
 
-None currently assigned.
+Task 011: Live Trading Safety Gates.
 
 # Last Completed Step
 
@@ -24,7 +24,7 @@ Verified on 2026-05-08 with `pytest`: 113 passed.
 
 # Next Step
 
-Review `docs/08_ROADMAP.md` Phase 12, create or select the next task document for live trading safety gates, and do not implement live trading or more application code until that task explicitly permits it.
+Read `tasks/011_LIVE_TRADING_SAFETY_GATES.md`, define the future live-trading safety gates and next safe task or blocker, run verification, and perform Codex self-review without implementing application code.
 
 # Parallel Work Status
 
@@ -51,7 +51,8 @@ The documentation workflow, Python project setup, market data contract, CSV prov
 - [x] Later risk management task document selected or created
 - [x] First concrete risk-management implementation task defined
 - [x] Basic paper risk checks complete and verified
-- [ ] Later live trading safety-gates task document selected or created
+- [x] Later live trading safety-gates task document selected or created
+- [ ] Live trading safety gates defined
 
 # Open Questions
 
