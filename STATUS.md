@@ -6,32 +6,32 @@ Phase 11: Later Risk Management
 
 # Current Step
 
-Task 009: Risk Management Task Definition
+Task 010: Basic Paper Risk Checks
 
 # Current Goal
 
-Define the first concrete risk-management implementation task before any risk-management code is written.
+Implement deterministic paper-only risk checks for proposed paper trades without exchange APIs or state mutation.
 
 # Current Active Task
 
-Task 009: Risk Management Task Definition.
+Task 010: Basic Paper Risk Checks.
 
 # Last Completed Step
 
-Task 008: Paper Trading With State.
+Task 009: Risk Management Task Definition.
 
 Verified on 2026-05-08 with `pytest`: 84 passed.
 
 # Next Step
 
-Read `tasks/009_RISK_MANAGEMENT_TASK_DEFINITION.md`, define the next risk-management implementation task document, run verification, and perform Codex self-review without implementing application code.
+Read `tasks/010_BASIC_RISK_CHECKS.md`, define the test cases, implement only basic paper risk checks, run verification, and perform Codex self-review.
 
 # Parallel Work Status
 
 Parallel work is allowed only for independent leaf tasks.
 
 Reason:
-The documentation workflow, Python project setup, market data contract, CSV provider, RSI strategy, basic backtest, paper trader, Binance candle downloader, improved backtesting, and paper trading with state have been verified. Shared contract changes must still not be parallelized.
+The documentation workflow, Python project setup, market data contract, CSV provider, RSI strategy, basic backtest, paper trader, Binance candle downloader, improved backtesting, paper trading with state, and risk-management task definition have been verified. Shared contract changes must still not be parallelized.
 
 # Phase Checklist
 
@@ -49,7 +49,8 @@ The documentation workflow, Python project setup, market data contract, CSV prov
 - [x] Paper trading with state task document selected or created
 - [x] Paper trading with state complete and verified
 - [x] Later risk management task document selected or created
-- [ ] First concrete risk-management implementation task defined
+- [x] First concrete risk-management implementation task defined
+- [ ] Basic paper risk checks complete and verified
 
 # Open Questions
 
