@@ -2,15 +2,15 @@
 
 # Current Phase
 
-Phase 12: Later Live Trading
+Phase 13: Persistence Schema Design
 
 # Current Step
 
-Blocked after Task 011: Live Trading Safety Gates
+Task 013: Persistence Schema Design completed as documentation-only work.
 
 # Current Goal
 
-Stop live-trading implementation until explicit human approval and required safety policies are documented.
+Define persistence schemas and ownership boundaries before any PostgreSQL, Docker, Binance backfill, or WebSocket implementation.
 
 # Current Active Task
 
@@ -18,20 +18,20 @@ None currently assigned.
 
 # Last Completed Step
 
-Task 011: Live Trading Safety Gates.
+Task 013: Persistence Schema Design.
 
-Verified on 2026-05-08 with `pytest`: 113 passed.
+Verified on 2026-05-09 with `git diff --check`.
 
 # Next Step
 
-Do not implement live trading or additional application code. Review `tasks/012_LIVE_TRADING_IMPLEMENTATION_BLOCKER.md` and provide explicit human direction if live trading should ever proceed.
+Review `tasks/014_POSTGRES_BINANCE_BACKFILL.md` and provide explicit human approval before implementing PostgreSQL, Docker Compose, or Binance historical candle persistence.
 
 # Parallel Work Status
 
 Parallel work is not currently recommended.
 
 Reason:
-The project has reached the live-trading phase, which is blocked pending explicit human approval and safety policy documentation. Shared contract changes must still not be parallelized.
+The next work touches shared persistence contracts and local infrastructure. Schema, database, backfill, and WebSocket work should proceed sequentially through assigned task documents.
 
 # Phase Checklist
 
@@ -54,6 +54,8 @@ The project has reached the live-trading phase, which is blocked pending explici
 - [x] Later live trading safety-gates task document selected or created
 - [x] Live trading safety gates defined
 - [x] Live trading implementation blocker documented
+- [x] Persistence schema design task document selected or created
+- [x] Persistence schema design documented
 
 # Open Questions
 
@@ -62,10 +64,13 @@ The project has reached the live-trading phase, which is blocked pending explici
 - Should future live trading use Binance testnet/sandbox first?
 - What real-order endpoints, if any, are allowed?
 - What kill-switch or disable mechanism is required?
+- Has the project owner explicitly approved implementing Task 014: PostgreSQL Binance Backfill?
+- Should future PostgreSQL implementation use migrations, container init scripts, or another schema-management path?
 
 # Blockers
 
 - Live trading implementation is blocked until explicit human approval, credential policy, sandbox/testnet policy, real-order endpoint allowlist, kill-switch design, and safety tests are documented.
+- PostgreSQL, Docker Compose, Binance backfill, and WebSocket ingestion implementation are blocked until the corresponding assigned task is explicitly approved.
 
 # Rules for Next Codex Task
 

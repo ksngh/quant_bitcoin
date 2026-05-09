@@ -83,3 +83,24 @@
 - Features: to be defined by future requirement.
 - Out of scope: all current first-version work.
 - Exit criteria: future task explicitly permits live order execution and defines safety gates.
+
+# Phase 13: Persistence Schema Design
+
+- Goal: review the current project and design the data that should be persisted before adding any database implementation.
+- Features: document persistence candidates for market data, Binance candles, backtest runs, simulated trades, paper-trading state, strategy configuration, and operational ingestion metadata.
+- Out of scope: database migrations, PostgreSQL setup, Docker Compose, Binance API fetching changes, WebSocket ingestion, schedulers, dashboards, live trading, and real order execution.
+- Exit criteria: `tasks/013_PERSISTENCE_SCHEMA_DESIGN.md` documents owner roles, forbidden roles, proposed schemas, uniqueness rules, timestamp semantics, and tests required for a later implementation task.
+
+# Phase 14: PostgreSQL Backfill Persistence
+
+- Goal: implement local PostgreSQL persistence for historical Binance 1-minute candle backfill only after the schema design task is accepted.
+- Features: PostgreSQL, Docker Compose for local database startup, Binance historical 1-minute candle backfill, resumable ingestion, duplicate-safe candle writes, and closed-candle-only persistence.
+- Out of scope: live trading, real Binance order endpoints, WebSocket ingestion, strategy changes, execution changes, dashboards, schedulers beyond a manually run backfill command, and storing secrets.
+- Exit criteria: `tasks/014_POSTGRES_BINANCE_BACKFILL.md` is approved and implementation proves historical candles can be stored without calling order endpoints.
+
+# Phase 15: Binance WebSocket Candle Ingestion
+
+- Goal: keep collecting new Binance candle data after historical backfill exists.
+- Features: WebSocket market-data stream, closed 1-minute candle detection, duplicate-safe database writes, reconnect behavior, and ingestion health/status metadata.
+- Out of scope: real order execution, live trading, strategy execution, paper trading orchestration, dashboards, and full production scheduling.
+- Exit criteria: `tasks/015_BINANCE_WEBSOCKET_INGESTION.md` is approved and implementation proves continuous market-data ingestion can run without order endpoint access.
