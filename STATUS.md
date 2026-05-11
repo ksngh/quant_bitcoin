@@ -2,15 +2,15 @@
 
 # Current Phase
 
-Phase 16: Codex Command Consistency
+Phase 14: PostgreSQL Backfill Persistence
 
 # Current Step
 
-Task 016: Codex Command Consistency completed as documentation-only work.
+Task 014: PostgreSQL Binance Backfill is not implemented and is awaiting explicit human approval.
 
 # Current Goal
 
-Keep future Codex commands consistent across answer-only, task creation, documentation, implementation, review, and status requests.
+Review and approve the Task 014 implementation scope before adding PostgreSQL, Docker Compose, or Binance historical candle persistence.
 
 # Current Active Task
 
@@ -19,6 +19,8 @@ None currently assigned.
 # Last Completed Step
 
 Task 016: Codex Command Consistency.
+
+This was documentation-only work and did not implement Task 014 or Task 015.
 
 Verified on 2026-05-11 with `git diff --check`.
 
@@ -57,6 +59,10 @@ The next work touches shared persistence contracts and local infrastructure. Sch
 - [x] Persistence schema design task document selected or created
 - [x] Persistence schema design documented
 - [x] Codex command consistency guide documented
+- [ ] Task 014: PostgreSQL Binance Backfill approved for implementation
+- [ ] Task 014: PostgreSQL Binance Backfill complete and verified
+- [ ] Task 015: Binance WebSocket Candle Ingestion approved for implementation
+- [ ] Task 015: Binance WebSocket Candle Ingestion complete and verified
 
 # Open Questions
 
