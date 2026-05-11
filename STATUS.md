@@ -2,15 +2,15 @@
 
 # Current Phase
 
-Phase 13: Persistence Schema Design
+Phase 14: PostgreSQL Backfill Persistence
 
 # Current Step
 
-Task 013: Persistence Schema Design completed as documentation-only work.
+Task 014: PostgreSQL Binance Backfill is not implemented and is awaiting explicit human approval.
 
 # Current Goal
 
-Define persistence schemas and ownership boundaries before any PostgreSQL, Docker, Binance backfill, or WebSocket implementation.
+Review and approve the Task 014 implementation scope before adding PostgreSQL, Docker Compose, or Binance historical candle persistence.
 
 # Current Active Task
 
@@ -18,9 +18,11 @@ None currently assigned.
 
 # Last Completed Step
 
-Task 013: Persistence Schema Design.
+Task 016: Codex Command Consistency.
 
-Verified on 2026-05-09 with `git diff --check`.
+This was documentation-only work and did not implement Task 014 or Task 015.
+
+Verified on 2026-05-11 with `git diff --check`.
 
 # Next Step
 
@@ -56,6 +58,11 @@ The next work touches shared persistence contracts and local infrastructure. Sch
 - [x] Live trading implementation blocker documented
 - [x] Persistence schema design task document selected or created
 - [x] Persistence schema design documented
+- [x] Codex command consistency guide documented
+- [ ] Task 014: PostgreSQL Binance Backfill approved for implementation
+- [ ] Task 014: PostgreSQL Binance Backfill complete and verified
+- [ ] Task 015: Binance WebSocket Candle Ingestion approved for implementation
+- [ ] Task 015: Binance WebSocket Candle Ingestion complete and verified
 
 # Open Questions
 
@@ -76,6 +83,7 @@ The next work touches shared persistence contracts and local infrastructure. Sch
 
 - Read `AGENTS.md` before working.
 - Read this `STATUS.md` before starting implementation tasks.
+- Use `docs/10_CODEX_COMMAND_GUIDE.md` for consistent command handling and reusable prompt formats.
 - Read the assigned task file before coding.
 - Do not implement application code unless the assigned task explicitly requires it.
 - Do not create trading logic unless the assigned task explicitly requires it.
