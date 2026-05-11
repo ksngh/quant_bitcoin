@@ -37,6 +37,8 @@ Codex must not implement the following unless an assigned future task explicitly
 - Read `AGENTS.md` before working.
 - Read relevant docs before working.
 - Read the assigned task file before coding.
+- Do not proceed with implementation or documentation changes unless a specific task document is assigned.
+- If no task document is assigned, stop and ask the project owner to assign or create a task, even if the user prompt is written as a direct command.
 - If the requirement is unclear, extract roles and write assumptions before implementation.
 - Make small, incremental changes.
 - Do not expand scope beyond the assigned task.
