@@ -2,15 +2,15 @@
 
 # Current Phase
 
-Phase 13: Persistence Schema Design
+Phase 16: Codex Command Consistency
 
 # Current Step
 
-Task 013: Persistence Schema Design completed as documentation-only work.
+Task 016: Codex Command Consistency completed as documentation-only work.
 
 # Current Goal
 
-Define persistence schemas and ownership boundaries before any PostgreSQL, Docker, Binance backfill, or WebSocket implementation.
+Keep future Codex commands consistent across answer-only, task creation, documentation, implementation, review, and status requests.
 
 # Current Active Task
 
@@ -18,9 +18,9 @@ None currently assigned.
 
 # Last Completed Step
 
-Task 013: Persistence Schema Design.
+Task 016: Codex Command Consistency.
 
-Verified on 2026-05-09 with `git diff --check`.
+Verified on 2026-05-11 with `git diff --check`.
 
 # Next Step
 
@@ -56,6 +56,7 @@ The next work touches shared persistence contracts and local infrastructure. Sch
 - [x] Live trading implementation blocker documented
 - [x] Persistence schema design task document selected or created
 - [x] Persistence schema design documented
+- [x] Codex command consistency guide documented
 
 # Open Questions
 
@@ -76,6 +77,7 @@ The next work touches shared persistence contracts and local infrastructure. Sch
 
 - Read `AGENTS.md` before working.
 - Read this `STATUS.md` before starting implementation tasks.
+- Use `docs/10_CODEX_COMMAND_GUIDE.md` for consistent command handling and reusable prompt formats.
 - Read the assigned task file before coding.
 - Do not implement application code unless the assigned task explicitly requires it.
 - Do not create trading logic unless the assigned task explicitly requires it.
