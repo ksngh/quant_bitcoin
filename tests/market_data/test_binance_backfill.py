@@ -7,6 +7,7 @@ from urllib.parse import parse_qs, urlparse
 import pytest
 
 from quant_bitcoin.market_data.binance_backfill import (
+    RETRYABLE_HTTP_STATUS_CODES,
     BinanceHistoricalBackfiller,
     RetryableBinanceError,
     map_binance_kline_to_persisted_candle,
@@ -188,6 +189,35 @@ def test_backfill_retries_rate_limited_market_data_response():
     assert result.stored_candles == 1
     assert len(attempts) == 2
     assert sleeps == [1]
+
+
+def test_backfill_retries_rate_limit_payload_from_market_data_response():
+    repository = InMemoryCandleRepository()
+    attempts = []
+    sleeps = []
+
+    def fake_http_get(url: str, timeout: float):
+        attempts.append(url)
+        if len(attempts) == 1:
+            return {"status": "429", "msg": "rate limit"}
+        return [sample_kline(1_704_067_200_000)]
+
+    result = BinanceHistoricalBackfiller(
+        repository,
+        http_get=fake_http_get,
+        sleep=sleeps.append,
+        now=fixed_now,
+        max_retries=1,
+    ).run(start_time=1_704_067_200_000, end_time=1_704_067_200_000)
+
+    assert result.stored_candles == 1
+    assert len(attempts) == 2
+    assert sleeps == [1]
+
+
+def test_http_retry_statuses_include_binance_rate_limit_and_ip_ban_responses():
+    assert 418 in RETRYABLE_HTTP_STATUS_CODES
+    assert 429 in RETRYABLE_HTTP_STATUS_CODES
 
 
 def test_backfill_uses_public_market_data_endpoint_without_signed_request_data():

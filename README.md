@@ -21,7 +21,8 @@ Out of scope unless a future approved task explicitly asks for it:
 
 - Live trading or real order execution.
 - API keys, signed requests, or tracked `.env` files.
-- Futures, leverage, portfolio optimization, dashboards, databases, schedulers, Docker, FastAPI, Streamlit, and machine learning.
+- Futures, leverage, portfolio optimization, dashboards, schedulers, FastAPI, Streamlit, and machine learning.
+- Additional databases or Dockerized application services beyond the Task 014 local PostgreSQL developer service.
 
 ## Project layout
 
@@ -79,7 +80,12 @@ postgresql://quant_bitcoin:quant_bitcoin_dev@localhost:5432/quant_bitcoin
 ```
 
 Optional PostgreSQL integration tests use `QUANT_BITCOIN_TEST_DATABASE_URL`. The
-ordinary unit test suite does not require Docker or a running database.
+ordinary unit test suite does not require Docker, a running PostgreSQL server, or
+real Binance availability; network calls are mocked in ordinary tests.
+
+Docker Compose is optional local developer verification only. If Docker is not
+available in an environment, skip runtime startup there; it can be verified later
+in a Docker-capable local environment.
 
 ### Backfill public Binance 1-minute candles
 
