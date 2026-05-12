@@ -66,18 +66,18 @@ This task is an implementation task definition, not an implementation approval b
 
 ## Before Implementation
 
-- [ ] Read `AGENTS.md`.
-- [ ] Read `STATUS.md`.
-- [ ] Read `tasks/013_PERSISTENCE_SCHEMA_DESIGN.md`.
-- [ ] Confirm Task 013 is accepted.
-- [ ] Confirm explicit human approval to implement PostgreSQL and Docker Compose.
-- [ ] Confirm no live-trading approval is implied by this task.
+- [x] Read `AGENTS.md`.
+- [x] Read `STATUS.md`.
+- [x] Read `tasks/013_PERSISTENCE_SCHEMA_DESIGN.md`.
+- [x] Confirm Task 013 is accepted.
+- [x] Confirm explicit human approval to implement PostgreSQL and Docker Compose.
+- [x] Confirm no live-trading approval is implied by this task.
 
 ## After Implementation
 
-- [ ] Update `STATUS.md` if active task, next step, or blocker changes.
-- [ ] Mark checklist items complete only after acceptance criteria and verification pass.
-- [ ] Leave uncertain items open and document the uncertainty.
+- [x] Update `STATUS.md` if active task, next step, or blocker changes.
+- [ ] Mark checklist items complete only after acceptance criteria and verification pass. Docker runtime verification is pending because Docker is unavailable in this environment.
+- [x] Leave uncertain items open and document the uncertainty.
 
 # Acceptance Criteria
 

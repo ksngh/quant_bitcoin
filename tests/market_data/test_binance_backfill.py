@@ -1,0 +1,229 @@
+from __future__ import annotations
+
+from datetime import datetime, timezone
+from decimal import Decimal
+from urllib.parse import parse_qs, urlparse
+
+import pytest
+
+from quant_bitcoin.market_data.binance_backfill import (
+    BinanceHistoricalBackfiller,
+    RetryableBinanceError,
+    map_binance_kline_to_persisted_candle,
+)
+from quant_bitcoin.persistence import HISTORICAL_BACKFILL_MODE, SOURCE_BINANCE_SPOT
+
+
+def sample_kline(open_time_ms: int) -> list[object]:
+    return [
+        open_time_ms,
+        "42000.00",
+        "42100.00",
+        "41900.00",
+        "42050.00",
+        "12.50000000",
+        open_time_ms + 59_999,
+        "525625.00000000",
+        123,
+        "6.10000000",
+        "256405.00000000",
+        "0",
+    ]
+
+
+class InMemoryCandleRepository:
+    def __init__(self) -> None:
+        self.rows = {}
+        self.checkpoints = []
+        self.latest = None
+
+    def latest_open_time(self, source: str, symbol: str, interval: str):
+        assert source == SOURCE_BINANCE_SPOT
+        assert symbol == "BTCUSDT"
+        assert interval == "1m"
+        return self.latest
+
+    def upsert_candles(self, candles):
+        for candle in candles:
+            key = (candle.source, candle.symbol, candle.interval, candle.open_time)
+            self.rows[key] = candle
+            self.latest = candle.open_time
+        return len(candles)
+
+    def save_checkpoint(self, checkpoint):
+        self.checkpoints.append(checkpoint)
+
+
+def fixed_now() -> datetime:
+    return datetime(2024, 1, 1, 0, 3, 30, tzinfo=timezone.utc)
+
+
+def test_maps_binance_kline_payload_to_persistence_row():
+    candle = map_binance_kline_to_persisted_candle(
+        sample_kline(1_704_067_200_000),
+        symbol=" btcusdt ",
+        interval="1m",
+        now=datetime(2024, 1, 1, 0, 2, tzinfo=timezone.utc),
+    )
+
+    assert candle.source == SOURCE_BINANCE_SPOT
+    assert candle.symbol == "BTCUSDT"
+    assert candle.interval == "1m"
+    assert candle.open_time == datetime(2024, 1, 1, 0, 0, tzinfo=timezone.utc)
+    assert candle.close_time == datetime(
+        2024, 1, 1, 0, 0, 59, 999000, tzinfo=timezone.utc
+    )
+    assert candle.open == Decimal("42000.00")
+    assert candle.high == Decimal("42100.00")
+    assert candle.low == Decimal("41900.00")
+    assert candle.close == Decimal("42050.00")
+    assert candle.volume == Decimal("12.50000000")
+    assert candle.quote_asset_volume == Decimal("525625.00000000")
+    assert candle.number_of_trades == 123
+    assert candle.taker_buy_base_asset_volume == Decimal("6.10000000")
+    assert candle.taker_buy_quote_asset_volume == Decimal("256405.00000000")
+    assert candle.is_closed is True
+    assert candle.raw_payload == sample_kline(1_704_067_200_000)
+
+
+def test_open_in_progress_kline_is_not_persisted_as_closed():
+    candle = map_binance_kline_to_persisted_candle(
+        sample_kline(1_704_067_380_000),
+        symbol="BTCUSDT",
+        interval="1m",
+        now=fixed_now(),
+    )
+
+    assert candle.is_closed is False
+
+
+def test_backfill_paginates_from_earliest_start_and_persists_closed_candles():
+    repository = InMemoryCandleRepository()
+    requested_urls = []
+    pages = [
+        [sample_kline(1_704_067_200_000), sample_kline(1_704_067_260_000)],
+        [sample_kline(1_704_067_320_000)],
+    ]
+
+    def fake_http_get(url: str, timeout: float):
+        requested_urls.append(url)
+        assert timeout == 2.0
+        assert "/api/v3/klines" in url
+        assert "/order" not in url.lower()
+        return pages.pop(0)
+
+    result = BinanceHistoricalBackfiller(
+        repository,
+        timeout=2.0,
+        http_get=fake_http_get,
+        now=fixed_now,
+    ).run(start_time=1_704_067_200_000, end_time=1_704_067_320_000, limit=2)
+
+    assert result.stored_candles == 3
+    assert result.pages_fetched == 2
+    assert len(repository.rows) == 3
+    first_query = parse_qs(urlparse(requested_urls[0]).query)
+    second_query = parse_qs(urlparse(requested_urls[1]).query)
+    assert first_query["startTime"] == ["1704067200000"]
+    assert first_query["endTime"] == ["1704067320000"]
+    assert first_query["limit"] == ["2"]
+    assert second_query["startTime"] == ["1704067320000"]
+    assert repository.checkpoints[-1].status == "completed"
+    assert repository.checkpoints[-1].mode == HISTORICAL_BACKFILL_MODE
+
+
+def test_backfill_resumes_after_latest_stored_candle():
+    repository = InMemoryCandleRepository()
+    repository.latest = datetime(2024, 1, 1, 0, 0, tzinfo=timezone.utc)
+    requested_urls = []
+
+    def fake_http_get(url: str, timeout: float):
+        requested_urls.append(url)
+        return [sample_kline(1_704_067_260_000)]
+
+    result = BinanceHistoricalBackfiller(
+        repository, http_get=fake_http_get, now=fixed_now
+    ).run(end_time=1_704_067_260_000, limit=1000)
+
+    assert result.stored_candles == 1
+    query = parse_qs(urlparse(requested_urls[0]).query)
+    assert query["startTime"] == ["1704067260000"]
+
+
+def test_backfill_filters_open_candles_before_upsert():
+    repository = InMemoryCandleRepository()
+
+    def fake_http_get(url: str, timeout: float):
+        return [sample_kline(1_704_067_320_000), sample_kline(1_704_067_380_000)]
+
+    result = BinanceHistoricalBackfiller(
+        repository, http_get=fake_http_get, now=fixed_now
+    ).run(start_time=1_704_067_320_000, end_time=1_704_067_380_000, limit=2)
+
+    assert result.stored_candles == 1
+    assert len(repository.rows) == 1
+    stored = next(iter(repository.rows.values()))
+    assert stored.open_time == datetime(2024, 1, 1, 0, 2, tzinfo=timezone.utc)
+
+
+def test_backfill_retries_rate_limited_market_data_response():
+    repository = InMemoryCandleRepository()
+    attempts = []
+    sleeps = []
+
+    def fake_http_get(url: str, timeout: float):
+        attempts.append(url)
+        if len(attempts) == 1:
+            raise RetryableBinanceError("rate limited")
+        return [sample_kline(1_704_067_200_000)]
+
+    result = BinanceHistoricalBackfiller(
+        repository,
+        http_get=fake_http_get,
+        sleep=sleeps.append,
+        now=fixed_now,
+        max_retries=1,
+    ).run(start_time=1_704_067_200_000, end_time=1_704_067_200_000)
+
+    assert result.stored_candles == 1
+    assert len(attempts) == 2
+    assert sleeps == [1]
+
+
+def test_backfill_uses_public_market_data_endpoint_without_signed_request_data():
+    repository = InMemoryCandleRepository()
+
+    def fake_http_get(url: str, timeout: float):
+        parsed = urlparse(url)
+        assert parsed.path == "/api/v3/klines"
+        assert "order" not in parsed.path.lower()
+        assert "apiKey" not in url
+        assert "signature" not in url
+        assert "X-MBX-APIKEY" not in url
+        return []
+
+    result = BinanceHistoricalBackfiller(
+        repository, http_get=fake_http_get, now=fixed_now
+    ).run(start_time=1_704_067_200_000, end_time=1_704_067_200_000)
+
+    assert result.stored_candles == 0
+
+
+@pytest.mark.parametrize(
+    ("raw_kline", "message"),
+    [
+        ("not-a-row", "must be a sequence"),
+        ([1, "42000"], "at least 11 fields"),
+        (
+            sample_kline(1_704_067_200_000)[:1]
+            + ["bad"]
+            + sample_kline(1_704_067_200_000)[2:],
+            "must be numeric",
+        ),
+    ],
+)
+def test_kline_mapping_rejects_invalid_payloads(raw_kline, message):
+    with pytest.raises(ValueError, match=message):
+        map_binance_kline_to_persisted_candle(
+            raw_kline, symbol="BTCUSDT", interval="1m", now=fixed_now()
+        )
