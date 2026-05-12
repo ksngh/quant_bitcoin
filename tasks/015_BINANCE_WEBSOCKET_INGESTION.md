@@ -60,18 +60,18 @@ Historical backfill and continuous ingestion are separate responsibilities. This
 
 ## Before Implementation
 
-- [ ] Read `AGENTS.md`.
-- [ ] Read `STATUS.md`.
-- [ ] Read `tasks/013_PERSISTENCE_SCHEMA_DESIGN.md`.
-- [ ] Read `tasks/014_POSTGRES_BINANCE_BACKFILL.md`.
-- [ ] Confirm persistence schema and historical backfill are accepted or implemented.
-- [ ] Confirm explicit human approval to implement WebSocket ingestion.
+- [x] Read `AGENTS.md`.
+- [x] Read `STATUS.md`.
+- [x] Read `tasks/013_PERSISTENCE_SCHEMA_DESIGN.md`.
+- [x] Read `tasks/014_POSTGRES_BINANCE_BACKFILL.md`.
+- [x] Confirm persistence schema and historical backfill are accepted or implemented.
+- [x] Confirm explicit human approval to implement WebSocket ingestion.
 
 ## After Implementation
 
-- [ ] Update `STATUS.md` if active task, next step, or blocker changes.
-- [ ] Mark checklist items complete only after acceptance criteria and verification pass.
-- [ ] Leave uncertain items open and document the uncertainty.
+- [x] Update `STATUS.md` if active task, next step, or blocker changes.
+- [x] Mark checklist items complete only after acceptance criteria and verification pass.
+- [x] Leave uncertain items open and document the uncertainty.
 
 # Acceptance Criteria
 
@@ -125,6 +125,23 @@ Default:
 ```bash
 pytest
 ```
+
+Additional Task 015 verification run on 2026-05-12:
+
+```bash
+pytest
+git diff --check
+python -m compileall quant_bitcoin
+rg -n "apiKey|APIKEY|signature|ENABLE_LIVE_TRADING|/order|SECRET|PRIVATE" quant_bitcoin tests README.md pyproject.toml
+```
+
+# Startup Catch-Up Decision
+
+WebSocket ingestion does not run historical REST gap fill on startup. When
+historical completeness is required after downtime, run the accepted Task 014
+PostgreSQL Binance backfill first, then start the WebSocket ingestor. This keeps
+continuous ingestion and historical catch-up as separate market-data
+responsibilities.
 
 # Codex Self-Review Requirement
 

@@ -15,7 +15,7 @@ Implemented components:
 - **Basic backtester** for a simple long-only, fixed-quantity historical simulation.
 - **Paper trader** for in-memory fake trade recording and paper cash/position updates.
 - **Paper risk checker** for deterministic cash and position checks before paper trades.
-- **PostgreSQL candle persistence** for Binance spot candle storage and restartable historical backfill.
+- **PostgreSQL candle persistence** for Binance spot candle storage, restartable historical backfill, and public WebSocket closed-candle ingestion.
 
 Out of scope unless a future approved task explicitly asks for it:
 
@@ -30,7 +30,7 @@ Out of scope unless a future approved task explicitly asks for it:
 quant_bitcoin/
   backtesting/        Basic backtest engine and result models.
   execution/          Paper-only execution simulation.
-  market_data/        CSV provider, Binance public downloader, and historical backfill.
+  market_data/        CSV provider, Binance public downloader, backfill, and WebSocket ingestion.
   persistence/        PostgreSQL candle repository and ingestion checkpoint storage.
   risk/               Paper-only risk checks.
   strategies/         RSI strategy and signal contract.
@@ -44,6 +44,7 @@ tests/                Unit, contract, and safety tests.
 - Python 3.10 or newer.
 - `pandas` for data handling.
 - `psycopg` for PostgreSQL persistence.
+- `websockets` for optional live public WebSocket connections.
 - `pytest` for tests.
 
 The package metadata is defined in `pyproject.toml`.
@@ -104,6 +105,31 @@ print(result.stored_candles)
 
 The backfiller uses Binance public spot kline data only, persists closed candles,
 and resumes from the latest stored candle without creating duplicate rows.
+
+### Ingest public Binance WebSocket closed candles
+
+```python
+import asyncio
+
+from quant_bitcoin.market_data import BinanceWebSocketCandleIngestor
+from quant_bitcoin.persistence import PostgresCandleRepository
+
+repository = PostgresCandleRepository(
+    "postgresql://quant_bitcoin:quant_bitcoin_dev@localhost:5432/quant_bitcoin"
+)
+repository.initialize_schema()
+
+asyncio.run(
+    BinanceWebSocketCandleIngestor(repository).run(symbol="BTCUSDT", interval="1m")
+)
+```
+
+The WebSocket ingestor subscribes to Binance public spot kline streams, persists
+only closed `BTCUSDT` `1m` candles, and relies on the PostgreSQL duplicate-safe
+`source + symbol + interval + open_time` uniqueness rule. It does not perform
+historical REST gap fill on startup; run the Task 014 backfill first whenever
+historical completeness after downtime is required. Ordinary tests mock the
+WebSocket connector and do not require real Binance availability.
 
 ## Running tests
 
@@ -232,7 +258,7 @@ This repository is designed to keep strategy research and paper workflows separa
 - Market-data code may fetch or load candles; it must not execute trades.
 - Backtests simulate historical execution only; they must not call live exchange order APIs.
 - Paper trading records fake trades only; it must not call real exchange order APIs.
-- Binance downloading and backfill are limited to public candle data.
+- Binance downloading, backfill, and WebSocket ingestion are limited to public candle data.
 - Live trading remains blocked until a future human-approved task documents credential handling, sandbox/testnet policy, endpoint allowlist, kill switch behavior, and safety tests.
 
 ## Documentation
