@@ -75,15 +75,19 @@ Task 015 must clearly state the following before implementation begins:
 
 # Acceptance Criteria
 
-- [ ] `tasks/015_BINANCE_WEBSOCKET_INGESTION.md` clarifies startup catch-up behavior before implementation.
-- [ ] `tasks/015_BINANCE_WEBSOCKET_INGESTION.md` clarifies any WebSocket dependency/runtime approach before implementation.
-- [ ] `tasks/015_BINANCE_WEBSOCKET_INGESTION.md` lists allowed implementation and test file areas for Task 015.
-- [ ] `tasks/015_BINANCE_WEBSOCKET_INGESTION.md` requires preserving the Task 013/014 persistence schema and duplicate-safe candle uniqueness rule.
-- [ ] `tasks/015_BINANCE_WEBSOCKET_INGESTION.md` requires ordinary tests to mock network/WebSocket behavior and avoid real Binance availability.
-- [ ] `tasks/015_BINANCE_WEBSOCKET_INGESTION.md` requires safety checks against API keys, signed requests, live-trading flags, and Binance order endpoints.
-- [ ] `tasks/015_BINANCE_WEBSOCKET_INGESTION.md` explicitly says Task 015 implementation must not begin during Task 017.
-- [ ] No application code is changed.
-- [ ] `STATUS.md` is updated if project state changes.
+- [x] `tasks/015_BINANCE_WEBSOCKET_INGESTION.md` clarifies startup catch-up behavior before implementation.
+- [x] `tasks/015_BINANCE_WEBSOCKET_INGESTION.md` clarifies any WebSocket dependency/runtime approach before implementation.
+- [x] `tasks/015_BINANCE_WEBSOCKET_INGESTION.md` lists allowed implementation and test file areas for Task 015.
+- [x] `tasks/015_BINANCE_WEBSOCKET_INGESTION.md` requires preserving the Task 013/014 persistence schema and duplicate-safe candle uniqueness rule.
+- [x] `tasks/015_BINANCE_WEBSOCKET_INGESTION.md` requires ordinary tests to mock network/WebSocket behavior and avoid real Binance availability.
+- [x] `tasks/015_BINANCE_WEBSOCKET_INGESTION.md` requires safety checks against API keys, signed requests, live-trading flags, and Binance order endpoints.
+- [x] `tasks/015_BINANCE_WEBSOCKET_INGESTION.md` explicitly says Task 015 implementation must not begin during Task 017.
+- [x] No application code is changed.
+- [x] `STATUS.md` is updated if project state changes.
+
+# Completion Notes
+
+Task 017 completed by clarifying `tasks/015_BINANCE_WEBSOCKET_INGESTION.md`. Task 015 implementation remains unstarted and still requires separate explicit project-owner approval.
 
 # Verification
 

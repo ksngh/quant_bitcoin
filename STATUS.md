@@ -2,19 +2,19 @@
 
 # Current Phase
 
-Phase 15 Readiness: WebSocket Ingestion Scope Clarification
+Phase 15: WebSocket Ingestion Approval Pending
 
 # Current Step
 
-Task 017: WebSocket Ingestion Readiness Clarification task document has been created to refine Task 015 before implementation.
+Task 017: WebSocket Ingestion Readiness Clarification is complete. Task 015 is clarified but remains unapproved and unstarted.
 
 # Current Goal
 
-Implement Task 017 documentation-only readiness clarification before any Task 015 implementation approval.
+Project owner must explicitly approve Task 015 before WebSocket ingestion implementation starts.
 
 # Current Active Task
 
-`tasks/017_WEBSOCKET_INGESTION_READINESS.md`
+None. Task 017 is complete; Task 015 awaits explicit implementation approval.
 
 # Last Completed Step
 
@@ -26,7 +26,7 @@ Verified on 2026-05-11 with `git diff --check`.
 
 # Next Step
 
-Implement Task 017 by clarifying `tasks/015_BINANCE_WEBSOCKET_INGESTION.md`; do not start Task 015 implementation until separately approved. Optional local Docker Compose PostgreSQL startup verification may still be run later in a Docker-capable developer environment.
+Project owner should decide whether to approve Task 015 implementation. Optional local Docker Compose PostgreSQL startup verification may still be run later in a Docker-capable developer environment.
 
 # Parallel Work Status
 
@@ -63,7 +63,7 @@ The next work touches shared persistence contracts and local infrastructure. Sch
 - [x] Task 014: PostgreSQL Binance Backfill accepted for current cloud workflow with non-Docker verification
 - [ ] Task 014: PostgreSQL Binance Backfill optional local Docker runtime startup verified
 - [x] Task 017: WebSocket Ingestion Readiness Clarification task document selected or created
-- [ ] Task 017: WebSocket Ingestion Readiness Clarification complete and verified
+- [x] Task 017: WebSocket Ingestion Readiness Clarification complete and verified
 - [ ] Task 015: Binance WebSocket Candle Ingestion approved for implementation
 - [ ] Task 015: Binance WebSocket Candle Ingestion complete and verified
 
@@ -80,7 +80,7 @@ The next work touches shared persistence contracts and local infrastructure. Sch
 # Blockers
 
 - Live trading implementation is blocked until explicit human approval, credential policy, sandbox/testnet policy, real-order endpoint allowlist, kill-switch design, and safety tests are documented.
-- Task 015 WebSocket ingestion remains blocked until Task 017 clarifies readiness items and the project owner explicitly approves Task 015 implementation.
+- Task 015 WebSocket ingestion remains blocked until the project owner explicitly approves Task 015 implementation.
 
 # Rules for Next Codex Task
 
