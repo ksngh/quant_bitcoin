@@ -33,7 +33,7 @@ from quant_bitcoin.persistence import (
 
 BINANCE_MAX_KLINE_LIMIT = 1000
 ONE_MINUTE_MS = 60_000
-RETRYABLE_HTTP_STATUS_CODES = frozenset({408, 425, 429, 500, 502, 503, 504})
+RETRYABLE_HTTP_STATUS_CODES = frozenset({408, 418, 425, 429, 500, 502, 503, 504})
 
 HttpGet = Callable[[str, float], object]
 Sleep = Callable[[float], None]
@@ -352,8 +352,10 @@ def _get_json(url: str, timeout: float) -> object:
 
 def _validate_kline_page(payload: object) -> list[object]:
     if isinstance(payload, dict):
-        code = payload.get("code")
-        if code in (418, 429) or payload.get("status") in (418, 429):
+        retry_markers = {"418", "429"}
+        code = str(payload.get("code"))
+        status = str(payload.get("status"))
+        if code in retry_markers or status in retry_markers:
             raise RetryableBinanceError("Binance market-data request was rate limited")
     if not isinstance(payload, Sequence) or isinstance(payload, (str, bytes)):
         raise ValueError("Binance kline response must be a sequence of rows")

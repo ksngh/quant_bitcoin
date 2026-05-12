@@ -6,15 +6,15 @@ Phase 14: PostgreSQL Backfill Persistence
 
 # Current Step
 
-Task 014: PostgreSQL Binance Backfill implementation is complete in code and tests, with local Docker runtime verification pending because Docker is not installed in the current environment.
+Task 014: PostgreSQL Binance Backfill is accepted for the current cloud workflow based on completed non-Docker verification. Docker Compose PostgreSQL startup is intentionally skipped in this environment because Docker cannot be installed or run here, and remains optional local developer verification.
 
 # Current Goal
 
-Verify Task 014 in an environment with Docker available before marking the task fully complete.
+Select the next project task explicitly. Task 015 remains unstarted and unapproved unless the project owner approves it separately.
 
 # Current Active Task
 
-`tasks/014_POSTGRES_BINANCE_BACKFILL.md` verification follow-up
+None. Task 014 is accepted for the current cloud workflow; optional local Docker verification remains deferred.
 
 # Last Completed Step
 
@@ -26,7 +26,7 @@ Verified on 2026-05-11 with `git diff --check`.
 
 # Next Step
 
-Run local Docker Compose startup verification for PostgreSQL, then mark Task 014 complete if acceptance criteria pass.
+Project owner should approve the next task. Optional local Docker Compose PostgreSQL startup verification may still be run later in a Docker-capable developer environment, but it is not required for this cloud workflow. Task 015 remains unstarted and requires explicit approval.
 
 # Parallel Work Status
 
@@ -60,7 +60,8 @@ The next work touches shared persistence contracts and local infrastructure. Sch
 - [x] Persistence schema design documented
 - [x] Codex command consistency guide documented
 - [x] Task 014: PostgreSQL Binance Backfill approved for implementation
-- [ ] Task 014: PostgreSQL Binance Backfill complete and verified
+- [x] Task 014: PostgreSQL Binance Backfill accepted for current cloud workflow with non-Docker verification
+- [ ] Task 014: PostgreSQL Binance Backfill optional local Docker runtime startup verified
 - [ ] Task 015: Binance WebSocket Candle Ingestion approved for implementation
 - [ ] Task 015: Binance WebSocket Candle Ingestion complete and verified
 
@@ -72,7 +73,7 @@ The next work touches shared persistence contracts and local infrastructure. Sch
 - What real-order endpoints, if any, are allowed?
 - What kill-switch or disable mechanism is required?
 - Should future PostgreSQL implementation use migrations, container init scripts, or another schema-management path? Current Task 014 uses container init SQL plus repository schema initialization; migrations remain a future decision if schema evolution is needed.
-- Docker is not installed in the current environment, so local PostgreSQL container startup remains unverified here.
+- Docker is not installed in the current cloud environment. Local PostgreSQL container startup is intentionally skipped here and remains optional local developer verification.
 
 # Blockers
 
