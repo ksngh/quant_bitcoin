@@ -15,6 +15,7 @@ Implemented components:
 - **Basic backtester** for a simple long-only, fixed-quantity historical simulation.
 - **Paper trader** for in-memory fake trade recording and paper cash/position updates.
 - **Paper risk checker** for deterministic cash and position checks before paper trades.
+- **PostgreSQL candle persistence** for Binance spot candle storage and restartable historical backfill.
 
 Out of scope unless a future approved task explicitly asks for it:
 
@@ -28,7 +29,8 @@ Out of scope unless a future approved task explicitly asks for it:
 quant_bitcoin/
   backtesting/        Basic backtest engine and result models.
   execution/          Paper-only execution simulation.
-  market_data/        CSV provider and Binance public candle downloader.
+  market_data/        CSV provider, Binance public downloader, and historical backfill.
+  persistence/        PostgreSQL candle repository and ingestion checkpoint storage.
   risk/               Paper-only risk checks.
   strategies/         RSI strategy and signal contract.
 docs/                 Architecture, data contract, workflow, and decision docs.
@@ -40,6 +42,7 @@ tests/                Unit, contract, and safety tests.
 
 - Python 3.10 or newer.
 - `pandas` for data handling.
+- `psycopg` for PostgreSQL persistence.
 - `pytest` for tests.
 
 The package metadata is defined in `pyproject.toml`.
@@ -54,6 +57,47 @@ source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -e '.[test]'
 ```
+
+## Local PostgreSQL for candle persistence
+
+Task 014 adds local PostgreSQL support for market-data persistence only. The
+Docker Compose service uses non-secret development defaults and loads the
+accepted candle schema from `db/init/001_market_data.sql`. Do not commit `.env`
+files; override `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, or
+`POSTGRES_PORT` in your shell when needed.
+
+Start local PostgreSQL from the repository root:
+
+```bash
+docker compose up -d postgres
+```
+
+The matching development database URL is:
+
+```text
+postgresql://quant_bitcoin:quant_bitcoin_dev@localhost:5432/quant_bitcoin
+```
+
+Optional PostgreSQL integration tests use `QUANT_BITCOIN_TEST_DATABASE_URL`. The
+ordinary unit test suite does not require Docker or a running database.
+
+### Backfill public Binance 1-minute candles
+
+```python
+from quant_bitcoin.market_data import BinanceHistoricalBackfiller
+from quant_bitcoin.persistence import PostgresCandleRepository
+
+repository = PostgresCandleRepository(
+    "postgresql://quant_bitcoin:quant_bitcoin_dev@localhost:5432/quant_bitcoin"
+)
+repository.initialize_schema()
+
+result = BinanceHistoricalBackfiller(repository).run(symbol="BTCUSDT", interval="1m")
+print(result.stored_candles)
+```
+
+The backfiller uses Binance public spot kline data only, persists closed candles,
+and resumes from the latest stored candle without creating duplicate rows.
 
 ## Running tests
 
@@ -182,7 +226,7 @@ This repository is designed to keep strategy research and paper workflows separa
 - Market-data code may fetch or load candles; it must not execute trades.
 - Backtests simulate historical execution only; they must not call live exchange order APIs.
 - Paper trading records fake trades only; it must not call real exchange order APIs.
-- Binance downloading is limited to public candle data.
+- Binance downloading and backfill are limited to public candle data.
 - Live trading remains blocked until a future human-approved task documents credential handling, sandbox/testnet policy, endpoint allowlist, kill switch behavior, and safety tests.
 
 ## Documentation
