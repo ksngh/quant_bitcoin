@@ -2,25 +2,25 @@
 
 # Current Phase
 
-Phase 15: Binance WebSocket Candle Ingestion
+Phase 17: WebSocket Ingestion Readiness
 
 # Current Step
 
-Task 015: Binance WebSocket Candle Ingestion is implemented and verified for the current cloud workflow with mocked WebSocket/network tests. Ordinary tests do not require real Binance availability or a running PostgreSQL server.
+Task 017: WebSocket Ingestion Readiness is implemented and verified for the current cloud workflow with deterministic readiness checks and mocked/no-network ordinary tests.
 
 # Current Goal
 
-Task 015 is complete for public Binance WebSocket candle ingestion. Select the next project task explicitly.
+Task 017 is complete for market-data-only Binance WebSocket ingestion readiness. Select the next project task explicitly.
 
 # Current Active Task
 
-None. Task 015 is complete and verified for the current cloud workflow.
+None. Task 017 is complete and verified for the current cloud workflow.
 
 # Last Completed Step
 
-Task 015: Binance WebSocket Candle Ingestion.
+Task 017: WebSocket Ingestion Readiness.
 
-Implemented market-data-only Binance public WebSocket kline ingestion for closed `BTCUSDT` `1m` candles. Verified on 2026-05-12 with `pytest`, `git diff --check`, `python -m compileall quant_bitcoin`, and the required static safety scan.
+Implemented a deterministic readiness helper for Binance public WebSocket candle ingestion configuration. The helper validates symbol, interval, stream URL safety, reconnect delay, and reconnect limit without opening network connections or touching PostgreSQL. Verified on 2026-05-12 with `pytest`, `git diff --check`, and `python -m compileall quant_bitcoin`.
 
 # Next Step
 
@@ -62,6 +62,8 @@ The next work may touch shared persistence contracts, ingestion workflows, or sa
 - [ ] Task 014: PostgreSQL Binance Backfill optional local Docker runtime startup verified
 - [x] Task 015: Binance WebSocket Candle Ingestion approved for implementation
 - [x] Task 015: Binance WebSocket Candle Ingestion complete and verified
+- [x] Task 017: WebSocket Ingestion Readiness task document selected or created
+- [x] Task 017: WebSocket Ingestion Readiness complete and verified
 
 # Open Questions
 
@@ -72,7 +74,6 @@ The next work may touch shared persistence contracts, ingestion workflows, or sa
 - What kill-switch or disable mechanism is required?
 - Should future PostgreSQL implementation use migrations, container init scripts, or another schema-management path? Current Task 014 uses container init SQL plus repository schema initialization; migrations remain a future decision if schema evolution is needed.
 - Docker is not installed in the current cloud environment. Local PostgreSQL container startup is intentionally skipped here and remains optional local developer verification.
-- The requested `tasks/017_WEBSOCKET_INGESTION_READINESS.md` document is not present in the repository, so it could not be read during Task 015 implementation.
 
 # Blockers
 
