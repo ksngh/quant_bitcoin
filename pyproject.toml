@@ -21,3 +21,6 @@ test = [
 
 [tool.setuptools.packages.find]
 include = ["quant_bitcoin*"]
+
+[project.scripts]
+quant-bitcoin-websocket-ingestion = "quant_bitcoin.market_data.websocket_ingestion_cli:main"
