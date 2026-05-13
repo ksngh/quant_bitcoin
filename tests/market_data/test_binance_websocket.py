@@ -12,6 +12,7 @@ from quant_bitcoin.market_data.binance_websocket import (
     BinanceWebSocketCandleIngestor,
     BinanceWebSocketIngestionError,
     build_kline_stream_url,
+    check_websocket_ingestion_readiness,
     parse_binance_kline_message,
 )
 from quant_bitcoin.persistence import SOURCE_BINANCE_SPOT
@@ -289,3 +290,63 @@ def test_build_kline_stream_url_uses_public_market_data_stream_without_signed_da
 
 async def _fake_sleep(seconds: float) -> None:
     return None
+
+
+def _checks_by_name(report):
+    return {check.name: check for check in report.checks}
+
+
+def test_websocket_readiness_defaults_are_ready_without_network_io():
+    report = check_websocket_ingestion_readiness()
+    checks = _checks_by_name(report)
+
+    assert report.ready is True
+    assert report.symbol == "BTCUSDT"
+    assert report.interval == "1m"
+    assert report.stream_url == "wss://stream.binance.com:9443/ws/btcusdt@kline_1m"
+    assert checks["symbol"].passed is True
+    assert checks["interval"].passed is True
+    assert checks["stream_url"].passed is True
+    assert checks["startup_catch_up"].passed is True
+    assert "Task 014 backfill" in checks["startup_catch_up"].message
+
+
+def test_websocket_readiness_reports_invalid_configuration_without_raising():
+    report = check_websocket_ingestion_readiness(
+        symbol="  ",
+        interval="2h",
+        reconnect_delay_seconds=-0.1,
+        max_reconnects=-1,
+    )
+    checks = _checks_by_name(report)
+
+    assert report.ready is False
+    assert report.symbol is None
+    assert report.stream_url is None
+    assert checks["symbol"].passed is False
+    assert checks["interval"].passed is False
+    assert checks["reconnect_delay_seconds"].passed is False
+    assert checks["max_reconnects"].passed is False
+    assert checks["stream_url"].passed is False
+    assert "symbol must not be blank" in checks["symbol"].message
+    assert "supported minute interval" in checks["interval"].message
+
+
+def test_websocket_readiness_rejects_order_or_signed_request_configuration():
+    order_report = check_websocket_ingestion_readiness(
+        base_url="wss://stream.binance.com:9443/ws/order"
+    )
+    signed_report = check_websocket_ingestion_readiness(
+        base_url="wss://stream.binance.com:9443/ws?signature=not-a-secret"
+    )
+
+    order_checks = _checks_by_name(order_report)
+    signed_checks = _checks_by_name(signed_report)
+    assert order_report.ready is False
+    assert order_report.stream_url is None
+    assert order_checks["stream_url"].passed is False
+    assert "order endpoints" in order_checks["stream_url"].message
+    assert signed_report.ready is False
+    assert signed_report.stream_url is None
+    assert signed_checks["stream_url"].passed is False
+    assert "signed request data" in signed_checks["stream_url"].message

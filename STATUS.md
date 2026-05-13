@@ -2,29 +2,29 @@
 
 # Current Phase
 
-Phase 15: Binance WebSocket Candle Ingestion
+Phase 18: Docker WebSocket Ingestion Service
 
 # Current Step
 
-Task 015: Binance WebSocket Candle Ingestion is implemented and verified for the current cloud workflow with mocked WebSocket/network tests. Ordinary tests do not require real Binance availability or a running PostgreSQL server.
+Task 018: Docker WebSocket Ingestion Service is implemented and verified for the current cloud workflow with mocked/no-network ordinary tests. Docker runtime startup remains unverified in this cloud environment.
 
 # Current Goal
 
-Task 015 is complete for public Binance WebSocket candle ingestion. Select the next project task explicitly.
+Task 018 is complete for local Docker support and a market-data-only WebSocket ingestion CLI. Select the next project task explicitly.
 
 # Current Active Task
 
-None. Task 015 is complete and verified for the current cloud workflow.
+None. Task 018 is complete and verified for the current cloud workflow.
 
 # Last Completed Step
 
-Task 015: Binance WebSocket Candle Ingestion.
+Task 018: Docker WebSocket Ingestion Service.
 
-Implemented market-data-only Binance public WebSocket kline ingestion for closed `BTCUSDT` `1m` candles. Verified on 2026-05-12 with `pytest`, `git diff --check`, `python -m compileall quant_bitcoin`, and the required static safety scan.
+Implemented local Docker support for PostgreSQL-backed, market-data-only WebSocket ingestion. Added a Dockerfile, extended Docker Compose with a bounded `websocket-ingestor` service, and added a CLI for readiness checks and bounded ingestion. Verified on 2026-05-13 with `pytest`, `git diff --check`, and `python -m compileall quant_bitcoin`. Docker runtime startup was not run in this cloud environment.
 
 # Next Step
 
-Project owner should approve the next task. If historical completeness is needed before or after WebSocket downtime, run the accepted Task 014 PostgreSQL Binance backfill before starting WebSocket ingestion. Optional local Docker Compose PostgreSQL startup verification from Task 014 remains deferred to a Docker-capable developer environment.
+Project owner should approve the next task. If historical completeness is needed before or after WebSocket downtime, run the accepted Task 014 PostgreSQL Binance backfill before starting WebSocket ingestion. Local Docker Compose runtime startup verification for Task 018 remains deferred to a Docker-capable developer environment.
 
 # Parallel Work Status
 
@@ -62,6 +62,10 @@ The next work may touch shared persistence contracts, ingestion workflows, or sa
 - [ ] Task 014: PostgreSQL Binance Backfill optional local Docker runtime startup verified
 - [x] Task 015: Binance WebSocket Candle Ingestion approved for implementation
 - [x] Task 015: Binance WebSocket Candle Ingestion complete and verified
+- [x] Task 017: WebSocket Ingestion Readiness task document selected or created
+- [x] Task 017: WebSocket Ingestion Readiness complete and verified
+- [x] Task 018: Docker WebSocket Ingestion Service task document selected or created
+- [x] Task 018: Docker WebSocket Ingestion Service complete and verified
 
 # Open Questions
 
@@ -71,8 +75,7 @@ The next work may touch shared persistence contracts, ingestion workflows, or sa
 - What real-order endpoints, if any, are allowed?
 - What kill-switch or disable mechanism is required?
 - Should future PostgreSQL implementation use migrations, container init scripts, or another schema-management path? Current Task 014 uses container init SQL plus repository schema initialization; migrations remain a future decision if schema evolution is needed.
-- Docker is not installed in the current cloud environment. Local PostgreSQL container startup is intentionally skipped here and remains optional local developer verification.
-- The requested `tasks/017_WEBSOCKET_INGESTION_READINESS.md` document is not present in the repository, so it could not be read during Task 015 implementation.
+- Docker is not installed in the current cloud environment. Local PostgreSQL and WebSocket ingestor container startup are intentionally skipped here and remain optional local developer verification.
 
 # Blockers
 

@@ -63,6 +63,31 @@ class WebSocketIngestionResult:
     reconnects: int
 
 
+@dataclass(frozen=True)
+class WebSocketReadinessCheck:
+    """One deterministic preflight check for WebSocket ingestion startup."""
+
+    name: str
+    passed: bool
+    message: str
+
+
+@dataclass(frozen=True)
+class WebSocketReadinessReport:
+    """Readiness summary for Binance public WebSocket ingestion settings."""
+
+    symbol: str | None
+    interval: str
+    stream_url: str | None
+    checks: tuple[WebSocketReadinessCheck, ...]
+
+    @property
+    def ready(self) -> bool:
+        """Return true when every preflight check passed."""
+
+        return all(check.passed for check in self.checks)
+
+
 class BinanceWebSocketIngestionError(RuntimeError):
     """Base error for Binance WebSocket ingestion failures."""
 
@@ -251,6 +276,149 @@ class BinanceWebSocketCandleIngestor:
                 metadata=metadata,
             )
         )
+
+
+def check_websocket_ingestion_readiness(
+    *,
+    symbol: str = "BTCUSDT",
+    interval: str = "1m",
+    base_url: str = DEFAULT_WEBSOCKET_BASE_URL,
+    reconnect_delay_seconds: float = DEFAULT_RECONNECT_DELAY_SECONDS,
+    max_reconnects: int = 3,
+) -> WebSocketReadinessReport:
+    """Validate WebSocket ingestion startup settings without external I/O.
+
+    This helper builds the same public kline stream URL used by the ingestor and
+    reports configuration problems as structured check results. It intentionally
+    does not open a WebSocket connection, touch PostgreSQL, perform historical
+    backfill, or call account/order APIs. Historical startup gap catch-up remains
+    the responsibility of the Task 014 backfill workflow when completeness is
+    required.
+    """
+
+    checks: list[WebSocketReadinessCheck] = []
+    normalized_symbol: str | None = None
+    stream_url: str | None = None
+
+    try:
+        normalized_symbol = _normalize_symbol(symbol)
+    except ValueError as error:
+        checks.append(
+            WebSocketReadinessCheck(
+                name="symbol",
+                passed=False,
+                message=str(error),
+            )
+        )
+    else:
+        checks.append(
+            WebSocketReadinessCheck(
+                name="symbol",
+                passed=True,
+                message=f"symbol normalized to {normalized_symbol}",
+            )
+        )
+
+    try:
+        _validate_interval(interval)
+    except ValueError as error:
+        checks.append(
+            WebSocketReadinessCheck(
+                name="interval",
+                passed=False,
+                message=str(error),
+            )
+        )
+    else:
+        checks.append(
+            WebSocketReadinessCheck(
+                name="interval",
+                passed=True,
+                message=f"interval {interval} is supported",
+            )
+        )
+
+    if reconnect_delay_seconds < 0:
+        checks.append(
+            WebSocketReadinessCheck(
+                name="reconnect_delay_seconds",
+                passed=False,
+                message="reconnect_delay_seconds must be non-negative",
+            )
+        )
+    else:
+        checks.append(
+            WebSocketReadinessCheck(
+                name="reconnect_delay_seconds",
+                passed=True,
+                message=f"reconnect delay is {reconnect_delay_seconds} seconds",
+            )
+        )
+
+    if max_reconnects < 0:
+        checks.append(
+            WebSocketReadinessCheck(
+                name="max_reconnects",
+                passed=False,
+                message="max_reconnects must be non-negative",
+            )
+        )
+    else:
+        checks.append(
+            WebSocketReadinessCheck(
+                name="max_reconnects",
+                passed=True,
+                message=f"max reconnects is {max_reconnects}",
+            )
+        )
+
+    if normalized_symbol is not None:
+        try:
+            stream_url = build_kline_stream_url(
+                base_url, symbol=normalized_symbol, interval=interval
+            )
+        except ValueError as error:
+            checks.append(
+                WebSocketReadinessCheck(
+                    name="stream_url",
+                    passed=False,
+                    message=str(error),
+                )
+            )
+        else:
+            checks.append(
+                WebSocketReadinessCheck(
+                    name="stream_url",
+                    passed=True,
+                    message=f"public kline stream URL is {stream_url}",
+                )
+            )
+    else:
+        checks.append(
+            WebSocketReadinessCheck(
+                name="stream_url",
+                passed=False,
+                message="stream URL cannot be built until symbol is valid",
+            )
+        )
+
+    checks.append(
+        WebSocketReadinessCheck(
+            name="startup_catch_up",
+            passed=True,
+            message=(
+                "historical startup gap catch-up requires Task 014 backfill "
+                "when completeness is required"
+            ),
+        )
+    )
+
+    return WebSocketReadinessReport(
+        symbol=normalized_symbol,
+        interval=interval,
+        stream_url=stream_url,
+        checks=tuple(checks),
+    )
 
 
 def build_kline_stream_url(base_url: str, *, symbol: str, interval: str) -> str:

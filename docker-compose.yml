@@ -16,5 +16,21 @@ services:
       timeout: 5s
       retries: 10
 
+  websocket-ingestor:
+    build: .
+    environment:
+      DATABASE_URL: postgresql://quant_bitcoin:quant_bitcoin_dev@postgres:5432/quant_bitcoin
+      SYMBOL: ${SYMBOL:-BTCUSDT}
+      INTERVAL: ${INTERVAL:-1m}
+      INGEST_MAX_MESSAGES: ${INGEST_MAX_MESSAGES:-5}
+      RECONNECT_DELAY_SECONDS: ${RECONNECT_DELAY_SECONDS:-1.0}
+      MAX_RECONNECTS: ${MAX_RECONNECTS:-3}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command:
+      - quant-bitcoin-websocket-ingestion
+      - ingest
+
 volumes:
   postgres_data:
