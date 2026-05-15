@@ -181,6 +181,42 @@ class PostgresCandleRepository:
             return _as_utc(latest)
         return None
 
+    def load_standard_candles(
+        self,
+        *,
+        source: str,
+        symbol: str,
+        interval: str,
+        start_time: datetime | None = None,
+        end_time: datetime | None = None,
+    ) -> list[dict[str, Any]]:
+        """Return stored candles normalized to the standard candle schema."""
+
+        import psycopg
+        from psycopg.rows import dict_row
+
+        query, params = _build_standard_candle_query(
+            source=source,
+            symbol=symbol,
+            interval=interval,
+            start_time=start_time,
+            end_time=end_time,
+        )
+        with psycopg.connect(self.database_url, row_factory=dict_row) as connection:
+            rows = connection.execute(query, params).fetchall()
+
+        return [
+            {
+                "timestamp": _as_utc(row["timestamp"]),
+                "open": row["open"],
+                "high": row["high"],
+                "low": row["low"],
+                "close": row["close"],
+                "volume": row["volume"],
+            }
+            for row in rows
+        ]
+
     def save_checkpoint(self, checkpoint: IngestionCheckpoint) -> None:
         """Insert or update a restart checkpoint."""
 
@@ -239,6 +275,14 @@ class PostgresCandleRepository:
         )
 
 
+SELECT_STANDARD_CANDLES_BASE_SQL = """
+SELECT open_time AS timestamp, open, high, low, close, volume
+FROM candles
+WHERE source = %(source)s AND symbol = %(symbol)s AND interval = %(interval)s
+  AND is_closed IS TRUE
+"""
+
+
 UPSERT_CANDLE_SQL = """
 INSERT INTO candles (
     source, symbol, interval, open_time, close_time, open, high, low, close,
@@ -285,6 +329,30 @@ ON CONFLICT (source, symbol, interval, mode) DO UPDATE SET
     metadata = EXCLUDED.metadata,
     updated_at = now()
 """
+
+
+def _build_standard_candle_query(
+    *,
+    source: str,
+    symbol: str,
+    interval: str,
+    start_time: datetime | None,
+    end_time: datetime | None,
+) -> tuple[str, dict[str, Any]]:
+    query_parts = [SELECT_STANDARD_CANDLES_BASE_SQL]
+    params: dict[str, Any] = {
+        "source": source,
+        "symbol": symbol,
+        "interval": interval,
+    }
+    if start_time is not None:
+        query_parts.append("AND open_time >= %(start_time)s")
+        params["start_time"] = start_time
+    if end_time is not None:
+        query_parts.append("AND open_time <= %(end_time)s")
+        params["end_time"] = end_time
+    query_parts.append("ORDER BY open_time ASC")
+    return "\n".join(query_parts), params
 
 
 def _optional_utc(value: datetime | None) -> datetime | None:

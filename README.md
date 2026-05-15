@@ -222,6 +222,43 @@ candles = provider.load()
 
 The CSV provider normalizes column names and returns only the standard candle fields.
 
+### Load candles from PostgreSQL for backtesting
+
+After PostgreSQL has been populated by the Binance backfill or WebSocket
+ingestion workflow, use `PostgresCandleDataProvider` to read stored `candles`
+rows into the same standard candle schema used by CSV-backed backtests:
+
+```python
+from datetime import datetime, timezone
+
+from quant_bitcoin.backtesting import BasicBacktester
+from quant_bitcoin.market_data import PostgresCandleDataProvider
+from quant_bitcoin.persistence import PostgresCandleRepository
+from quant_bitcoin.strategies import RsiStrategy
+
+repository = PostgresCandleRepository(
+    "postgresql://quant_bitcoin:quant_bitcoin_dev@localhost:5432/quant_bitcoin"
+)
+provider = PostgresCandleDataProvider(
+    repository,
+    symbol="BTCUSDT",
+    interval="1m",
+    start_time=datetime(2024, 1, 1, tzinfo=timezone.utc),
+    end_time=datetime(2024, 1, 2, tzinfo=timezone.utc),
+)
+candles = provider.load()
+
+strategy = RsiStrategy(window=14)
+result = BasicBacktester(starting_cash=10_000, trade_quantity=0.01).run(
+    candles, strategy
+)
+print(result.summary)
+```
+
+The PostgreSQL provider maps `candles.open_time` to `timestamp`, returns only
+`timestamp`, `open`, `high`, `low`, `close`, and `volume`, and sorts rows by
+`timestamp` ascending before backtesting.
+
 ### Generate an RSI signal
 
 ```python

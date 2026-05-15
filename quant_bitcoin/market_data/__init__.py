@@ -20,6 +20,7 @@ from quant_bitcoin.market_data.binance_websocket import (
     parse_binance_kline_message,
 )
 from quant_bitcoin.market_data.csv_provider import CsvCandleDataProvider
+from quant_bitcoin.market_data.postgres_provider import PostgresCandleDataProvider
 
 __all__ = [
     "BackfillResult",
@@ -27,6 +28,7 @@ __all__ = [
     "BinanceCandleDownloader",
     "BinanceHistoricalBackfiller",
     "CsvCandleDataProvider",
+    "PostgresCandleDataProvider",
     "WEBSOCKET_INGESTION_MODE",
     "WebSocketIngestionResult",
     "WebSocketReadinessCheck",

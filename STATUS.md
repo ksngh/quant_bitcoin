@@ -6,25 +6,25 @@ Phase 19: PostgreSQL Candle Data Provider for Backtesting
 
 # Current Step
 
-Task 019: PostgreSQL Candle Data Provider for Backtesting task document is created and ready for explicit implementation approval.
+Task 019: PostgreSQL Candle Data Provider for Backtesting is implemented and verified with mocked/no-network ordinary tests.
 
 # Current Goal
 
-Task 019 is documented to add a PostgreSQL-backed candle read path that returns the standard candle DataFrame for existing backtests. Await explicit project-owner approval before implementation.
+Task 019 is complete for a PostgreSQL-backed candle read path that returns the standard candle DataFrame for existing backtests. Select the next project task explicitly.
 
 # Current Active Task
 
-None. Task 019 is created but not yet approved for implementation.
+None. Task 019 is implemented and verified for the current cloud workflow.
 
 # Last Completed Step
 
-Task 014 follow-up: Runnable PostgreSQL Binance backfill CLI script.
+Task 019: PostgreSQL Candle Data Provider for Backtesting.
 
-Added and documented a `quant-bitcoin-binance-backfill` console script that wires the existing public-market-data Binance historical backfiller to `PostgresCandleRepository`, supports local schema initialization, configurable symbol/interval/start/end/limit/retry settings, and emits a JSON run summary. Verified on 2026-05-15 with `pytest`. This follow-up does not add live trading, signed requests, API-key handling, or Binance order endpoint behavior. Docker runtime startup remains unverified in this cloud environment.
+Added a PostgreSQL-backed candle data provider and repository read path that maps stored `candles.open_time` to the standard `timestamp` field and returns only `timestamp`, `open`, `high`, `low`, `close`, and `volume` for existing backtests. Added tests for standard schema mapping, open-time filter wiring, `BasicBacktester` compatibility without CSV, invalid numeric handling, and no-network provider behavior. Verified on 2026-05-15 with `pytest`, `git diff --check`, and `python -m compileall quant_bitcoin`. This task does not add live trading, signed requests, API-key handling, or Binance order endpoint behavior.
 
 # Next Step
 
-Project owner should explicitly approve Task 019 for implementation before code changes. If PostgreSQL candles need to exist before testing the provider locally, run the accepted Task 014 PostgreSQL Binance backfill first. Local Docker Compose runtime startup verification for Task 018 remains deferred to a Docker-capable developer environment.
+Project owner should select or create the next task explicitly. If PostgreSQL candles need to exist before local backtesting, run the accepted Task 014 PostgreSQL Binance backfill first. Local Docker Compose runtime startup verification for Task 018 remains deferred to a Docker-capable developer environment.
 
 # Parallel Work Status
 
@@ -67,7 +67,8 @@ The next work may touch shared persistence contracts, ingestion workflows, or sa
 - [x] Task 018: Docker WebSocket Ingestion Service task document selected or created
 - [x] Task 018: Docker WebSocket Ingestion Service complete and verified
 - [x] Task 019: PostgreSQL Candle Data Provider for Backtesting task document selected or created
-- [ ] Task 019: PostgreSQL Candle Data Provider for Backtesting approved for implementation
+- [x] Task 019: PostgreSQL Candle Data Provider for Backtesting approved for implementation
+- [x] Task 019: PostgreSQL Candle Data Provider for Backtesting complete and verified
 
 # Open Questions
 

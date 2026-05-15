@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 from datetime import datetime, timezone
 from decimal import Decimal
+from typing import Any
 
 import pytest
 
@@ -13,7 +14,10 @@ from quant_bitcoin.persistence import (
     PersistedCandle,
     PostgresCandleRepository,
 )
-from quant_bitcoin.persistence.postgres import UPSERT_CANDLE_SQL
+from quant_bitcoin.persistence.postgres import (
+    SELECT_STANDARD_CANDLES_BASE_SQL,
+    UPSERT_CANDLE_SQL,
+)
 
 
 EXPECTED_CANDLE_COLUMNS = (
@@ -35,6 +39,33 @@ EXPECTED_CANDLE_COLUMNS = (
     "raw_payload",
 )
 
+
+
+
+class FakeResult:
+    def __init__(self, rows: list[dict[str, Any]]) -> None:
+        self.rows = rows
+
+    def fetchall(self) -> list[dict[str, Any]]:
+        return self.rows
+
+
+class FakeConnection:
+    def __init__(self, rows: list[dict[str, Any]]) -> None:
+        self.rows = rows
+        self.executed_query: str | None = None
+        self.executed_params: dict[str, Any] | None = None
+
+    def __enter__(self) -> "FakeConnection":
+        return self
+
+    def __exit__(self, *args: object) -> None:
+        return None
+
+    def execute(self, query: str, params: dict[str, Any]) -> FakeResult:
+        self.executed_query = query
+        self.executed_params = params
+        return FakeResult(self.rows)
 
 def persisted_candle(open_price: str = "42000") -> PersistedCandle:
     return PersistedCandle(
@@ -67,6 +98,72 @@ def test_schema_enforces_accepted_uniqueness_rules():
     assert "UNIQUE (source, symbol, interval, open_time)" in SCHEMA_SQL
     assert "UNIQUE (source, symbol, interval, mode)" in SCHEMA_SQL
 
+
+def test_standard_candle_select_uses_open_time_timestamp_mapping():
+    assert "SELECT open_time AS timestamp, open, high, low, close, volume" in (
+        SELECT_STANDARD_CANDLES_BASE_SQL
+    )
+    assert "FROM candles" in SELECT_STANDARD_CANDLES_BASE_SQL
+    assert "is_closed IS TRUE" in SELECT_STANDARD_CANDLES_BASE_SQL
+
+
+def test_repository_load_standard_candles_maps_rows_and_filters(monkeypatch):
+    import psycopg
+
+    row_open_time = datetime(2024, 1, 1, 0, 0, tzinfo=timezone.utc)
+    start_time = datetime(2024, 1, 1, 0, 0, tzinfo=timezone.utc)
+    end_time = datetime(2024, 1, 1, 1, 0, tzinfo=timezone.utc)
+    fake_connection = FakeConnection(
+        [
+            {
+                "timestamp": row_open_time,
+                "open": Decimal("100"),
+                "high": Decimal("101"),
+                "low": Decimal("99"),
+                "close": Decimal("100.5"),
+                "volume": Decimal("12.5"),
+                "source": "binance_spot",
+                "raw_payload": ["ignored"],
+            }
+        ]
+    )
+
+    def fake_connect(database_url: str, **kwargs: Any) -> FakeConnection:
+        assert database_url == "postgresql://example/test"
+        assert "row_factory" in kwargs
+        return fake_connection
+
+    monkeypatch.setattr(psycopg, "connect", fake_connect)
+
+    rows = PostgresCandleRepository("postgresql://example/test").load_standard_candles(
+        source="binance_spot",
+        symbol="BTCUSDT",
+        interval="1m",
+        start_time=start_time,
+        end_time=end_time,
+    )
+
+    assert rows == [
+        {
+            "timestamp": row_open_time,
+            "open": Decimal("100"),
+            "high": Decimal("101"),
+            "low": Decimal("99"),
+            "close": Decimal("100.5"),
+            "volume": Decimal("12.5"),
+        }
+    ]
+    assert fake_connection.executed_params == {
+        "source": "binance_spot",
+        "symbol": "BTCUSDT",
+        "interval": "1m",
+        "start_time": start_time,
+        "end_time": end_time,
+    }
+    assert fake_connection.executed_query is not None
+    assert "open_time >= %(start_time)s" in fake_connection.executed_query
+    assert "open_time <= %(end_time)s" in fake_connection.executed_query
+    assert "ORDER BY open_time ASC" in fake_connection.executed_query
 
 def test_upsert_sql_is_duplicate_safe_for_candle_identity():
     assert (
