@@ -10,17 +10,17 @@ Task 018: Docker WebSocket Ingestion Service is implemented and verified for the
 
 # Current Goal
 
-Task 018 is complete for local Docker support and a market-data-only WebSocket ingestion CLI. Select the next project task explicitly.
+Task 018 is complete for local Docker support and a market-data-only WebSocket ingestion CLI. Task 014 now also includes a runnable Binance backfill CLI script for PostgreSQL-backed historical candle ingestion. Select the next project task explicitly.
 
 # Current Active Task
 
-None. Task 018 is complete and verified for the current cloud workflow.
+None. Task 014 follow-up backfill CLI script is implemented and verified; Task 018 remains complete for the current cloud workflow.
 
 # Last Completed Step
 
-Task 018: Docker WebSocket Ingestion Service.
+Task 014 follow-up: Runnable PostgreSQL Binance backfill CLI script.
 
-Implemented local Docker support for PostgreSQL-backed, market-data-only WebSocket ingestion. Added a Dockerfile, extended Docker Compose with a bounded `websocket-ingestor` service, and added a CLI for readiness checks and bounded ingestion. Verified on 2026-05-13 with `pytest`, `git diff --check`, and `python -m compileall quant_bitcoin`. Docker runtime startup was not run in this cloud environment.
+Added and documented a `quant-bitcoin-binance-backfill` console script that wires the existing public-market-data Binance historical backfiller to `PostgresCandleRepository`, supports local schema initialization, configurable symbol/interval/start/end/limit/retry settings, and emits a JSON run summary. Verified on 2026-05-15 with `pytest`. This follow-up does not add live trading, signed requests, API-key handling, or Binance order endpoint behavior. Docker runtime startup remains unverified in this cloud environment.
 
 # Next Step
 

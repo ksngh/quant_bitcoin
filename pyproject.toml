@@ -23,4 +23,5 @@ test = [
 include = ["quant_bitcoin*"]
 
 [project.scripts]
+quant-bitcoin-binance-backfill = "quant_bitcoin.market_data.binance_backfill_cli:main"
 quant-bitcoin-websocket-ingestion = "quant_bitcoin.market_data.websocket_ingestion_cli:main"
