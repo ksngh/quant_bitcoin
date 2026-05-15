@@ -2,19 +2,19 @@
 
 # Current Phase
 
-Phase 18: Docker WebSocket Ingestion Service
+Phase 19: PostgreSQL Candle Data Provider for Backtesting
 
 # Current Step
 
-Task 018: Docker WebSocket Ingestion Service is implemented and verified for the current cloud workflow with mocked/no-network ordinary tests. Docker runtime startup remains unverified in this cloud environment.
+Task 019: PostgreSQL Candle Data Provider for Backtesting task document is created and ready for explicit implementation approval.
 
 # Current Goal
 
-Task 018 is complete for local Docker support and a market-data-only WebSocket ingestion CLI. Task 014 now also includes a runnable Binance backfill CLI script for PostgreSQL-backed historical candle ingestion. Select the next project task explicitly.
+Task 019 is documented to add a PostgreSQL-backed candle read path that returns the standard candle DataFrame for existing backtests. Await explicit project-owner approval before implementation.
 
 # Current Active Task
 
-None. Task 014 follow-up backfill CLI script is implemented and verified; Task 018 remains complete for the current cloud workflow.
+None. Task 019 is created but not yet approved for implementation.
 
 # Last Completed Step
 
@@ -24,7 +24,7 @@ Added and documented a `quant-bitcoin-binance-backfill` console script that wire
 
 # Next Step
 
-Project owner should approve the next task. If historical completeness is needed before or after WebSocket downtime, run the accepted Task 014 PostgreSQL Binance backfill before starting WebSocket ingestion. Local Docker Compose runtime startup verification for Task 018 remains deferred to a Docker-capable developer environment.
+Project owner should explicitly approve Task 019 for implementation before code changes. If PostgreSQL candles need to exist before testing the provider locally, run the accepted Task 014 PostgreSQL Binance backfill first. Local Docker Compose runtime startup verification for Task 018 remains deferred to a Docker-capable developer environment.
 
 # Parallel Work Status
 
@@ -66,6 +66,8 @@ The next work may touch shared persistence contracts, ingestion workflows, or sa
 - [x] Task 017: WebSocket Ingestion Readiness complete and verified
 - [x] Task 018: Docker WebSocket Ingestion Service task document selected or created
 - [x] Task 018: Docker WebSocket Ingestion Service complete and verified
+- [x] Task 019: PostgreSQL Candle Data Provider for Backtesting task document selected or created
+- [ ] Task 019: PostgreSQL Candle Data Provider for Backtesting approved for implementation
 
 # Open Questions
 
