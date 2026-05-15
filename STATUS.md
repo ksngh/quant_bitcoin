@@ -2,29 +2,29 @@
 
 # Current Phase
 
-Phase 18: Docker WebSocket Ingestion Service
+Phase 20: PostgreSQL Backtest Runner
 
 # Current Step
 
-Task 018: Docker WebSocket Ingestion Service is implemented and verified for the current cloud workflow with mocked/no-network ordinary tests. Docker runtime startup remains unverified in this cloud environment.
+Task 020: PostgreSQL Backtest Runner task document is created and ready for explicit implementation approval.
 
 # Current Goal
 
-Task 018 is complete for local Docker support and a market-data-only WebSocket ingestion CLI. Task 014 now also includes a runnable Binance backfill CLI script for PostgreSQL-backed historical candle ingestion. Select the next project task explicitly.
+Task 020 is documented to add a runnable RSI backtest workflow for candles already stored in PostgreSQL. Await explicit project-owner approval before implementation.
 
 # Current Active Task
 
-None. Task 014 follow-up backfill CLI script is implemented and verified; Task 018 remains complete for the current cloud workflow.
+None. Task 020 is created but not yet approved for implementation.
 
 # Last Completed Step
 
-Task 014 follow-up: Runnable PostgreSQL Binance backfill CLI script.
+Task 019: PostgreSQL Candle Data Provider for Backtesting.
 
-Added and documented a `quant-bitcoin-binance-backfill` console script that wires the existing public-market-data Binance historical backfiller to `PostgresCandleRepository`, supports local schema initialization, configurable symbol/interval/start/end/limit/retry settings, and emits a JSON run summary. Verified on 2026-05-15 with `pytest`. This follow-up does not add live trading, signed requests, API-key handling, or Binance order endpoint behavior. Docker runtime startup remains unverified in this cloud environment.
+Added a PostgreSQL-backed candle data provider and repository read path that maps stored `candles.open_time` to the standard `timestamp` field and returns only `timestamp`, `open`, `high`, `low`, `close`, and `volume` for existing backtests. Added tests for standard schema mapping, open-time filter wiring, `BasicBacktester` compatibility without CSV, invalid numeric handling, and no-network provider behavior. Verified on 2026-05-15 with `pytest`, `git diff --check`, and `python -m compileall quant_bitcoin`. This task does not add live trading, signed requests, API-key handling, or Binance order endpoint behavior.
 
 # Next Step
 
-Project owner should approve the next task. If historical completeness is needed before or after WebSocket downtime, run the accepted Task 014 PostgreSQL Binance backfill before starting WebSocket ingestion. Local Docker Compose runtime startup verification for Task 018 remains deferred to a Docker-capable developer environment.
+Project owner should explicitly approve Task 020 for implementation before code changes. If PostgreSQL candles need to exist before local backtesting, run the accepted Task 014 PostgreSQL Binance backfill first. Local Docker Compose runtime startup verification for Task 018 remains deferred to a Docker-capable developer environment.
 
 # Parallel Work Status
 
@@ -66,6 +66,11 @@ The next work may touch shared persistence contracts, ingestion workflows, or sa
 - [x] Task 017: WebSocket Ingestion Readiness complete and verified
 - [x] Task 018: Docker WebSocket Ingestion Service task document selected or created
 - [x] Task 018: Docker WebSocket Ingestion Service complete and verified
+- [x] Task 019: PostgreSQL Candle Data Provider for Backtesting task document selected or created
+- [x] Task 019: PostgreSQL Candle Data Provider for Backtesting approved for implementation
+- [x] Task 019: PostgreSQL Candle Data Provider for Backtesting complete and verified
+- [x] Task 020: PostgreSQL Backtest Runner task document selected or created
+- [ ] Task 020: PostgreSQL Backtest Runner approved for implementation
 
 # Open Questions
 

@@ -5,6 +5,7 @@ from quant_bitcoin.persistence.postgres import (
     SOURCE_BINANCE_SPOT,
     CANDLE_TABLE_COLUMNS,
     SCHEMA_SQL,
+    SELECT_STANDARD_CANDLES_BASE_SQL,
     IngestionCheckpoint,
     PersistedCandle,
     PostgresCandleRepository,
@@ -17,5 +18,6 @@ __all__ = [
     "PersistedCandle",
     "PostgresCandleRepository",
     "SCHEMA_SQL",
+    "SELECT_STANDARD_CANDLES_BASE_SQL",
     "SOURCE_BINANCE_SPOT",
 ]
