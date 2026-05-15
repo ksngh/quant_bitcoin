@@ -2,19 +2,19 @@
 
 # Current Phase
 
-Phase 19: PostgreSQL Candle Data Provider for Backtesting
+Phase 20: PostgreSQL Backtest Runner
 
 # Current Step
 
-Task 019: PostgreSQL Candle Data Provider for Backtesting is implemented and verified with mocked/no-network ordinary tests.
+Task 020: PostgreSQL Backtest Runner task document is created and ready for explicit implementation approval.
 
 # Current Goal
 
-Task 019 is complete for a PostgreSQL-backed candle read path that returns the standard candle DataFrame for existing backtests. Select the next project task explicitly.
+Task 020 is documented to add a runnable RSI backtest workflow for candles already stored in PostgreSQL. Await explicit project-owner approval before implementation.
 
 # Current Active Task
 
-None. Task 019 is implemented and verified for the current cloud workflow.
+None. Task 020 is created but not yet approved for implementation.
 
 # Last Completed Step
 
@@ -24,7 +24,7 @@ Added a PostgreSQL-backed candle data provider and repository read path that map
 
 # Next Step
 
-Project owner should select or create the next task explicitly. If PostgreSQL candles need to exist before local backtesting, run the accepted Task 014 PostgreSQL Binance backfill first. Local Docker Compose runtime startup verification for Task 018 remains deferred to a Docker-capable developer environment.
+Project owner should explicitly approve Task 020 for implementation before code changes. If PostgreSQL candles need to exist before local backtesting, run the accepted Task 014 PostgreSQL Binance backfill first. Local Docker Compose runtime startup verification for Task 018 remains deferred to a Docker-capable developer environment.
 
 # Parallel Work Status
 
@@ -69,6 +69,8 @@ The next work may touch shared persistence contracts, ingestion workflows, or sa
 - [x] Task 019: PostgreSQL Candle Data Provider for Backtesting task document selected or created
 - [x] Task 019: PostgreSQL Candle Data Provider for Backtesting approved for implementation
 - [x] Task 019: PostgreSQL Candle Data Provider for Backtesting complete and verified
+- [x] Task 020: PostgreSQL Backtest Runner task document selected or created
+- [ ] Task 020: PostgreSQL Backtest Runner approved for implementation
 
 # Open Questions
 
