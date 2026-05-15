@@ -90,6 +90,64 @@ in a Docker-capable local environment.
 
 ### Backfill public Binance 1-minute candles
 
+The recommended local path is to run the packaged CLI from the repository root
+after installing the project and starting local PostgreSQL:
+
+```bash
+python -m pip install -e '.[test]'
+docker compose up -d postgres
+quant-bitcoin-binance-backfill
+```
+
+With the default Docker Compose database, the CLI connects to:
+
+```text
+postgresql://quant_bitcoin:quant_bitcoin_dev@localhost:5432/quant_bitcoin
+```
+
+The default command initializes the PostgreSQL schema if needed, backfills
+`BTCUSDT` `1m` candles from the latest stored candle or Binance's earliest
+available candle, persists only closed candles, and prints a JSON summary such as
+`stored_candles` and `pages_fetched`. Re-running the command is safe because the
+repository writes candles by the duplicate-safe
+`source + symbol + interval + open_time` uniqueness rule.
+
+Common bounded examples:
+
+```bash
+# Backfill a specific UTC date range.
+quant-bitcoin-binance-backfill \
+  --start-time 2024-01-01T00:00:00Z \
+  --end-time 2024-01-02T00:00:00Z
+
+# Use an explicit database URL and skip schema initialization if already managed.
+quant-bitcoin-binance-backfill \
+  --database-url postgresql://quant_bitcoin:quant_bitcoin_dev@localhost:5432/quant_bitcoin \
+  --no-initialize-schema
+```
+
+Useful CLI options and matching environment variables:
+
+| Option | Environment variable | Default |
+| --- | --- | --- |
+| `--database-url` | `DATABASE_URL` | Local Docker Compose PostgreSQL URL. |
+| `--symbol` | `SYMBOL` | `BTCUSDT` |
+| `--interval` | `INTERVAL` | `1m` |
+| `--start-time` | `BACKFILL_START_TIME` | Resume after latest stored candle, or start from earliest available candle. |
+| `--end-time` | `BACKFILL_END_TIME` | Latest closed candle at runtime. |
+| `--limit` | `BACKFILL_LIMIT` | `1000` |
+| `--base-url` | `BINANCE_MARKET_DATA_BASE_URL` | Binance public market-data REST base URL. |
+| `--timeout-seconds` | `BACKFILL_TIMEOUT_SECONDS` | `10.0` |
+| `--max-retries` | `BACKFILL_MAX_RETRIES` | `3` |
+
+`--start-time` and `--end-time` accept UTC ISO-8601 values such as
+`2024-01-01T00:00:00Z` or millisecond timestamps. Do not commit `.env` files;
+set overrides in your shell or local process manager instead. The backfill uses
+Binance public spot kline data only and does not require API keys, signed
+requests, or order endpoints.
+
+The same behavior can be invoked from Python when embedding the workflow:
+
 ```python
 from quant_bitcoin.market_data import BinanceHistoricalBackfiller
 from quant_bitcoin.persistence import PostgresCandleRepository
@@ -102,9 +160,6 @@ repository.initialize_schema()
 result = BinanceHistoricalBackfiller(repository).run(symbol="BTCUSDT", interval="1m")
 print(result.stored_candles)
 ```
-
-The backfiller uses Binance public spot kline data only, persists closed candles,
-and resumes from the latest stored candle without creating duplicate rows.
 
 ### Ingest public Binance WebSocket closed candles
 
