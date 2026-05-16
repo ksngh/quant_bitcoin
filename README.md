@@ -62,11 +62,14 @@ python -m pip install -e '.[test]'
 
 ## Local PostgreSQL for candle persistence
 
-Task 014 adds local PostgreSQL support for market-data persistence only. The
-Docker Compose service uses non-secret development defaults and loads the
-accepted candle schema from `db/init/001_market_data.sql`. Do not commit `.env`
-files; override `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, or
-`POSTGRES_PORT` in your shell when needed.
+Task 014 adds local PostgreSQL support for persistence. The Docker Compose
+service uses non-secret development defaults and loads the accepted schema from
+the managed SQL command files in `db/init/`; the current source-of-truth schema
+file is `db/init/001_schema.sql`. Do not commit `.env` files; override
+`POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, or `POSTGRES_PORT` in your
+shell when needed. Database command ownership, future existing-database change
+files, and the runtime DML boundary are documented in
+`docs/11_DATABASE_COMMAND_MANAGEMENT.md`.
 
 Start local PostgreSQL from the repository root:
 
@@ -248,9 +251,12 @@ The returned `BacktestRunReadModel` has this shape:
   nullable trade marker fields (`trade_id` and `signal`).
 
 Use `list_completed_runs(...)` to select recent graph inputs. It returns
-newest completed runs first and can filter by source, symbol, interval, and
-actual persisted candle time range. These read methods are intentionally
-read-only: they issue SELECT queries against saved Task 021/022 tables and do
+newest completed runs first and includes the associated strategy config id, key,
+name, version, canonical parameters, and parameter hash so future strategy
+variants can be distinguished before loading the full run. It can filter by
+source, symbol, interval, and actual persisted candle time range. These read
+methods are intentionally read-only: they issue SELECT queries against saved
+Task 021/022 tables and do
 not call Binance, exchange account APIs, order endpoints, `RsiStrategy`, or
 `BasicBacktester`.
 
