@@ -6,32 +6,32 @@ Phase 20: PostgreSQL Backtest Runner
 
 # Current Step
 
-Task 020: PostgreSQL Backtest Runner task document is created and ready for explicit implementation approval.
+Task 020: PostgreSQL Backtest Runner complete and verified.
 
 # Current Goal
 
-Task 020 is documented to add a runnable RSI backtest workflow for candles already stored in PostgreSQL. Await explicit project-owner approval before implementation.
+Task 020 added a short runnable RSI backtest command for candles already stored in PostgreSQL.
 
 # Current Active Task
 
-None. Task 020 is created but not yet approved for implementation.
+None. Task 020 implementation is complete.
 
 # Last Completed Step
 
-Task 019: PostgreSQL Candle Data Provider for Backtesting.
+Task 020: PostgreSQL Backtest Runner.
 
-Added a PostgreSQL-backed candle data provider and repository read path that maps stored `candles.open_time` to the standard `timestamp` field and returns only `timestamp`, `open`, `high`, `low`, `close`, and `volume` for existing backtests. Added tests for standard schema mapping, open-time filter wiring, `BasicBacktester` compatibility without CSV, invalid numeric handling, and no-network provider behavior. Verified on 2026-05-15 with `pytest`, `git diff --check`, and `python -m compileall quant_bitcoin`. This task does not add live trading, signed requests, API-key handling, or Binance order endpoint behavior.
+Added the `quant-bitcoin-postgres-backtest` command to run existing PostgreSQL candles through `PostgresCandleDataProvider`, `RsiStrategy`, and `BasicBacktester`, then print deterministic JSON. Added mocked/fake-provider tests for CLI parsing, component wiring, empty-candle summaries, and no-network test behavior. Updated README usage instructions for running Task 014 backfill before local real-data backtests. Verified on 2026-05-15 with `pytest`, `git diff --check`, and `python -m compileall quant_bitcoin`. This task does not add live trading, signed requests, API-key handling, Binance network calls, or exchange order endpoint behavior.
 
 # Next Step
 
-Project owner should explicitly approve Task 020 for implementation before code changes. If PostgreSQL candles need to exist before local backtesting, run the accepted Task 014 PostgreSQL Binance backfill first. Local Docker Compose runtime startup verification for Task 018 remains deferred to a Docker-capable developer environment.
+Recommended next task should be selected or created by the project owner. If PostgreSQL candles need to exist before local backtesting, run the accepted Task 014 PostgreSQL Binance backfill first. Local Docker Compose runtime startup verification for Task 018 remains deferred to a Docker-capable developer environment.
 
 # Parallel Work Status
 
 Parallel work is not currently recommended.
 
 Reason:
-The next work may touch shared persistence contracts, ingestion workflows, or safety-sensitive trading boundaries. Schema, database, backfill, WebSocket, and any future execution work should proceed sequentially through assigned task documents.
+No implementation task is active. Future work that touches shared persistence contracts, ingestion workflows, or safety-sensitive trading boundaries should proceed sequentially through assigned task documents.
 
 # Phase Checklist
 
@@ -70,7 +70,8 @@ The next work may touch shared persistence contracts, ingestion workflows, or sa
 - [x] Task 019: PostgreSQL Candle Data Provider for Backtesting approved for implementation
 - [x] Task 019: PostgreSQL Candle Data Provider for Backtesting complete and verified
 - [x] Task 020: PostgreSQL Backtest Runner task document selected or created
-- [ ] Task 020: PostgreSQL Backtest Runner approved for implementation
+- [x] Task 020: PostgreSQL Backtest Runner approved for implementation
+- [x] Task 020: PostgreSQL Backtest Runner complete and verified
 
 # Open Questions
 
