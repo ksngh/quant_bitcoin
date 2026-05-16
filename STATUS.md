@@ -2,38 +2,39 @@
 
 # Current Phase
 
-Phase 23: Backtest Result Read Model for Graphs
+Phase 24: Database Schema Command Management
 
 # Current Step
 
-Task 023: Backtest Result Read Model for Graphs implemented and verified.
+Task 024: Database Schema Command Management implemented and verified.
 
 # Current Goal
 
-Expose a read-only PostgreSQL backtest result model so later graph workflows can load saved summary, simulated trades, and graph-ready time-series points without re-running backtests.
+Consolidate PostgreSQL DDL/DML command management under version-controlled `db/` SQL files while preserving accepted candle, backtest persistence, and graph read-model behavior.
 
 # Current Active Task
 
-None. Task 023 implementation is complete pending owner review/merge.
+None. Task 024 implementation is complete pending owner review/merge.
 
 # Last Completed Step
 
-Task 023: Backtest Result Read Model for Graphs.
+Task 024: Database Schema Command Management.
 
-Implemented a read-only PostgreSQL backtest result read model for future graph workflows. `PostgresBacktestResultRepository` can now load one completed saved run by id with metadata, strategy parameters, summary metrics, deterministic simulated trades, and ordered graph-ready points, and can list recent completed runs with optional market/time filters. Documented the returned graph-consumer shape in `README.md`. Verified on 2026-05-16 with `pytest`, `git diff --check`, and `python -m compileall quant_bitcoin`. This task did not add graph UI, FastAPI, Streamlit, schedulers, live trading, signed requests, API-key handling, Binance order endpoints, or exchange account API behavior.
+Implemented DB command-file loading and execution for `db/init/*.sql`, removed duplicated Python-owned schema DDL, renamed the first-start schema file to `db/init/001_schema.sql`, added an explicit empty `db/changes/` path for future existing-database change commands, documented the DDL/DML audit and runtime DML boundary, and updated tests to validate command ordering, repository initialization wiring, managed schema definitions, and empty change-directory behavior. Verified on 2026-05-16 with `pytest`, `git diff --check`, and `python -m compileall quant_bitcoin`. This task did not add graph UI, FastAPI, Streamlit, schedulers, live trading, signed requests, API-key handling, Binance order endpoints, or exchange account API behavior.
 
-Previous completed step: Task 022: PostgreSQL Backtest Result Persistence.
+
+Previous completed step: Task 023: Backtest Result Read Model for Graphs.
 
 # Next Step
 
-Recommended next task: Task 024 Database Schema Command Management. Consolidate duplicated PostgreSQL DDL ownership under version-controlled `db/` command files, ensure first-start DDL/DML execution is managed from `db/`, and define the future DB change-command path before resuming graph consumer work. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
+Recommended next task: owner review/merge for Task 024, then select the next approved graph consumer or persistence workflow task. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
 
 # Parallel Work Status
 
 Parallel work is not currently recommended.
 
 Reason:
-Task 023 should consume the shared persistence contract introduced by Task 022. Additional shared contract changes should remain sequential and explicitly reviewed.
+Task 024 touched shared database command ownership and is complete; additional shared contract changes should remain sequential and explicitly reviewed.
 
 # Phase Checklist
 
@@ -82,7 +83,8 @@ Task 023 should consume the shared persistence contract introduced by Task 022. 
 - [x] Task 023: Backtest Result Read Model for Graphs approved for implementation by owner prompt on 2026-05-16
 - [x] Task 023: Backtest Result Read Model for Graphs complete and verified
 - [x] Task 024: Database Schema Command Management task document created
-- [ ] Task 024: Database Schema Command Management approved for implementation
+- [x] Task 024: Database Schema Command Management approved for implementation by owner prompt on 2026-05-16
+- [x] Task 024: Database Schema Command Management complete and verified
 
 # Open Questions
 
@@ -91,7 +93,7 @@ Task 023 should consume the shared persistence contract introduced by Task 022. 
 - Should future live trading use Binance testnet/sandbox first?
 - What real-order endpoints, if any, are allowed?
 - What kill-switch or disable mechanism is required?
-- Task 024 is expected to decide the concrete PostgreSQL command-management path. Current state has duplicated schema ownership between `db/init/001_market_data.sql` and `SCHEMA_SQL` in `quant_bitcoin/persistence/postgres.py`; implementation should move schema command ownership under version-controlled `db/` files.
+- Task 024 decided the concrete PostgreSQL command-management path: `db/init/001_schema.sql` is the source-of-truth first-start schema DDL, `db/changes/` is reserved for future existing-database state-change SQL, repository initialization executes managed command files, and runtime persistence DML remains application-owned.
 - Docker is not installed in the current cloud environment. Local PostgreSQL and WebSocket ingestor container startup are intentionally skipped here and remain optional local developer verification.
 
 # Blockers

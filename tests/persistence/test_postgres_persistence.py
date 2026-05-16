@@ -9,7 +9,6 @@ import pytest
 
 from quant_bitcoin.persistence import (
     CANDLE_TABLE_COLUMNS,
-    SCHEMA_SQL,
     BacktestGraphPointPayload,
     BacktestPersistencePayload,
     BacktestResultPayload,
@@ -20,6 +19,14 @@ from quant_bitcoin.persistence import (
     PostgresBacktestResultRepository,
     PostgresCandleRepository,
     build_rsi_strategy_config_payload,
+)
+from quant_bitcoin.persistence.db_commands import (
+    DB_CHANGES_DIR,
+    DbCommandFile,
+    execute_db_commands,
+    load_change_db_commands,
+    load_initial_db_commands,
+    load_sql_command_files,
 )
 from quant_bitcoin.persistence.postgres import (
     SELECT_STANDARD_CANDLES_BASE_SQL,
@@ -47,6 +54,8 @@ EXPECTED_CANDLE_COLUMNS = (
 )
 
 
+def managed_schema_sql() -> str:
+    return "\n".join(command.sql for command in load_initial_db_commands())
 
 
 class FakeResult:
@@ -74,6 +83,84 @@ class FakeConnection:
         self.executed_params = params
         return FakeResult(self.rows)
 
+
+class FakeSchemaConnection:
+    def __init__(self) -> None:
+        self.executed: list[str] = []
+
+    def __enter__(self) -> "FakeSchemaConnection":
+        return self
+
+    def __exit__(self, *args: object) -> None:
+        return None
+
+    def execute(self, query: str) -> object:
+        self.executed.append(query)
+        return object()
+
+
+def test_db_command_loader_returns_sql_files_in_deterministic_order(tmp_path):
+    (tmp_path / "020_second.sql").write_text("SELECT 2;", encoding="utf-8")
+    (tmp_path / "010_first.sql").write_text("SELECT 1;", encoding="utf-8")
+    (tmp_path / "README.md").write_text("ignored", encoding="utf-8")
+
+    commands = load_sql_command_files(tmp_path)
+
+    assert [command.path.name for command in commands] == [
+        "010_first.sql",
+        "020_second.sql",
+    ]
+    assert [command.sql for command in commands] == ["SELECT 1;", "SELECT 2;"]
+
+
+def test_db_command_executor_runs_loaded_files_in_order():
+    connection = FakeSchemaConnection()
+    commands = (
+        DbCommandFile(path=DB_CHANGES_DIR / "010_first.sql", sql="SELECT 1;"),
+        DbCommandFile(path=DB_CHANGES_DIR / "020_second.sql", sql="SELECT 2;"),
+    )
+
+    execute_db_commands(connection, commands)
+
+    assert connection.executed == ["SELECT 1;", "SELECT 2;"]
+
+
+def test_empty_change_command_directory_is_explicitly_supported():
+    assert load_change_db_commands() == ()
+
+
+def test_repository_initialize_schema_executes_managed_db_command_files(monkeypatch):
+    import psycopg
+
+    fake_connection = FakeSchemaConnection()
+    monkeypatch.setattr(psycopg, "connect", lambda database_url: fake_connection)
+
+    PostgresCandleRepository("postgresql://example/test").initialize_schema()
+
+    assert fake_connection.executed == [
+        command.sql for command in load_initial_db_commands()
+    ]
+    assert fake_connection.executed
+    assert all(
+        "CREATE TABLE IF NOT EXISTS" in sql for sql in fake_connection.executed
+    )
+
+
+def test_backtest_repository_initialize_schema_executes_managed_db_command_files(
+    monkeypatch,
+):
+    import psycopg
+
+    fake_connection = FakeSchemaConnection()
+    monkeypatch.setattr(psycopg, "connect", lambda database_url: fake_connection)
+
+    PostgresBacktestResultRepository("postgresql://example/test").initialize_schema()
+
+    assert fake_connection.executed == [
+        command.sql for command in load_initial_db_commands()
+    ]
+
+
 def persisted_candle(open_price: str = "42000") -> PersistedCandle:
     return PersistedCandle(
         source="binance_spot",
@@ -98,12 +185,12 @@ def persisted_candle(open_price: str = "42000") -> PersistedCandle:
 def test_candle_contract_columns_match_task_013_schema():
     assert CANDLE_TABLE_COLUMNS == EXPECTED_CANDLE_COLUMNS
     for column in EXPECTED_CANDLE_COLUMNS:
-        assert column in SCHEMA_SQL
+        assert column in managed_schema_sql()
 
 
 def test_schema_enforces_accepted_uniqueness_rules():
-    assert "UNIQUE (source, symbol, interval, open_time)" in SCHEMA_SQL
-    assert "UNIQUE (source, symbol, interval, mode)" in SCHEMA_SQL
+    assert "UNIQUE (source, symbol, interval, open_time)" in managed_schema_sql()
+    assert "UNIQUE (source, symbol, interval, mode)" in managed_schema_sql()
 
 
 def test_standard_candle_select_uses_open_time_timestamp_mapping():
@@ -341,11 +428,14 @@ def test_schema_contains_graph_ready_backtest_tables_and_constraints():
         "backtest_trades",
         "backtest_graph_points",
     ):
-        assert f"CREATE TABLE IF NOT EXISTS {table_name}" in SCHEMA_SQL
-    assert "UNIQUE (strategy_key, version, parameters_hash)" in SCHEMA_SQL
-    assert "CONSTRAINT backtest_runs_run_key_key UNIQUE (run_key)" in SCHEMA_SQL
-    assert "UNIQUE (backtest_run_id, sequence)" in SCHEMA_SQL
-    assert "UNIQUE (backtest_run_id, candle_open_time)" in SCHEMA_SQL
+        assert f"CREATE TABLE IF NOT EXISTS {table_name}" in managed_schema_sql()
+    assert "UNIQUE (strategy_key, version, parameters_hash)" in managed_schema_sql()
+    assert (
+        "CONSTRAINT backtest_runs_run_key_key UNIQUE (run_key)"
+        in managed_schema_sql()
+    )
+    assert "UNIQUE (backtest_run_id, sequence)" in managed_schema_sql()
+    assert "UNIQUE (backtest_run_id, candle_open_time)" in managed_schema_sql()
 
 
 def test_rsi_strategy_config_payload_is_canonical():
