@@ -339,6 +339,123 @@ class BacktestPersistencePayload:
     graph_points: tuple[BacktestGraphPointPayload, ...]
 
 
+@dataclass(frozen=True)
+class BacktestStrategyConfigReadModel:
+    """Strategy metadata returned with a persisted backtest graph read."""
+
+    id: int
+    strategy_key: str
+    strategy_name: str
+    version: str
+    parameters: dict[str, Any]
+    parameters_hash: str
+    metadata: dict[str, Any] | None = None
+
+
+@dataclass(frozen=True)
+class BacktestRunMetadataReadModel:
+    """Run metadata returned by the read-only graph result model."""
+
+    id: int
+    run_key: str
+    engine_name: str
+    engine_version: str
+    candle_source: str
+    symbol: str
+    interval: str
+    requested_start_time: datetime | None
+    requested_end_time: datetime | None
+    actual_start_time: datetime | None
+    actual_end_time: datetime | None
+    candle_count: int
+    starting_cash: float
+    trade_quantity: float
+    status: str
+    metadata: dict[str, Any] | None
+    created_at: datetime
+    completed_at: datetime | None
+
+
+@dataclass(frozen=True)
+class BacktestSummaryReadModel:
+    """Summary metrics for one persisted completed backtest."""
+
+    starting_cash: float
+    ending_cash: float
+    ending_position: float
+    final_price: float | None
+    final_equity: float
+    total_return: float
+    trade_count: int
+    buy_count: int
+    sell_count: int
+    metadata: dict[str, Any] | None
+    created_at: datetime
+
+
+@dataclass(frozen=True)
+class BacktestTradeReadModel:
+    """Deterministically ordered simulated trade returned for graph markers."""
+
+    id: int
+    sequence: int
+    candle_open_time: datetime
+    signal: str
+    price: float
+    quantity: float
+    cash_after: float
+    position_after: float
+    metadata: dict[str, Any] | None
+
+
+@dataclass(frozen=True)
+class BacktestGraphPointReadModel:
+    """Dense graph-ready point for one candle in a saved backtest run."""
+
+    id: int
+    sequence: int
+    candle_open_time: datetime
+    close_price: float
+    cash: float
+    position: float
+    equity: float
+    trade_id: int | None
+    signal: str | None
+    metadata: dict[str, Any] | None
+
+
+@dataclass(frozen=True)
+class BacktestRunReadModel:
+    """Complete read-only shape for future graph consumers."""
+
+    run: BacktestRunMetadataReadModel
+    strategy_config: BacktestStrategyConfigReadModel
+    summary: BacktestSummaryReadModel
+    trades: tuple[BacktestTradeReadModel, ...]
+    graph_points: tuple[BacktestGraphPointReadModel, ...]
+
+
+@dataclass(frozen=True)
+class BacktestRunListItem:
+    """Lightweight completed-run selector row for graph input selection."""
+
+    id: int
+    run_key: str
+    strategy_name: str
+    strategy_version: str
+    candle_source: str
+    symbol: str
+    interval: str
+    actual_start_time: datetime | None
+    actual_end_time: datetime | None
+    candle_count: int
+    final_equity: float
+    total_return: float
+    trade_count: int
+    created_at: datetime
+    completed_at: datetime | None
+
+
 class PostgresCandleRepository:
     """PostgreSQL repository for candles and ingestion checkpoints."""
 
@@ -535,6 +652,80 @@ class PostgresBacktestResultRepository:
                 )
                 return int(backtest_run_id)
 
+    def load_run_for_graphs(self, backtest_run_id: int) -> BacktestRunReadModel | None:
+        """Load one completed run in the read-only shape needed by graph consumers.
+
+        The read path only selects saved rows. It does not call market-data
+        providers, strategy code, backtest engines, Binance endpoints, or order
+        endpoints. Trades are returned by ascending sequence, and graph points
+        are returned by ascending candle timestamp and sequence.
+        """
+
+        import psycopg
+        from psycopg.rows import dict_row
+
+        with psycopg.connect(self.database_url, row_factory=dict_row) as connection:
+            row = connection.execute(
+                SELECT_BACKTEST_RUN_READ_MODEL_SQL,
+                {"backtest_run_id": backtest_run_id},
+            ).fetchone()
+            if row is None:
+                return None
+            trade_rows = connection.execute(
+                SELECT_BACKTEST_TRADES_FOR_GRAPH_SQL,
+                {"backtest_run_id": backtest_run_id},
+            ).fetchall()
+            graph_point_rows = connection.execute(
+                SELECT_BACKTEST_GRAPH_POINTS_SQL,
+                {"backtest_run_id": backtest_run_id},
+            ).fetchall()
+
+        return BacktestRunReadModel(
+            run=_map_backtest_run_metadata(row),
+            strategy_config=_map_strategy_config(row),
+            summary=_map_backtest_summary(row),
+            trades=tuple(_map_backtest_trade(trade) for trade in trade_rows),
+            graph_points=tuple(
+                _map_backtest_graph_point(point) for point in graph_point_rows
+            ),
+        )
+
+    def list_completed_runs(
+        self,
+        *,
+        source: str | None = None,
+        symbol: str | None = None,
+        interval: str | None = None,
+        actual_start_time: datetime | None = None,
+        actual_end_time: datetime | None = None,
+        limit: int = 20,
+    ) -> tuple[BacktestRunListItem, ...]:
+        """List recent completed runs for choosing graph inputs.
+
+        Optional filters narrow by candle source, symbol, interval, and the
+        persisted actual candle time range. Results are ordered newest first by
+        run creation time and id.
+        """
+
+        if limit <= 0:
+            raise ValueError("limit must be positive")
+
+        import psycopg
+        from psycopg.rows import dict_row
+
+        query, params = _build_completed_runs_query(
+            source=source,
+            symbol=symbol,
+            interval=interval,
+            actual_start_time=actual_start_time,
+            actual_end_time=actual_end_time,
+            limit=limit,
+        )
+        with psycopg.connect(self.database_url, row_factory=dict_row) as connection:
+            rows = connection.execute(query, params).fetchall()
+
+        return tuple(_map_backtest_run_list_item(row) for row in rows)
+
 
 SELECT_STANDARD_CANDLES_BASE_SQL = """
 SELECT open_time AS timestamp, open, high, low, close, volume
@@ -680,6 +871,90 @@ INSERT INTO backtest_graph_points (
     %(backtest_run_id)s, %(sequence)s, %(candle_open_time)s, %(close_price)s,
     %(cash)s, %(position)s, %(equity)s, %(trade_id)s, %(signal)s, %(metadata)s
 )
+"""
+
+SELECT_BACKTEST_RUN_READ_MODEL_SQL = """
+SELECT
+    br.id AS run_id,
+    br.run_key,
+    br.engine_name,
+    br.engine_version,
+    br.candle_source,
+    br.symbol,
+    br.interval,
+    br.requested_start_time,
+    br.requested_end_time,
+    br.actual_start_time,
+    br.actual_end_time,
+    br.candle_count,
+    br.starting_cash AS run_starting_cash,
+    br.trade_quantity,
+    br.status,
+    br.metadata AS run_metadata,
+    br.created_at AS run_created_at,
+    br.completed_at,
+    sc.id AS strategy_config_id,
+    sc.strategy_key,
+    sc.strategy_name,
+    sc.version AS strategy_version,
+    sc.parameters AS strategy_parameters,
+    sc.parameters_hash,
+    sc.metadata AS strategy_metadata,
+    r.starting_cash AS result_starting_cash,
+    r.ending_cash,
+    r.ending_position,
+    r.final_price,
+    r.final_equity,
+    r.total_return,
+    r.trade_count,
+    r.buy_count,
+    r.sell_count,
+    r.metadata AS result_metadata,
+    r.created_at AS result_created_at
+FROM backtest_runs br
+JOIN strategy_configs sc ON sc.id = br.strategy_config_id
+JOIN backtest_results r ON r.backtest_run_id = br.id
+WHERE br.id = %(backtest_run_id)s
+  AND br.status = 'completed'
+"""
+
+SELECT_BACKTEST_TRADES_FOR_GRAPH_SQL = """
+SELECT id, sequence, candle_open_time, signal, price, quantity, cash_after,
+       position_after, metadata
+FROM backtest_trades
+WHERE backtest_run_id = %(backtest_run_id)s
+ORDER BY sequence ASC
+"""
+
+SELECT_BACKTEST_GRAPH_POINTS_SQL = """
+SELECT id, sequence, candle_open_time, close_price, cash, position, equity,
+       trade_id, signal, metadata
+FROM backtest_graph_points
+WHERE backtest_run_id = %(backtest_run_id)s
+ORDER BY candle_open_time ASC, sequence ASC
+"""
+
+SELECT_COMPLETED_BACKTEST_RUNS_BASE_SQL = """
+SELECT
+    br.id,
+    br.run_key,
+    sc.strategy_name,
+    sc.version AS strategy_version,
+    br.candle_source,
+    br.symbol,
+    br.interval,
+    br.actual_start_time,
+    br.actual_end_time,
+    br.candle_count,
+    r.final_equity,
+    r.total_return,
+    r.trade_count,
+    br.created_at,
+    br.completed_at
+FROM backtest_runs br
+JOIN strategy_configs sc ON sc.id = br.strategy_config_id
+JOIN backtest_results r ON r.backtest_run_id = br.id
+WHERE br.status = 'completed'
 """
 
 
@@ -888,6 +1163,153 @@ def _build_standard_candle_query(
         params["end_time"] = end_time
     query_parts.append("ORDER BY open_time ASC")
     return "\n".join(query_parts), params
+
+
+def _build_completed_runs_query(
+    *,
+    source: str | None,
+    symbol: str | None,
+    interval: str | None,
+    actual_start_time: datetime | None,
+    actual_end_time: datetime | None,
+    limit: int,
+) -> tuple[str, dict[str, Any]]:
+    query_parts = [SELECT_COMPLETED_BACKTEST_RUNS_BASE_SQL]
+    params: dict[str, Any] = {"limit": limit}
+    if source is not None:
+        query_parts.append("AND br.candle_source = %(source)s")
+        params["source"] = source
+    if symbol is not None:
+        query_parts.append("AND br.symbol = %(symbol)s")
+        params["symbol"] = symbol
+    if interval is not None:
+        query_parts.append("AND br.interval = %(interval)s")
+        params["interval"] = interval
+    if actual_start_time is not None:
+        query_parts.append("AND br.actual_start_time >= %(actual_start_time)s")
+        params["actual_start_time"] = actual_start_time
+    if actual_end_time is not None:
+        query_parts.append("AND br.actual_end_time <= %(actual_end_time)s")
+        params["actual_end_time"] = actual_end_time
+    query_parts.append("ORDER BY br.created_at DESC, br.id DESC")
+    query_parts.append("LIMIT %(limit)s")
+    return "\n".join(query_parts), params
+
+
+def _map_backtest_run_metadata(row: dict[str, Any]) -> BacktestRunMetadataReadModel:
+    return BacktestRunMetadataReadModel(
+        id=int(row["run_id"]),
+        run_key=row["run_key"],
+        engine_name=row["engine_name"],
+        engine_version=row["engine_version"],
+        candle_source=row["candle_source"],
+        symbol=row["symbol"],
+        interval=row["interval"],
+        requested_start_time=_optional_utc(row["requested_start_time"]),
+        requested_end_time=_optional_utc(row["requested_end_time"]),
+        actual_start_time=_optional_utc(row["actual_start_time"]),
+        actual_end_time=_optional_utc(row["actual_end_time"]),
+        candle_count=int(row["candle_count"]),
+        starting_cash=_as_float(row["run_starting_cash"]),
+        trade_quantity=_as_float(row["trade_quantity"]),
+        status=row["status"],
+        metadata=row["run_metadata"],
+        created_at=_as_utc(row["run_created_at"]),
+        completed_at=_optional_utc(row["completed_at"]),
+    )
+
+
+def _map_strategy_config(row: dict[str, Any]) -> BacktestStrategyConfigReadModel:
+    return BacktestStrategyConfigReadModel(
+        id=int(row["strategy_config_id"]),
+        strategy_key=row["strategy_key"],
+        strategy_name=row["strategy_name"],
+        version=row["strategy_version"],
+        parameters=row["strategy_parameters"],
+        parameters_hash=row["parameters_hash"],
+        metadata=row["strategy_metadata"],
+    )
+
+
+def _map_backtest_summary(row: dict[str, Any]) -> BacktestSummaryReadModel:
+    return BacktestSummaryReadModel(
+        starting_cash=_as_float(row["result_starting_cash"]),
+        ending_cash=_as_float(row["ending_cash"]),
+        ending_position=_as_float(row["ending_position"]),
+        final_price=_optional_float(row["final_price"]),
+        final_equity=_as_float(row["final_equity"]),
+        total_return=_as_float(row["total_return"]),
+        trade_count=int(row["trade_count"]),
+        buy_count=int(row["buy_count"]),
+        sell_count=int(row["sell_count"]),
+        metadata=row["result_metadata"],
+        created_at=_as_utc(row["result_created_at"]),
+    )
+
+
+def _map_backtest_trade(row: dict[str, Any]) -> BacktestTradeReadModel:
+    return BacktestTradeReadModel(
+        id=int(row["id"]),
+        sequence=int(row["sequence"]),
+        candle_open_time=_as_utc(row["candle_open_time"]),
+        signal=row["signal"],
+        price=_as_float(row["price"]),
+        quantity=_as_float(row["quantity"]),
+        cash_after=_as_float(row["cash_after"]),
+        position_after=_as_float(row["position_after"]),
+        metadata=row["metadata"],
+    )
+
+
+def _map_backtest_graph_point(row: dict[str, Any]) -> BacktestGraphPointReadModel:
+    return BacktestGraphPointReadModel(
+        id=int(row["id"]),
+        sequence=int(row["sequence"]),
+        candle_open_time=_as_utc(row["candle_open_time"]),
+        close_price=_as_float(row["close_price"]),
+        cash=_as_float(row["cash"]),
+        position=_as_float(row["position"]),
+        equity=_as_float(row["equity"]),
+        trade_id=_optional_int(row["trade_id"]),
+        signal=row["signal"],
+        metadata=row["metadata"],
+    )
+
+
+def _map_backtest_run_list_item(row: dict[str, Any]) -> BacktestRunListItem:
+    return BacktestRunListItem(
+        id=int(row["id"]),
+        run_key=row["run_key"],
+        strategy_name=row["strategy_name"],
+        strategy_version=row["strategy_version"],
+        candle_source=row["candle_source"],
+        symbol=row["symbol"],
+        interval=row["interval"],
+        actual_start_time=_optional_utc(row["actual_start_time"]),
+        actual_end_time=_optional_utc(row["actual_end_time"]),
+        candle_count=int(row["candle_count"]),
+        final_equity=_as_float(row["final_equity"]),
+        total_return=_as_float(row["total_return"]),
+        trade_count=int(row["trade_count"]),
+        created_at=_as_utc(row["created_at"]),
+        completed_at=_optional_utc(row["completed_at"]),
+    )
+
+
+def _optional_int(value: Any | None) -> int | None:
+    if value is None:
+        return None
+    return int(value)
+
+
+def _optional_float(value: Any | None) -> float | None:
+    if value is None:
+        return None
+    return _as_float(value)
+
+
+def _as_float(value: Any) -> float:
+    return float(value)
 
 
 def _optional_utc(value: datetime | None) -> datetime | None:
