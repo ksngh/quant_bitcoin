@@ -220,6 +220,40 @@ Common backtest options and matching environment variables:
 `2024-01-01T00:00:00Z`. Do not commit `.env` files; set overrides in your shell
 or local process manager instead.
 
+## Read saved backtest results for graph inputs
+
+Future graphing workflows should read persisted simulated output through the
+read-only `PostgresBacktestResultRepository` methods instead of re-running a
+strategy, a backtest engine, or market-data providers. Load one saved completed
+run by id with `load_run_for_graphs(backtest_run_id)`. The method returns
+`None` when no completed persisted run with that id and summary row exists; it
+does not synthesize missing data.
+
+The returned `BacktestRunReadModel` has this shape:
+
+- `run`: run metadata such as id, deterministic `run_key`, engine name/version,
+  candle source, symbol, interval, requested and actual candle time ranges,
+  candle count, starting cash, trade quantity, status, metadata, and creation /
+  completion timestamps.
+- `strategy_config`: saved strategy key, name, version, canonical parameters,
+  parameter hash, and optional metadata.
+- `summary`: persisted summary metrics including starting cash, ending cash,
+  ending position, final price, final equity, total return, trade count, buy
+  count, sell count, metadata, and creation timestamp.
+- `trades`: simulated trade rows ordered by `sequence ASC` for deterministic
+  marker overlays. Each row includes candle timestamp, signal, price, quantity,
+  cash after, position after, and optional metadata.
+- `graph_points`: dense graph-ready rows ordered by `candle_open_time ASC,
+  sequence ASC`. Each point includes close price, cash, position, equity, and
+  nullable trade marker fields (`trade_id` and `signal`).
+
+Use `list_completed_runs(...)` to select recent graph inputs. It returns
+newest completed runs first and can filter by source, symbol, interval, and
+actual persisted candle time range. These read methods are intentionally
+read-only: they issue SELECT queries against saved Task 021/022 tables and do
+not call Binance, exchange account APIs, order endpoints, `RsiStrategy`, or
+`BasicBacktester`.
+
 ### Ingest public Binance WebSocket closed candles
 
 ```python
