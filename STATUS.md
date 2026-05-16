@@ -2,19 +2,19 @@
 
 # Current Phase
 
-Phase 25: WebSocket Unbounded Ingestion Service
+Phase 25: Indicator Document Intake Process
 
 # Current Step
 
-Task 025: WebSocket Unbounded Ingestion Service implemented and verified.
+Task 025: Indicator Document Intake Process task document created; implementation of concrete indicators has not started.
 
 # Current Goal
 
-Make the WebSocket ingestion CLI and Docker service default to unbounded long-running candle ingestion while keeping explicit bounded smoke-test mode.
+Define a safe workflow for saving owner-provided technical indicator documents and converting them into one-indicator-at-a-time implementation tasks later.
 
 # Current Active Task
 
-None. Task 025 implementation is complete pending owner review/merge.
+Task 025: Indicator Document Intake Process is documented and pending owner review. No indicator implementation is active.
 
 # Last Completed Step
 
@@ -27,14 +27,14 @@ Previous completed step: Task 024: Database Schema Command Management.
 
 # Next Step
 
-Recommended next task: owner review/merge for Task 025, then select the next approved graph consumer, signal-evaluation, or persistence workflow task. Local Docker Compose runtime startup verification remains deferred to a Docker-capable developer environment.
+Recommended next task: owner review of Task 025, then provide the first indicator document to save under `tasks/indicators/`. Concrete indicator implementation should wait for an explicit indicator-specific implementation task. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
 
 # Parallel Work Status
 
 Parallel work is not currently recommended.
 
 Reason:
-Task 025 touched WebSocket service runtime defaults and is complete; additional ingestion, strategy, or signal-evaluation changes should remain explicitly reviewed.
+Task 025 defines an intake workflow for future indicator documents. Indicator implementation should proceed one indicator at a time unless the owner explicitly approves independent parallel leaf tasks that do not change shared contracts.
 
 # Phase Checklist
 
@@ -88,6 +88,8 @@ Task 025 touched WebSocket service runtime defaults and is complete; additional 
 - [x] Task 025: WebSocket Unbounded Ingestion Service task document created
 - [x] Task 025: WebSocket Unbounded Ingestion Service approved for implementation by owner prompt on 2026-05-16
 - [x] Task 025: WebSocket Unbounded Ingestion Service complete and verified
+- [x] Task 025: Indicator Document Intake Process task document created
+- [ ] First owner-provided indicator document saved under `tasks/indicators/`
 
 # Open Questions
 
@@ -97,6 +99,7 @@ Task 025 touched WebSocket service runtime defaults and is complete; additional 
 - What real-order endpoints, if any, are allowed?
 - What kill-switch or disable mechanism is required?
 - Task 024 decided the concrete PostgreSQL command-management path: `db/init/001_schema.sql` is the source-of-truth first-start schema DDL, `db/changes/` is reserved for future existing-database state-change SQL, repository initialization executes managed command files, and runtime persistence DML remains application-owned.
+- Task 025 defines the indicator document intake process. Future owner-provided indicator documents should be saved under `tasks/indicators/<INDICATOR_KEY>.md`, and concrete indicator code must wait for an explicit indicator-specific implementation task.
 - Docker is not installed in the current cloud environment. Local PostgreSQL and WebSocket ingestor container startup are intentionally skipped here and remain optional local developer verification.
 
 # Blockers
