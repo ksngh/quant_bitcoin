@@ -10,9 +10,16 @@ import pytest
 from quant_bitcoin.persistence import (
     CANDLE_TABLE_COLUMNS,
     SCHEMA_SQL,
+    BacktestGraphPointPayload,
+    BacktestPersistencePayload,
+    BacktestResultPayload,
+    BacktestRunPayload,
+    BacktestTradePayload,
     IngestionCheckpoint,
     PersistedCandle,
+    PostgresBacktestResultRepository,
     PostgresCandleRepository,
+    build_rsi_strategy_config_payload,
 )
 from quant_bitcoin.persistence.postgres import (
     SELECT_STANDARD_CANDLES_BASE_SQL,
@@ -217,3 +224,208 @@ def test_postgres_repository_upserts_duplicate_candles_idempotently():
     )
     assert checkpoint is not None
     assert checkpoint.last_open_time == latest
+
+
+class FakeFetchOneResult:
+    def __init__(self, row: dict[str, Any] | None = None) -> None:
+        self.row = row or {"id": 1}
+
+    def fetchone(self) -> dict[str, Any]:
+        return self.row
+
+
+class FakeTransaction:
+    def __init__(self) -> None:
+        self.entered = False
+        self.exit_exc_type: type[BaseException] | None = None
+
+    def __enter__(self) -> "FakeTransaction":
+        self.entered = True
+        return self
+
+    def __exit__(self, exc_type: type[BaseException] | None, *args: object) -> None:
+        self.exit_exc_type = exc_type
+        return None
+
+
+class FakeBacktestConnection:
+    def __init__(self, *, fail_on_graph_point: bool = False) -> None:
+        self.fail_on_graph_point = fail_on_graph_point
+        self.executed: list[tuple[str, dict[str, Any]]] = []
+        self.transaction_context = FakeTransaction()
+        self.next_id = 100
+
+    def __enter__(self) -> "FakeBacktestConnection":
+        return self
+
+    def __exit__(self, *args: object) -> None:
+        return None
+
+    def transaction(self) -> FakeTransaction:
+        return self.transaction_context
+
+    def execute(self, query: str, params: dict[str, Any]) -> FakeFetchOneResult:
+        if self.fail_on_graph_point and "INSERT INTO backtest_graph_points" in query:
+            raise RuntimeError("simulated graph point insert failure")
+        self.executed.append((query, params))
+        self.next_id += 1
+        return FakeFetchOneResult({"id": self.next_id})
+
+
+def backtest_payload() -> BacktestPersistencePayload:
+    strategy_config = build_rsi_strategy_config_payload(
+        window=2, buy_threshold=30, sell_threshold=70
+    )
+    run_time = datetime(2024, 1, 1, tzinfo=timezone.utc)
+    return BacktestPersistencePayload(
+        strategy_config=strategy_config,
+        run=BacktestRunPayload(
+            run_key="run-key",
+            engine_name="BasicBacktester",
+            engine_version="basic_backtester_v1",
+            candle_source="binance_spot",
+            symbol="BTCUSDT",
+            interval="1m",
+            requested_start_time=run_time,
+            requested_end_time=run_time,
+            actual_start_time=run_time,
+            actual_end_time=run_time,
+            candle_count=1,
+            starting_cash=1000.0,
+            trade_quantity=1.0,
+            status="completed",
+            metadata={"schema_version": "backtest_persistence_schema_v1"},
+        ),
+        result=BacktestResultPayload(
+            starting_cash=1000.0,
+            ending_cash=900.0,
+            ending_position=1.0,
+            final_price=100.0,
+            final_equity=1000.0,
+            total_return=0.0,
+            trade_count=1,
+            buy_count=1,
+            sell_count=0,
+        ),
+        trades=(
+            BacktestTradePayload(
+                sequence=1,
+                candle_open_time=run_time,
+                signal="BUY",
+                price=100.0,
+                quantity=1.0,
+                cash_after=900.0,
+                position_after=1.0,
+            ),
+        ),
+        graph_points=(
+            BacktestGraphPointPayload(
+                sequence=1,
+                candle_open_time=run_time,
+                close_price=100.0,
+                cash=900.0,
+                position=1.0,
+                equity=1000.0,
+                trade_sequence=1,
+                signal="BUY",
+            ),
+        ),
+    )
+
+
+def test_schema_contains_graph_ready_backtest_tables_and_constraints():
+    for table_name in (
+        "strategy_configs",
+        "backtest_runs",
+        "backtest_results",
+        "backtest_trades",
+        "backtest_graph_points",
+    ):
+        assert f"CREATE TABLE IF NOT EXISTS {table_name}" in SCHEMA_SQL
+    assert "UNIQUE (strategy_key, version, parameters_hash)" in SCHEMA_SQL
+    assert "CONSTRAINT backtest_runs_run_key_key UNIQUE (run_key)" in SCHEMA_SQL
+    assert "UNIQUE (backtest_run_id, sequence)" in SCHEMA_SQL
+    assert "UNIQUE (backtest_run_id, candle_open_time)" in SCHEMA_SQL
+
+
+def test_rsi_strategy_config_payload_is_canonical():
+    payload = build_rsi_strategy_config_payload(
+        window=14, buy_threshold=30, sell_threshold=70
+    )
+    same_payload = build_rsi_strategy_config_payload(
+        window=14, buy_threshold=30.0, sell_threshold=70.0
+    )
+    changed_payload = build_rsi_strategy_config_payload(
+        window=7, buy_threshold=30, sell_threshold=70
+    )
+
+    assert payload.strategy_key == "rsi"
+    assert payload.strategy_name == "RsiStrategy"
+    assert payload.parameters == {
+        "buy_threshold": 30.0,
+        "sell_threshold": 70.0,
+        "window": 14,
+    }
+    assert payload.parameters_hash == same_payload.parameters_hash
+    assert payload.parameters_hash != changed_payload.parameters_hash
+
+
+def test_backtest_repository_maps_payload_and_uses_transaction(monkeypatch):
+    import psycopg
+
+    fake_connection = FakeBacktestConnection()
+
+    def fake_connect(database_url: str, **kwargs: Any) -> FakeBacktestConnection:
+        assert database_url == "postgresql://example/test"
+        assert "row_factory" in kwargs
+        return fake_connection
+
+    monkeypatch.setattr(psycopg, "connect", fake_connect)
+
+    run_id = PostgresBacktestResultRepository(
+        "postgresql://example/test"
+    ).save_completed_backtest(backtest_payload())
+
+    assert run_id == 102
+    assert fake_connection.transaction_context.entered is True
+    assert fake_connection.transaction_context.exit_exc_type is None
+    executed_sql = "\n".join(query for query, _ in fake_connection.executed)
+    assert "INSERT INTO strategy_configs" in executed_sql
+    assert "ON CONFLICT (run_key) DO UPDATE SET" in executed_sql
+    assert "DELETE FROM backtest_graph_points" in executed_sql
+    assert "DELETE FROM backtest_trades" in executed_sql
+    assert "DELETE FROM backtest_results" in executed_sql
+    assert "INSERT INTO backtest_runs" in executed_sql
+    assert "INSERT INTO backtest_results" in executed_sql
+    assert "INSERT INTO backtest_trades" in executed_sql
+    assert "INSERT INTO backtest_graph_points" in executed_sql
+
+    graph_params = next(
+        params
+        for query, params in fake_connection.executed
+        if "INSERT INTO backtest_graph_points" in query
+    )
+    assert graph_params["trade_id"] == 107
+    assert graph_params["sequence"] == 1
+    assert graph_params["signal"] == "BUY"
+    assert graph_params["equity"] == 1000.0
+
+
+def test_backtest_repository_failure_exits_transaction_with_error(monkeypatch):
+    import psycopg
+
+    fake_connection = FakeBacktestConnection(fail_on_graph_point=True)
+
+    monkeypatch.setattr(
+        psycopg,
+        "connect",
+        lambda database_url, **kwargs: fake_connection,
+    )
+
+    with pytest.raises(RuntimeError, match="simulated graph point insert failure"):
+        PostgresBacktestResultRepository(
+            "postgresql://example/test"
+        ).save_completed_backtest(backtest_payload())
+
+    assert fake_connection.transaction_context.entered is True
+    assert fake_connection.transaction_context.exit_exc_type is RuntimeError

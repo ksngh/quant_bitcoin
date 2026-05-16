@@ -17,9 +17,25 @@ from dataclasses import asdict
 from datetime import datetime, timezone
 from typing import Any
 
+import pandas as pd
+
 from quant_bitcoin.backtesting.basic import BacktestResult, BasicBacktester
 from quant_bitcoin.market_data import PostgresCandleDataProvider
-from quant_bitcoin.persistence import SOURCE_BINANCE_SPOT
+from quant_bitcoin.persistence import (
+    BACKTEST_ENGINE_NAME,
+    BACKTEST_ENGINE_VERSION,
+    BACKTEST_SCHEMA_VERSION,
+    COMPLETED_BACKTEST_STATUS,
+    SOURCE_BINANCE_SPOT,
+    BacktestGraphPointPayload,
+    BacktestPersistencePayload,
+    BacktestResultPayload,
+    BacktestRunPayload,
+    BacktestTradePayload,
+    PostgresBacktestResultRepository,
+    build_backtest_run_key,
+    build_rsi_strategy_config_payload,
+)
 from quant_bitcoin.strategies import RsiStrategy
 
 DEFAULT_DATABASE_URL = (
@@ -36,6 +52,7 @@ DEFAULT_RSI_SELL_THRESHOLD = 70.0
 ProviderFactory = Callable[..., Any]
 StrategyFactory = Callable[..., Any]
 BacktesterFactory = Callable[..., Any]
+RepositoryFactory = Callable[..., Any]
 
 
 def main(
@@ -44,6 +61,7 @@ def main(
     provider_factory: ProviderFactory = PostgresCandleDataProvider.from_database_url,
     strategy_factory: StrategyFactory = RsiStrategy,
     backtester_factory: BacktesterFactory = BasicBacktester,
+    repository_factory: RepositoryFactory = PostgresBacktestResultRepository,
 ) -> int:
     """Run the PostgreSQL RSI backtest CLI and return a process exit code."""
 
@@ -69,6 +87,25 @@ def main(
     )
     result = backtester.run(candles, strategy)
 
+    persisted_run_id = None
+    if args.persist_results:
+        repository = repository_factory(args.database_url)
+        payload = build_persistence_payload(
+            result,
+            candles=candles,
+            source=args.source,
+            symbol=args.symbol,
+            interval=args.interval,
+            start_time=args.start_time,
+            end_time=args.end_time,
+            starting_cash=args.starting_cash,
+            trade_quantity=args.trade_quantity,
+            rsi_window=args.rsi_window,
+            rsi_buy_threshold=args.rsi_buy_threshold,
+            rsi_sell_threshold=args.rsi_sell_threshold,
+        )
+        persisted_run_id = repository.save_completed_backtest(payload)
+
     _print_json(
         build_output(
             result,
@@ -81,6 +118,7 @@ def main(
             rsi_window=args.rsi_window,
             rsi_buy_threshold=args.rsi_buy_threshold,
             rsi_sell_threshold=args.rsi_sell_threshold,
+            backtest_run_id=persisted_run_id,
         )
     )
     return 0
@@ -161,6 +199,13 @@ def build_parser() -> argparse.ArgumentParser:
         ),
         help="RSI value at or above which the strategy returns SELL",
     )
+    parser.add_argument(
+        "--no-persist",
+        action="store_false",
+        dest="persist_results",
+        help="print the backtest JSON without saving simulated results to PostgreSQL",
+    )
+    parser.set_defaults(persist_results=True)
     return parser
 
 
@@ -176,10 +221,11 @@ def build_output(
     rsi_window: int,
     rsi_buy_threshold: float,
     rsi_sell_threshold: float,
+    backtest_run_id: int | None = None,
 ) -> dict[str, Any]:
     """Return a deterministic JSON-serializable backtest output object."""
 
-    return {
+    output = {
         "candle_count": candle_count,
         "input": {
             "source": source,
@@ -197,7 +243,7 @@ def build_output(
         "summary": asdict(result.summary),
         "trades": [
             {
-                "timestamp": _serialize_datetime(trade.timestamp.to_pydatetime()),
+                "timestamp": _serialize_datetime(_to_datetime(trade.timestamp)),
                 "signal": trade.signal.value,
                 "price": trade.price,
                 "quantity": trade.quantity,
@@ -207,6 +253,148 @@ def build_output(
             for trade in result.trades
         ],
     }
+    if backtest_run_id is not None:
+        output["backtest_run_id"] = backtest_run_id
+    return output
+
+
+def build_persistence_payload(
+    result: BacktestResult,
+    *,
+    candles: pd.DataFrame,
+    source: str,
+    symbol: str,
+    interval: str,
+    start_time: datetime | None,
+    end_time: datetime | None,
+    starting_cash: float,
+    trade_quantity: float,
+    rsi_window: int,
+    rsi_buy_threshold: float,
+    rsi_sell_threshold: float,
+) -> BacktestPersistencePayload:
+    """Build the graph-ready persistence payload for one completed run."""
+
+    normalized_candles = _normalize_candles_for_persistence(candles)
+    actual_start_time = (
+        _to_datetime(normalized_candles.iloc[0]["timestamp"])
+        if not normalized_candles.empty
+        else None
+    )
+    actual_end_time = (
+        _to_datetime(normalized_candles.iloc[-1]["timestamp"])
+        if not normalized_candles.empty
+        else None
+    )
+    strategy_config = build_rsi_strategy_config_payload(
+        window=rsi_window,
+        buy_threshold=rsi_buy_threshold,
+        sell_threshold=rsi_sell_threshold,
+    )
+    identity = {
+        "schema_version": BACKTEST_SCHEMA_VERSION,
+        "engine_name": BACKTEST_ENGINE_NAME,
+        "engine_version": BACKTEST_ENGINE_VERSION,
+        "strategy_name": strategy_config.strategy_name,
+        "strategy_version": strategy_config.version,
+        "strategy_parameters": strategy_config.parameters,
+        "candle_source": source,
+        "symbol": symbol,
+        "interval": interval,
+        "requested_start_time": start_time,
+        "requested_end_time": end_time,
+        "actual_start_time": actual_start_time,
+        "actual_end_time": actual_end_time,
+        "candle_count": len(normalized_candles),
+        "starting_cash": float(starting_cash),
+        "trade_quantity": float(trade_quantity),
+    }
+    run_key = build_backtest_run_key(identity)
+    return BacktestPersistencePayload(
+        strategy_config=strategy_config,
+        run=BacktestRunPayload(
+            run_key=run_key,
+            engine_name=BACKTEST_ENGINE_NAME,
+            engine_version=BACKTEST_ENGINE_VERSION,
+            candle_source=source,
+            symbol=symbol,
+            interval=interval,
+            requested_start_time=start_time,
+            requested_end_time=end_time,
+            actual_start_time=actual_start_time,
+            actual_end_time=actual_end_time,
+            candle_count=len(normalized_candles),
+            starting_cash=float(starting_cash),
+            trade_quantity=float(trade_quantity),
+            status=COMPLETED_BACKTEST_STATUS,
+            metadata={"schema_version": BACKTEST_SCHEMA_VERSION},
+        ),
+        result=BacktestResultPayload(**asdict(result.summary)),
+        trades=_build_trade_payloads(result),
+        graph_points=_build_graph_point_payloads(
+            normalized_candles, result, starting_cash=float(starting_cash)
+        ),
+    )
+
+
+def _build_trade_payloads(result: BacktestResult) -> tuple[BacktestTradePayload, ...]:
+    return tuple(
+        BacktestTradePayload(
+            sequence=index,
+            candle_open_time=_to_datetime(trade.timestamp),
+            signal=trade.signal.value,
+            price=float(trade.price),
+            quantity=float(trade.quantity),
+            cash_after=float(trade.cash_after),
+            position_after=float(trade.position_after),
+        )
+        for index, trade in enumerate(result.trades, start=1)
+    )
+
+
+def _build_graph_point_payloads(
+    candles: pd.DataFrame, result: BacktestResult, *, starting_cash: float
+) -> tuple[BacktestGraphPointPayload, ...]:
+    trades_by_timestamp = {
+        _to_datetime(trade.timestamp): (index, trade)
+        for index, trade in enumerate(result.trades, start=1)
+    }
+    cash = float(starting_cash)
+    position = 0.0
+    points: list[BacktestGraphPointPayload] = []
+    for sequence, row in enumerate(candles.itertuples(index=False), start=1):
+        candle_open_time = _to_datetime(row.timestamp)
+        close_price = float(row.close)
+        trade_entry = trades_by_timestamp.get(candle_open_time)
+        trade_sequence = None
+        signal = None
+        if trade_entry is not None:
+            trade_sequence, trade = trade_entry
+            cash = float(trade.cash_after)
+            position = float(trade.position_after)
+            signal = trade.signal.value
+        points.append(
+            BacktestGraphPointPayload(
+                sequence=sequence,
+                candle_open_time=candle_open_time,
+                close_price=close_price,
+                cash=cash,
+                position=position,
+                equity=cash + position * close_price,
+                trade_sequence=trade_sequence,
+                signal=signal,
+            )
+        )
+    return tuple(points)
+
+
+def _normalize_candles_for_persistence(candles: pd.DataFrame) -> pd.DataFrame:
+    if candles.empty:
+        return candles.copy()
+    normalized = candles.loc[:, ["timestamp", "close"]].copy()
+    normalized["timestamp"] = pd.to_datetime(normalized["timestamp"], errors="raise")
+    normalized["close"] = pd.to_numeric(normalized["close"], errors="raise")
+    return normalized.sort_values("timestamp", kind="mergesort").reset_index(drop=True)
 
 
 def _optional_timestamp(value: str) -> datetime | None:
@@ -297,6 +485,17 @@ def _serialize_datetime(value: datetime) -> str:
     if value.tzinfo is None:
         value = value.replace(tzinfo=timezone.utc)
     return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+
+def _to_datetime(value: Any) -> datetime:
+    if isinstance(value, pd.Timestamp):
+        value = value.to_pydatetime()
+    if not isinstance(value, datetime):
+        raise TypeError("value must be a datetime")
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
 
 
 def _print_json(payload: dict[str, Any]) -> None:
