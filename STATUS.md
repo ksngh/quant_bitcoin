@@ -2,38 +2,39 @@
 
 # Current Phase
 
-Phase 23: Backtest Result Read Model for Graphs
+Phase 25: WebSocket Unbounded Ingestion Service
 
 # Current Step
 
-Task 023: Backtest Result Read Model for Graphs implemented and verified.
+Task 025: WebSocket Unbounded Ingestion Service implemented and verified.
 
 # Current Goal
 
-Expose a read-only PostgreSQL backtest result model so later graph workflows can load saved summary, simulated trades, and graph-ready time-series points without re-running backtests.
+Make the WebSocket ingestion CLI and Docker service default to unbounded long-running candle ingestion while keeping explicit bounded smoke-test mode.
 
 # Current Active Task
 
-None. Task 023 implementation is complete pending owner review/merge.
+None. Task 025 implementation is complete pending owner review/merge.
 
 # Last Completed Step
 
-Task 023: Backtest Result Read Model for Graphs.
+Task 025: WebSocket Unbounded Ingestion Service.
 
-Implemented a read-only PostgreSQL backtest result read model for future graph workflows. `PostgresBacktestResultRepository` can now load one completed saved run by id with metadata, strategy parameters, summary metrics, deterministic simulated trades, and ordered graph-ready points, and can list recent completed runs with optional market/time filters. Documented the returned graph-consumer shape in `README.md`. Verified on 2026-05-16 with `pytest`, `git diff --check`, and `python -m compileall quant_bitcoin`. This task did not add graph UI, FastAPI, Streamlit, schedulers, live trading, signed requests, API-key handling, Binance order endpoints, or exchange account API behavior.
+Implemented unbounded long-running WebSocket ingestion defaults for the CLI and Docker Compose service. `INGEST_MAX_MESSAGES` now treats unset, empty, `0`, `none`, `null`, and `unbounded` as no message limit, positive values still enable bounded smoke-test mode, and `--no-max-messages` forces unbounded mode even when the environment contains a limit. Updated tests and README documentation. Verified on 2026-05-16 with `pytest`, `git diff --check`, and `python -m compileall quant_bitcoin`. This task remained market-data-only and did not add strategy execution, paper trading, live trading, signed requests, API-key handling, Binance order endpoints, exchange account API behavior, scheduler, dashboard, FastAPI, or Streamlit.
 
-Previous completed step: Task 022: PostgreSQL Backtest Result Persistence.
+
+Previous completed step: Task 024: Database Schema Command Management.
 
 # Next Step
 
-Recommended next task: Task 024 Database Schema Command Management. Consolidate duplicated PostgreSQL DDL ownership under version-controlled `db/` command files, ensure first-start DDL/DML execution is managed from `db/`, and define the future DB change-command path before resuming graph consumer work. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
+Recommended next task: owner review/merge for Task 025, then select the next approved graph consumer, signal-evaluation, or persistence workflow task. Local Docker Compose runtime startup verification remains deferred to a Docker-capable developer environment.
 
 # Parallel Work Status
 
 Parallel work is not currently recommended.
 
 Reason:
-Task 023 should consume the shared persistence contract introduced by Task 022. Additional shared contract changes should remain sequential and explicitly reviewed.
+Task 025 touched WebSocket service runtime defaults and is complete; additional ingestion, strategy, or signal-evaluation changes should remain explicitly reviewed.
 
 # Phase Checklist
 
@@ -82,7 +83,11 @@ Task 023 should consume the shared persistence contract introduced by Task 022. 
 - [x] Task 023: Backtest Result Read Model for Graphs approved for implementation by owner prompt on 2026-05-16
 - [x] Task 023: Backtest Result Read Model for Graphs complete and verified
 - [x] Task 024: Database Schema Command Management task document created
-- [ ] Task 024: Database Schema Command Management approved for implementation
+- [x] Task 024: Database Schema Command Management approved for implementation by owner prompt on 2026-05-16
+- [x] Task 024: Database Schema Command Management complete and verified
+- [x] Task 025: WebSocket Unbounded Ingestion Service task document created
+- [x] Task 025: WebSocket Unbounded Ingestion Service approved for implementation by owner prompt on 2026-05-16
+- [x] Task 025: WebSocket Unbounded Ingestion Service complete and verified
 
 # Open Questions
 
@@ -91,7 +96,7 @@ Task 023 should consume the shared persistence contract introduced by Task 022. 
 - Should future live trading use Binance testnet/sandbox first?
 - What real-order endpoints, if any, are allowed?
 - What kill-switch or disable mechanism is required?
-- Task 024 is expected to decide the concrete PostgreSQL command-management path. Current state has duplicated schema ownership between `db/init/001_market_data.sql` and `SCHEMA_SQL` in `quant_bitcoin/persistence/postgres.py`; implementation should move schema command ownership under version-controlled `db/` files.
+- Task 024 decided the concrete PostgreSQL command-management path: `db/init/001_schema.sql` is the source-of-truth first-start schema DDL, `db/changes/` is reserved for future existing-database state-change SQL, repository initialization executes managed command files, and runtime persistence DML remains application-owned.
 - Docker is not installed in the current cloud environment. Local PostgreSQL and WebSocket ingestor container startup are intentionally skipped here and remain optional local developer verification.
 
 # Blockers
