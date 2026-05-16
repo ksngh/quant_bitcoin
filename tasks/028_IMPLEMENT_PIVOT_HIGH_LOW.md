@@ -10,7 +10,7 @@ This task must identify local swing points only. It must not fetch market data, 
 
 Owner listed Pivot High / Pivot Low as one of the remaining indicators to add on 2026-05-16.
 
-Detailed formulas, default parameters, output schema, and edge-case behavior are not yet fully specified in an owner-provided indicator document. Before implementation, the assigned implementer must either use an owner-approved saved indicator document or record explicit assumptions in this task and `STATUS.md`.
+Detailed formulas, default parameters, output schema, and edge-case behavior are specified in the owner-provided saved indicator document at `tasks/indicators/pivot_high_low.md`.
 
 # Clean Requirement
 
@@ -37,7 +37,7 @@ Pivot points are likely prerequisites for Swing Structure and Support / Resistan
 
 - Add a pure Pivot High / Pivot Low calculation from provided candles.
 - Use existing candle schema where possible: `timestamp`, `open`, `high`, `low`, `close`, `volume`.
-- Add explicit configuration for left/right lookback windows after owner confirmation.
+- Add explicit configuration for left/right lookback windows using the owner-confirmed defaults in `tasks/indicators/pivot_high_low.md`.
 - Add deterministic output that includes timestamp, high, low, pivot flags, and pivot price where applicable.
 - Add tests for normal pivots, no pivot, insufficient warm-up/cool-down candles, equal-high/equal-low tie behavior, and invalid input.
 - Update package exports only if needed.
@@ -62,27 +62,29 @@ Pivot points are likely prerequisites for Swing Structure and Support / Resistan
 
 # Open Questions Before Implementation
 
-- What are the default `left_bars` and `right_bars` values?
-- Should equal highs/lows count as pivots or invalidate the pivot?
-- Should the result be returned as a series aligned to all candles or only as pivot events?
-- Should a candle be allowed to be both a pivot high and pivot low?
-- Should the implementation require a full right-side confirmation window before marking the latest candle?
+Resolved by `tasks/indicators/pivot_high_low.md`:
+
+- Defaults are `left_window = 3` and `right_window = 3`.
+- Equal highs/lows are rejected by default and allowed only when `allow_equal_high_low = true`.
+- The initial output is returned as pivot events.
+- A candle may be both `PIVOT_HIGH` and `PIVOT_LOW`, represented as `BOTH`.
+- The default requires a full right-side confirmation window before returning confirmed pivot events.
 
 # Status Tracking
 
 ## Before Implementation
 
-- [ ] Read required project files and this task.
-- [ ] Confirm owner-approved pivot formula and parameters.
-- [ ] Confirm no shared contract changes are required for downstream Swing Structure or Support / Resistance Zone tasks.
-- [ ] Confirm implementation is limited to Pivot High / Pivot Low only.
+- [x] Read required project files and this task.
+- [x] Confirm owner-approved pivot formula and parameters.
+- [x] Confirm no shared contract changes are required for downstream Swing Structure or Support / Resistance Zone tasks.
+- [x] Confirm implementation is limited to Pivot High / Pivot Low only.
 
 ## After Implementation
 
-- [ ] Add or update deterministic tests.
-- [ ] Run required verification.
-- [ ] Complete Codex self-review.
-- [ ] Update `STATUS.md` if active task, current step, next step, or completion state changed.
+- [x] Add or update deterministic tests.
+- [x] Run required verification.
+- [x] Complete Codex self-review.
+- [x] Update `STATUS.md` if active task, current step, next step, or completion state changed.
 
 # Acceptance Criteria
 
