@@ -18,12 +18,12 @@ Task 025: Indicator Document Intake Process is documented and pending owner revi
 
 # Last Completed Step
 
-Task 024: Database Schema Command Management.
+Task 025: WebSocket Unbounded Ingestion Service.
 
-Implemented DB command-file loading and execution for `db/init/*.sql`, removed duplicated Python-owned schema DDL, renamed the first-start schema file to `db/init/001_schema.sql`, added an explicit empty `db/changes/` path for future existing-database change commands, documented the DDL/DML audit and runtime DML boundary, and updated tests to validate command ordering, repository initialization wiring, managed schema definitions, and empty change-directory behavior. Follow-up review feedback also made completed-run list items expose the associated strategy config id, key, canonical parameters, and parameter hash through the existing `backtest_runs.strategy_config_id -> strategy_configs.id` relationship so future strategy variants can be distinguished from saved results without changing the accepted schema. Verified on 2026-05-16 with `pytest`, `git diff --check`, and `python -m compileall quant_bitcoin`. This task did not add graph UI, FastAPI, Streamlit, schedulers, live trading, signed requests, API-key handling, Binance order endpoints, or exchange account API behavior.
+Implemented unbounded long-running WebSocket ingestion defaults for the CLI and Docker Compose service. `INGEST_MAX_MESSAGES` now treats unset, empty, `0`, `none`, `null`, and `unbounded` as no message limit, positive values still enable bounded smoke-test mode, and `--no-max-messages` forces unbounded mode even when the environment contains a limit. Updated tests and README documentation. Verified on 2026-05-16 with `pytest`, `git diff --check`, and `python -m compileall quant_bitcoin`. This task remained market-data-only and did not add strategy execution, paper trading, live trading, signed requests, API-key handling, Binance order endpoints, exchange account API behavior, scheduler, dashboard, FastAPI, or Streamlit.
 
 
-Previous completed step: Task 023: Backtest Result Read Model for Graphs.
+Previous completed step: Task 024: Database Schema Command Management.
 
 # Next Step
 
@@ -85,6 +85,9 @@ Task 025 defines an intake workflow for future indicator documents. Indicator im
 - [x] Task 024: Database Schema Command Management task document created
 - [x] Task 024: Database Schema Command Management approved for implementation by owner prompt on 2026-05-16
 - [x] Task 024: Database Schema Command Management complete and verified
+- [x] Task 025: WebSocket Unbounded Ingestion Service task document created
+- [x] Task 025: WebSocket Unbounded Ingestion Service approved for implementation by owner prompt on 2026-05-16
+- [x] Task 025: WebSocket Unbounded Ingestion Service complete and verified
 - [x] Task 025: Indicator Document Intake Process task document created
 - [ ] First owner-provided indicator document saved under `tasks/indicators/`
 

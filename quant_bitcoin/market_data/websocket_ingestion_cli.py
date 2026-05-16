@@ -1,9 +1,10 @@
 """Command-line helpers for market-data-only WebSocket ingestion.
 
 The CLI is intended for local operations and Docker Compose wiring. It supports
-configuration readiness checks without external I/O and bounded public market
-WebSocket ingestion into PostgreSQL. It does not place orders, call account APIs,
-or run strategy/execution logic.
+configuration readiness checks without external I/O, unbounded long-running
+public market WebSocket ingestion into PostgreSQL, and explicit bounded smoke
+checks. It does not place orders, call account APIs, or run strategy/execution
+logic.
 """
 
 from __future__ import annotations
@@ -28,7 +29,7 @@ from quant_bitcoin.persistence import PostgresCandleRepository
 
 DEFAULT_SYMBOL = "BTCUSDT"
 DEFAULT_INTERVAL = "1m"
-DEFAULT_MAX_MESSAGES = 5
+UNBOUNDED_MAX_MESSAGE_VALUES = {"", "0", "none", "null", "unbounded"}
 DEFAULT_DATABASE_URL = (
     "postgresql://quant_bitcoin:quant_bitcoin_dev@postgres:5432/quant_bitcoin"
 )
@@ -81,7 +82,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     ingest = subparsers.add_parser(
         "ingest",
-        help="run bounded public WebSocket candle ingestion into PostgreSQL",
+        help="run public WebSocket candle ingestion into PostgreSQL",
     )
     _add_common_ingestion_options(ingest)
     ingest.add_argument(
@@ -89,11 +90,25 @@ def build_parser() -> argparse.ArgumentParser:
         default=os.environ.get("DATABASE_URL", DEFAULT_DATABASE_URL),
         help="PostgreSQL connection URL for candle persistence",
     )
-    ingest.add_argument(
+    max_messages = ingest.add_mutually_exclusive_group()
+    max_messages.add_argument(
         "--max-messages",
         type=_positive_int,
-        default=_env_positive_int("INGEST_MAX_MESSAGES", DEFAULT_MAX_MESSAGES),
-        help="maximum WebSocket messages to process before exiting",
+        default=_env_optional_positive_int("INGEST_MAX_MESSAGES"),
+        help=(
+            "maximum WebSocket messages to process before exiting; use this for "
+            "bounded smoke checks"
+        ),
+    )
+    max_messages.add_argument(
+        "--no-max-messages",
+        action="store_const",
+        const=None,
+        dest="max_messages",
+        help=(
+            "run without a message limit; overrides INGEST_MAX_MESSAGES for "
+            "long-running ingestion"
+        ),
     )
     ingest.add_argument(
         "--initialize-schema",
@@ -198,10 +213,13 @@ def _env_float(name: str, default: float) -> float:
     return float(raw_value)
 
 
-def _env_positive_int(name: str, default: int) -> int:
+def _env_optional_positive_int(name: str) -> int | None:
     raw_value = os.environ.get(name)
     if raw_value is None:
-        return default
+        return None
+    normalized = raw_value.strip().lower()
+    if normalized in UNBOUNDED_MAX_MESSAGE_VALUES:
+        return None
     return _positive_int(raw_value)
 
 

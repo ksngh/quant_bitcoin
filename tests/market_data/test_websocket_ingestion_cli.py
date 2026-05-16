@@ -121,14 +121,112 @@ def test_cli_bounded_ingestion_wires_repository_and_ingestor_without_network(cap
     }
 
 
-def test_docker_compose_defines_postgres_and_bounded_websocket_ingestor_service():
+def test_cli_unbounded_ingestion_is_default_without_env(monkeypatch, capsys):
+    monkeypatch.delenv("INGEST_MAX_MESSAGES", raising=False)
+    calls = {"ingestors": []}
+
+    class FakeRepository:
+        def __init__(self, database_url: str) -> None:
+            self.database_url = database_url
+
+        def initialize_schema(self) -> None:
+            return None
+
+    class FakeIngestor:
+        def __init__(self, repository, **kwargs) -> None:
+            self.repository = repository
+            self.run_kwargs = None
+            calls["ingestors"].append(self)
+
+        async def run(self, **kwargs):
+            self.run_kwargs = kwargs
+            return WebSocketIngestionResult(
+                symbol=kwargs["symbol"],
+                interval=kwargs["interval"],
+                messages_seen=0,
+                candles_persisted=0,
+                reconnects=0,
+            )
+
+    exit_code = main(
+        ["ingest", "--no-initialize-schema"],
+        repository_factory=FakeRepository,
+        ingestor_factory=FakeIngestor,
+    )
+    output = _json_output(capsys)
+
+    assert exit_code == 0
+    assert output["messages_seen"] == 0
+    assert calls["ingestors"][0].run_kwargs["max_messages"] is None
+
+
+def test_cli_ingest_max_messages_env_policy_and_no_max_override(monkeypatch, capsys):
+    class FakeRepository:
+        def __init__(self, database_url: str) -> None:
+            self.database_url = database_url
+
+        def initialize_schema(self) -> None:
+            return None
+
+    class FakeIngestor:
+        instances = []
+
+        def __init__(self, repository, **kwargs) -> None:
+            self.repository = repository
+            self.run_kwargs = None
+            self.instances.append(self)
+
+        async def run(self, **kwargs):
+            self.run_kwargs = kwargs
+            return WebSocketIngestionResult(
+                symbol=kwargs["symbol"],
+                interval=kwargs["interval"],
+                messages_seen=kwargs["max_messages"] or 0,
+                candles_persisted=0,
+                reconnects=0,
+            )
+
+    for raw_value in ("", "0", "none", "null", "unbounded"):
+        FakeIngestor.instances.clear()
+        monkeypatch.setenv("INGEST_MAX_MESSAGES", raw_value)
+        assert main(
+            ["ingest", "--no-initialize-schema"],
+            repository_factory=FakeRepository,
+            ingestor_factory=FakeIngestor,
+        ) == 0
+        _json_output(capsys)
+        assert FakeIngestor.instances[0].run_kwargs["max_messages"] is None
+
+    FakeIngestor.instances.clear()
+    monkeypatch.setenv("INGEST_MAX_MESSAGES", "3")
+    assert main(
+        ["ingest", "--no-initialize-schema"],
+        repository_factory=FakeRepository,
+        ingestor_factory=FakeIngestor,
+    ) == 0
+    _json_output(capsys)
+    assert FakeIngestor.instances[0].run_kwargs["max_messages"] == 3
+
+    FakeIngestor.instances.clear()
+    monkeypatch.setenv("INGEST_MAX_MESSAGES", "3")
+    assert main(
+        ["ingest", "--no-initialize-schema", "--no-max-messages"],
+        repository_factory=FakeRepository,
+        ingestor_factory=FakeIngestor,
+    ) == 0
+    _json_output(capsys)
+    assert FakeIngestor.instances[0].run_kwargs["max_messages"] is None
+
+
+def test_docker_compose_defines_postgres_and_unbounded_websocket_ingestor_service():
     compose = Path("docker-compose.yml").read_text()
 
     assert "postgres:" in compose
     assert "websocket-ingestor:" in compose
     assert "build: ." in compose
     assert "postgresql://quant_bitcoin:quant_bitcoin_dev@postgres:5432/quant_bitcoin" in compose
-    assert "INGEST_MAX_MESSAGES: ${INGEST_MAX_MESSAGES:-5}" in compose
+    assert "INGEST_MAX_MESSAGES: ${INGEST_MAX_MESSAGES:-unbounded}" in compose
+    assert "INGEST_MAX_MESSAGES: ${INGEST_MAX_MESSAGES:-5}" not in compose
     assert "quant-bitcoin-websocket-ingestion" in compose
     assert "- ingest" in compose
     assert "condition: service_healthy" in compose

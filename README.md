@@ -285,6 +285,13 @@ historical REST gap fill on startup; run the Task 014 backfill first whenever
 historical completeness after downtime is required. Ordinary tests mock the
 WebSocket connector and do not require real Binance availability.
 
+The ingestion CLI defaults to unbounded long-running mode. Leave
+`INGEST_MAX_MESSAGES` unset, empty, `0`, `none`, `null`, or `unbounded` to
+keep running until the process is stopped or reconnects fail. Use `--max-messages <positive
+integer>` or a positive `INGEST_MAX_MESSAGES` value for bounded smoke checks.
+Use `--no-max-messages` to force unbounded mode even when `INGEST_MAX_MESSAGES`
+is set in the environment.
+
 ## Running tests
 
 ```bash
