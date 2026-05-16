@@ -2,19 +2,19 @@
 
 # Current Phase
 
-Phase 20: PostgreSQL Backtest Runner
+Phase 21: Graph-Ready Backtest Persistence Planning
 
 # Current Step
 
-Task 020: PostgreSQL Backtest Runner complete and verified.
+Tasks 021-023: Graph-ready backtest persistence task documents created; implementation not started.
 
 # Current Goal
 
-Task 020 added a short runnable RSI backtest command for candles already stored in PostgreSQL.
+Define the schema, write path, and read model needed to persist PostgreSQL backtest results for later graphing.
 
 # Current Active Task
 
-None. Task 020 implementation is complete.
+None. Task 021 should be assigned first before any DB result persistence implementation starts.
 
 # Last Completed Step
 
@@ -24,14 +24,14 @@ Added the `quant-bitcoin-postgres-backtest` command to run existing PostgreSQL c
 
 # Next Step
 
-Recommended next task should be selected or created by the project owner. If PostgreSQL candles need to exist before local backtesting, run the accepted Task 014 PostgreSQL Binance backfill first. Local Docker Compose runtime startup verification for Task 018 remains deferred to a Docker-capable developer environment.
+Recommended next task: Task 021 Graph-Ready Backtest Persistence Schema. Do not implement DB writes until Task 021 is accepted. After Task 021, implement Task 022 PostgreSQL Backtest Result Persistence, then Task 023 Backtest Result Read Model for Graphs. If PostgreSQL candles need to exist before local backtesting, run the accepted Task 014 PostgreSQL Binance backfill first. Local Docker Compose runtime startup verification for Task 018 remains deferred to a Docker-capable developer environment.
 
 # Parallel Work Status
 
 Parallel work is not currently recommended.
 
 Reason:
-No implementation task is active. Future work that touches shared persistence contracts, ingestion workflows, or safety-sensitive trading boundaries should proceed sequentially through assigned task documents.
+No implementation task is active. Tasks 021-023 intentionally touch shared persistence contracts and should proceed sequentially: design first, write implementation second, read model third.
 
 # Phase Checklist
 
@@ -72,6 +72,12 @@ No implementation task is active. Future work that touches shared persistence co
 - [x] Task 020: PostgreSQL Backtest Runner task document selected or created
 - [x] Task 020: PostgreSQL Backtest Runner approved for implementation
 - [x] Task 020: PostgreSQL Backtest Runner complete and verified
+- [x] Task 021: Graph-Ready Backtest Persistence Schema task document created
+- [x] Task 022: PostgreSQL Backtest Result Persistence task document created
+- [x] Task 023: Backtest Result Read Model for Graphs task document created
+- [ ] Task 021: Graph-Ready Backtest Persistence Schema accepted
+- [ ] Task 022: PostgreSQL Backtest Result Persistence approved for implementation
+- [ ] Task 023: Backtest Result Read Model for Graphs approved for implementation
 
 # Open Questions
 
@@ -80,7 +86,7 @@ No implementation task is active. Future work that touches shared persistence co
 - Should future live trading use Binance testnet/sandbox first?
 - What real-order endpoints, if any, are allowed?
 - What kill-switch or disable mechanism is required?
-- Should future PostgreSQL implementation use migrations, container init scripts, or another schema-management path? Current Task 014 uses container init SQL plus repository schema initialization; migrations remain a future decision if schema evolution is needed.
+- Should future PostgreSQL implementation use migrations, container init scripts, or another schema-management path? Current Task 014 uses container init SQL plus repository schema initialization; migrations remain a future decision if schema evolution is needed. Task 021 should decide the graph-ready backtest persistence schema before Task 022 writes results.
 - Docker is not installed in the current cloud environment. Local PostgreSQL and WebSocket ingestor container startup are intentionally skipped here and remain optional local developer verification.
 
 # Blockers
