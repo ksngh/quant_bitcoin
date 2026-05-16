@@ -26,7 +26,7 @@ Previous completed step: Task 022: PostgreSQL Backtest Result Persistence.
 
 # Next Step
 
-Recommended next task: owner review/merge for Task 023, then select a future graph consumer or visualization task only if explicitly approved. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
+Recommended next task: Task 024 Database Schema Command Management. Consolidate duplicated PostgreSQL DDL ownership under version-controlled `db/` command files, ensure first-start DDL/DML execution is managed from `db/`, and define the future DB change-command path before resuming graph consumer work. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
 
 # Parallel Work Status
 
@@ -81,6 +81,8 @@ Task 023 should consume the shared persistence contract introduced by Task 022. 
 - [x] Task 022: PostgreSQL Backtest Result Persistence complete and verified
 - [x] Task 023: Backtest Result Read Model for Graphs approved for implementation by owner prompt on 2026-05-16
 - [x] Task 023: Backtest Result Read Model for Graphs complete and verified
+- [x] Task 024: Database Schema Command Management task document created
+- [ ] Task 024: Database Schema Command Management approved for implementation
 
 # Open Questions
 
@@ -89,7 +91,7 @@ Task 023 should consume the shared persistence contract introduced by Task 022. 
 - Should future live trading use Binance testnet/sandbox first?
 - What real-order endpoints, if any, are allowed?
 - What kill-switch or disable mechanism is required?
-- Should future PostgreSQL implementation use migrations, container init scripts, or another schema-management path? Current Task 014 uses container init SQL plus repository schema initialization; migrations remain a future decision if schema evolution is needed. Task 022 extended the existing init SQL/repository initialization path for graph-ready backtest result tables.
+- Task 024 is expected to decide the concrete PostgreSQL command-management path. Current state has duplicated schema ownership between `db/init/001_market_data.sql` and `SCHEMA_SQL` in `quant_bitcoin/persistence/postgres.py`; implementation should move schema command ownership under version-controlled `db/` files.
 - Docker is not installed in the current cloud environment. Local PostgreSQL and WebSocket ingestor container startup are intentionally skipped here and remain optional local developer verification.
 
 # Blockers
