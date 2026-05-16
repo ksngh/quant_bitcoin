@@ -429,3 +429,254 @@ def test_backtest_repository_failure_exits_transaction_with_error(monkeypatch):
 
     assert fake_connection.transaction_context.entered is True
     assert fake_connection.transaction_context.exit_exc_type is RuntimeError
+
+class FakeReadResult:
+    def __init__(self, rows: list[dict[str, Any]]) -> None:
+        self.rows = rows
+
+    def fetchone(self) -> dict[str, Any] | None:
+        return self.rows[0] if self.rows else None
+
+    def fetchall(self) -> list[dict[str, Any]]:
+        return self.rows
+
+
+class FakeBacktestReadConnection:
+    def __init__(self, responses: list[list[dict[str, Any]]]) -> None:
+        self.responses = responses
+        self.executed: list[tuple[str, dict[str, Any]]] = []
+
+    def __enter__(self) -> "FakeBacktestReadConnection":
+        return self
+
+    def __exit__(self, *args: object) -> None:
+        return None
+
+    def execute(self, query: str, params: dict[str, Any]) -> FakeReadResult:
+        self.executed.append((query, params))
+        return FakeReadResult(self.responses.pop(0))
+
+
+def read_run_row() -> dict[str, Any]:
+    created_at = datetime(2024, 1, 1, 0, 10, tzinfo=timezone.utc)
+    return {
+        "run_id": 42,
+        "run_key": "run-key",
+        "engine_name": "BasicBacktester",
+        "engine_version": "basic_backtester_v1",
+        "candle_source": "binance_spot",
+        "symbol": "BTCUSDT",
+        "interval": "1m",
+        "requested_start_time": datetime(2024, 1, 1, tzinfo=timezone.utc),
+        "requested_end_time": datetime(2024, 1, 1, 0, 2, tzinfo=timezone.utc),
+        "actual_start_time": datetime(2024, 1, 1, tzinfo=timezone.utc),
+        "actual_end_time": datetime(2024, 1, 1, 0, 2, tzinfo=timezone.utc),
+        "candle_count": 3,
+        "run_starting_cash": Decimal("1000"),
+        "trade_quantity": Decimal("1"),
+        "status": "completed",
+        "run_metadata": {"schema_version": "backtest_persistence_schema_v1"},
+        "run_created_at": created_at,
+        "completed_at": created_at,
+        "strategy_config_id": 7,
+        "strategy_key": "rsi",
+        "strategy_name": "RsiStrategy",
+        "strategy_version": "rsi_strategy_v1",
+        "strategy_parameters": {"window": 2, "buy_threshold": 30.0, "sell_threshold": 70.0},
+        "parameters_hash": "hash",
+        "strategy_metadata": None,
+        "result_starting_cash": Decimal("1000"),
+        "ending_cash": Decimal("900"),
+        "ending_position": Decimal("1"),
+        "final_price": Decimal("110"),
+        "final_equity": Decimal("1010"),
+        "total_return": Decimal("0.01"),
+        "trade_count": 1,
+        "buy_count": 1,
+        "sell_count": 0,
+        "result_metadata": {"source": "unit-test"},
+        "result_created_at": created_at,
+    }
+
+
+def test_backtest_read_model_loads_run_summary_trades_and_graph_points(monkeypatch):
+    import psycopg
+
+    t0 = datetime(2024, 1, 1, tzinfo=timezone.utc)
+    t1 = datetime(2024, 1, 1, 0, 1, tzinfo=timezone.utc)
+    t2 = datetime(2024, 1, 1, 0, 2, tzinfo=timezone.utc)
+    fake_connection = FakeBacktestReadConnection(
+        [
+            [read_run_row()],
+            [
+                {
+                    "id": 101,
+                    "sequence": 1,
+                    "candle_open_time": t1,
+                    "signal": "BUY",
+                    "price": Decimal("100"),
+                    "quantity": Decimal("1"),
+                    "cash_after": Decimal("900"),
+                    "position_after": Decimal("1"),
+                    "metadata": {"kind": "simulated"},
+                }
+            ],
+            [
+                {
+                    "id": 201,
+                    "sequence": 1,
+                    "candle_open_time": t0,
+                    "close_price": Decimal("95"),
+                    "cash": Decimal("1000"),
+                    "position": Decimal("0"),
+                    "equity": Decimal("1000"),
+                    "trade_id": None,
+                    "signal": None,
+                    "metadata": None,
+                },
+                {
+                    "id": 202,
+                    "sequence": 2,
+                    "candle_open_time": t1,
+                    "close_price": Decimal("100"),
+                    "cash": Decimal("900"),
+                    "position": Decimal("1"),
+                    "equity": Decimal("1000"),
+                    "trade_id": 101,
+                    "signal": "BUY",
+                    "metadata": {"trade_sequence": 1},
+                },
+                {
+                    "id": 203,
+                    "sequence": 3,
+                    "candle_open_time": t2,
+                    "close_price": Decimal("110"),
+                    "cash": Decimal("900"),
+                    "position": Decimal("1"),
+                    "equity": Decimal("1010"),
+                    "trade_id": None,
+                    "signal": None,
+                    "metadata": None,
+                },
+            ],
+        ]
+    )
+
+    monkeypatch.setattr(psycopg, "connect", lambda database_url, **kwargs: fake_connection)
+
+    model = PostgresBacktestResultRepository(
+        "postgresql://example/test"
+    ).load_run_for_graphs(42)
+
+    assert model is not None
+    assert model.run.id == 42
+    assert model.run.symbol == "BTCUSDT"
+    assert model.strategy_config.parameters["window"] == 2
+    assert model.summary.final_equity == 1010.0
+    assert [trade.sequence for trade in model.trades] == [1]
+    assert model.trades[0].signal == "BUY"
+    assert [point.candle_open_time for point in model.graph_points] == [t0, t1, t2]
+    assert model.graph_points[1].trade_id == 101
+    assert model.graph_points[1].signal == "BUY"
+    assert model.graph_points[2].equity == 1010.0
+    assert all(params == {"backtest_run_id": 42} for _, params in fake_connection.executed)
+    executed_sql = "\n".join(query for query, _ in fake_connection.executed)
+    assert "SELECT" in executed_sql
+    assert "INSERT" not in executed_sql
+    assert "UPDATE" not in executed_sql
+    assert "DELETE" not in executed_sql
+
+
+def test_backtest_read_model_orders_trades_and_graph_points_in_sql(monkeypatch):
+    import psycopg
+
+    fake_connection = FakeBacktestReadConnection([[read_run_row()], [], []])
+    monkeypatch.setattr(psycopg, "connect", lambda database_url, **kwargs: fake_connection)
+
+    PostgresBacktestResultRepository("postgresql://example/test").load_run_for_graphs(42)
+
+    trade_query = fake_connection.executed[1][0]
+    graph_query = fake_connection.executed[2][0]
+    assert "ORDER BY sequence ASC" in trade_query
+    assert "ORDER BY candle_open_time ASC, sequence ASC" in graph_query
+
+
+def test_backtest_read_model_missing_run_returns_none(monkeypatch):
+    import psycopg
+
+    fake_connection = FakeBacktestReadConnection([[]])
+    monkeypatch.setattr(psycopg, "connect", lambda database_url, **kwargs: fake_connection)
+
+    model = PostgresBacktestResultRepository(
+        "postgresql://example/test"
+    ).load_run_for_graphs(404)
+
+    assert model is None
+    assert len(fake_connection.executed) == 1
+
+
+def test_backtest_read_model_lists_completed_runs_with_filters(monkeypatch):
+    import psycopg
+
+    t0 = datetime(2024, 1, 1, tzinfo=timezone.utc)
+    t1 = datetime(2024, 1, 2, tzinfo=timezone.utc)
+    fake_connection = FakeBacktestReadConnection(
+        [
+            [
+                {
+                    "id": 42,
+                    "run_key": "run-key",
+                    "strategy_name": "RsiStrategy",
+                    "strategy_version": "rsi_strategy_v1",
+                    "candle_source": "binance_spot",
+                    "symbol": "BTCUSDT",
+                    "interval": "1m",
+                    "actual_start_time": t0,
+                    "actual_end_time": t1,
+                    "candle_count": 100,
+                    "final_equity": Decimal("1010"),
+                    "total_return": Decimal("0.01"),
+                    "trade_count": 2,
+                    "created_at": t1,
+                    "completed_at": t1,
+                }
+            ]
+        ]
+    )
+    monkeypatch.setattr(psycopg, "connect", lambda database_url, **kwargs: fake_connection)
+
+    rows = PostgresBacktestResultRepository("postgresql://example/test").list_completed_runs(
+        source="binance_spot",
+        symbol="BTCUSDT",
+        interval="1m",
+        actual_start_time=t0,
+        actual_end_time=t1,
+        limit=5,
+    )
+
+    assert len(rows) == 1
+    assert rows[0].id == 42
+    assert rows[0].final_equity == 1010.0
+    query, params = fake_connection.executed[0]
+    assert "br.candle_source = %(source)s" in query
+    assert "br.symbol = %(symbol)s" in query
+    assert "br.interval = %(interval)s" in query
+    assert "br.actual_start_time >= %(actual_start_time)s" in query
+    assert "br.actual_end_time <= %(actual_end_time)s" in query
+    assert "ORDER BY br.created_at DESC, br.id DESC" in query
+    assert "LIMIT %(limit)s" in query
+    assert params == {
+        "source": "binance_spot",
+        "symbol": "BTCUSDT",
+        "interval": "1m",
+        "actual_start_time": t0,
+        "actual_end_time": t1,
+        "limit": 5,
+    }
+
+
+def test_backtest_read_model_rejects_non_positive_list_limit():
+    with pytest.raises(ValueError, match="limit must be positive"):
+        PostgresBacktestResultRepository("postgresql://example/test").list_completed_runs(
+            limit=0
+        )
