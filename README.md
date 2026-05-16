@@ -251,9 +251,12 @@ The returned `BacktestRunReadModel` has this shape:
   nullable trade marker fields (`trade_id` and `signal`).
 
 Use `list_completed_runs(...)` to select recent graph inputs. It returns
-newest completed runs first and can filter by source, symbol, interval, and
-actual persisted candle time range. These read methods are intentionally
-read-only: they issue SELECT queries against saved Task 021/022 tables and do
+newest completed runs first and includes the associated strategy config id, key,
+name, version, canonical parameters, and parameter hash so future strategy
+variants can be distinguished before loading the full run. It can filter by
+source, symbol, interval, and actual persisted candle time range. These read
+methods are intentionally read-only: they issue SELECT queries against saved
+Task 021/022 tables and do
 not call Binance, exchange account APIs, order endpoints, `RsiStrategy`, or
 `BasicBacktester`.
 

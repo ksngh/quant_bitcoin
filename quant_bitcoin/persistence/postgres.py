@@ -282,8 +282,12 @@ class BacktestRunListItem:
 
     id: int
     run_key: str
+    strategy_config_id: int
+    strategy_key: str
     strategy_name: str
     strategy_version: str
+    strategy_parameters: dict[str, Any]
+    strategy_parameters_hash: str
     candle_source: str
     symbol: str
     interval: str
@@ -779,8 +783,12 @@ SELECT_COMPLETED_BACKTEST_RUNS_BASE_SQL = """
 SELECT
     br.id,
     br.run_key,
+    sc.id AS strategy_config_id,
+    sc.strategy_key,
     sc.strategy_name,
     sc.version AS strategy_version,
+    sc.parameters AS strategy_parameters,
+    sc.parameters_hash AS strategy_parameters_hash,
     br.candle_source,
     br.symbol,
     br.interval,
@@ -1121,8 +1129,12 @@ def _map_backtest_run_list_item(row: dict[str, Any]) -> BacktestRunListItem:
     return BacktestRunListItem(
         id=int(row["id"]),
         run_key=row["run_key"],
+        strategy_config_id=int(row["strategy_config_id"]),
+        strategy_key=row["strategy_key"],
         strategy_name=row["strategy_name"],
         strategy_version=row["strategy_version"],
+        strategy_parameters=row["strategy_parameters"],
+        strategy_parameters_hash=row["strategy_parameters_hash"],
         candle_source=row["candle_source"],
         symbol=row["symbol"],
         interval=row["interval"],

@@ -716,8 +716,12 @@ def test_backtest_read_model_lists_completed_runs_with_filters(monkeypatch):
                 {
                     "id": 42,
                     "run_key": "run-key",
+                    "strategy_config_id": 7,
+                    "strategy_key": "rsi",
                     "strategy_name": "RsiStrategy",
                     "strategy_version": "rsi_strategy_v1",
+                    "strategy_parameters": {"window": 14},
+                    "strategy_parameters_hash": "strategy-hash",
                     "candle_source": "binance_spot",
                     "symbol": "BTCUSDT",
                     "interval": "1m",
@@ -746,8 +750,19 @@ def test_backtest_read_model_lists_completed_runs_with_filters(monkeypatch):
 
     assert len(rows) == 1
     assert rows[0].id == 42
+    assert rows[0].strategy_config_id == 7
+    assert rows[0].strategy_key == "rsi"
+    assert rows[0].strategy_name == "RsiStrategy"
+    assert rows[0].strategy_version == "rsi_strategy_v1"
+    assert rows[0].strategy_parameters == {"window": 14}
+    assert rows[0].strategy_parameters_hash == "strategy-hash"
     assert rows[0].final_equity == 1010.0
     query, params = fake_connection.executed[0]
+    assert "sc.id AS strategy_config_id" in query
+    assert "sc.strategy_key" in query
+    assert "sc.parameters AS strategy_parameters" in query
+    assert "sc.parameters_hash AS strategy_parameters_hash" in query
+    assert "JOIN strategy_configs sc ON sc.id = br.strategy_config_id" in query
     assert "br.candle_source = %(source)s" in query
     assert "br.symbol = %(symbol)s" in query
     assert "br.interval = %(interval)s" in query
