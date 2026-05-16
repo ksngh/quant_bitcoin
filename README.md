@@ -161,6 +161,54 @@ result = BinanceHistoricalBackfiller(repository).run(symbol="BTCUSDT", interval=
 print(result.stored_candles)
 ```
 
+## Run an RSI backtest from PostgreSQL candles
+
+After PostgreSQL already contains closed candles, run the short packaged
+backtest command from the repository root:
+
+```bash
+quant-bitcoin-postgres-backtest
+```
+
+The command reads candles through `PostgresCandleDataProvider`, runs the
+existing `RsiStrategy` with `BasicBacktester`, and prints deterministic JSON
+containing the input stream, strategy parameters, summary, and simulated trades.
+It does not call Binance, place real orders, use API keys, or call exchange
+account endpoints.
+
+If PostgreSQL is empty, populate it first with the accepted Task 014 backfill
+workflow:
+
+```bash
+docker compose up -d postgres
+quant-bitcoin-binance-backfill \
+  --start-time 2024-01-01T00:00:00Z \
+  --end-time 2024-01-02T00:00:00Z
+quant-bitcoin-postgres-backtest \
+  --start-time 2024-01-01T00:00:00Z \
+  --end-time 2024-01-02T00:00:00Z
+```
+
+Common backtest options and matching environment variables:
+
+| Option | Environment variable | Default |
+| --- | --- | --- |
+| `--database-url` | `DATABASE_URL` | Local Docker Compose PostgreSQL URL. |
+| `--source` | `CANDLE_SOURCE` | `binance_spot` |
+| `--symbol` | `SYMBOL` | `BTCUSDT` |
+| `--interval` | `INTERVAL` | `1m` |
+| `--start-time` | `BACKTEST_START_TIME` | No lower bound. |
+| `--end-time` | `BACKTEST_END_TIME` | No upper bound. |
+| `--starting-cash` | `BACKTEST_STARTING_CASH` | `10000.0` |
+| `--trade-quantity` | `BACKTEST_TRADE_QUANTITY` | `0.01` |
+| `--rsi-window` | `BACKTEST_RSI_WINDOW` | `14` |
+| `--rsi-buy-threshold` | `BACKTEST_RSI_BUY_THRESHOLD` | `30.0` |
+| `--rsi-sell-threshold` | `BACKTEST_RSI_SELL_THRESHOLD` | `70.0` |
+
+`--start-time` and `--end-time` accept UTC ISO-8601 values such as
+`2024-01-01T00:00:00Z`. Do not commit `.env` files; set overrides in your shell
+or local process manager instead.
+
 ### Ingest public Binance WebSocket closed candles
 
 ```python
