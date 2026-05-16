@@ -72,25 +72,25 @@ This task should implement only the accepted write path and keep the existing co
 
 ## Before Implementation
 
-- [ ] Read `AGENTS.md`.
-- [ ] Read `STATUS.md`.
-- [ ] Read `docs/10_CODEX_COMMAND_GUIDE.md`.
-- [ ] Read `docs/04_DATA_CONTRACT.md`.
-- [ ] Read `tasks/013_PERSISTENCE_SCHEMA_DESIGN.md`.
-- [ ] Read `tasks/020_POSTGRES_BACKTEST_RUNNER.md`.
-- [ ] Read `tasks/021_GRAPH_READY_BACKTEST_PERSISTENCE_SCHEMA.md`.
-- [ ] Read `reviews/CODEX_SELF_REVIEW.md`.
-- [ ] Read this task file.
-- [ ] Confirm Task 021 is complete and accepted.
-- [ ] Confirm this task is simulated backtest persistence only.
-- [ ] Confirm no live trading, exchange order execution, graph UI, API service, or scheduler behavior is requested.
+- [x] Read `AGENTS.md`.
+- [x] Read `STATUS.md`.
+- [x] Read `docs/10_CODEX_COMMAND_GUIDE.md`.
+- [x] Read `docs/04_DATA_CONTRACT.md`.
+- [x] Read `tasks/013_PERSISTENCE_SCHEMA_DESIGN.md`.
+- [x] Read `tasks/020_POSTGRES_BACKTEST_RUNNER.md`.
+- [x] Read `tasks/021_GRAPH_READY_BACKTEST_PERSISTENCE_SCHEMA.md`.
+- [x] Read `reviews/CODEX_SELF_REVIEW.md`.
+- [x] Read this task file.
+- [x] Confirm Task 021 is complete and accepted.
+- [x] Confirm this task is simulated backtest persistence only.
+- [x] Confirm no live trading, exchange order execution, graph UI, API service, or scheduler behavior is requested.
 
 ## After Implementation
 
-- [ ] Update `STATUS.md` if active task, current step, next step, or completion state changes.
-- [ ] Mark checklist items complete only after acceptance criteria and verification pass.
-- [ ] Leave uncertain items open and document the uncertainty.
-- [ ] Confirm the next step is accurate or explicitly left undecided.
+- [x] Update `STATUS.md` if active task, current step, next step, or completion state changes.
+- [x] Mark checklist items complete only after acceptance criteria and verification pass.
+- [x] Leave uncertain items open and document the uncertainty.
+- [x] Confirm the next step is accurate or explicitly left undecided.
 
 # Acceptance Criteria
 

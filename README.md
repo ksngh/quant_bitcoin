@@ -171,10 +171,20 @@ quant-bitcoin-postgres-backtest
 ```
 
 The command reads candles through `PostgresCandleDataProvider`, runs the
-existing `RsiStrategy` with `BasicBacktester`, and prints deterministic JSON
-containing the input stream, strategy parameters, summary, and simulated trades.
-It does not call Binance, place real orders, use API keys, or call exchange
-account endpoints.
+existing `RsiStrategy` with `BasicBacktester`, saves the completed simulated
+backtest result to PostgreSQL, and prints deterministic JSON containing the
+input stream, strategy parameters, summary, simulated trades, and saved
+`backtest_run_id`. It does not call Binance, place real orders, use API keys,
+or call exchange account endpoints.
+
+Saved runs use the graph-ready Task 021 schema in `strategy_configs`,
+`backtest_runs`, `backtest_results`, `backtest_trades`, and
+`backtest_graph_points`. The write is transactional for each run: strategy
+metadata, run metadata, summary metrics, deterministic trade rows, and ordered
+graph points are committed together or rolled back together. Re-running the same
+deterministic backtest replaces the prior saved rows for the same `run_key`.
+Use `--no-persist` only when you want to inspect stdout JSON without saving
+simulated result rows.
 
 If PostgreSQL is empty, populate it first with the accepted Task 014 backfill
 workflow:
@@ -204,6 +214,7 @@ Common backtest options and matching environment variables:
 | `--rsi-window` | `BACKTEST_RSI_WINDOW` | `14` |
 | `--rsi-buy-threshold` | `BACKTEST_RSI_BUY_THRESHOLD` | `30.0` |
 | `--rsi-sell-threshold` | `BACKTEST_RSI_SELL_THRESHOLD` | `70.0` |
+| `--no-persist` | None | Persist simulated results by default. |
 
 `--start-time` and `--end-time` accept UTC ISO-8601 values such as
 `2024-01-01T00:00:00Z`. Do not commit `.env` files; set overrides in your shell

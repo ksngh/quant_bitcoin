@@ -13,6 +13,16 @@ from quant_bitcoin.backtesting import postgres_runner_cli
 from quant_bitcoin.strategies import RsiStrategy
 
 
+class FakeRepository:
+    def __init__(self, database_url: str = "postgresql://example/test") -> None:
+        self.database_url = database_url
+        self.payloads: list[Any] = []
+
+    def save_completed_backtest(self, payload: Any) -> int:
+        self.payloads.append(payload)
+        return 42
+
+
 class FakeProvider:
     def __init__(self, candles: pd.DataFrame) -> None:
         self.candles = candles
@@ -87,6 +97,8 @@ def test_postgres_backtest_cli_wires_provider_strategy_and_backtester(capsys):
         calls["provider"] = {"database_url": database_url, **kwargs}
         return provider
 
+    repository = FakeRepository()
+
     exit_code = postgres_runner_cli.main(
         [
             "--database-url",
@@ -115,11 +127,15 @@ def test_postgres_backtest_cli_wires_provider_strategy_and_backtester(capsys):
         provider_factory=provider_factory,
         strategy_factory=RsiStrategy,
         backtester_factory=BasicBacktester,
+        repository_factory=lambda database_url: repository,
     )
 
     output = json.loads(capsys.readouterr().out)
     assert exit_code == 0
     assert provider.load_calls == 1
+    assert repository.database_url == "postgresql://example/test"
+    assert len(repository.payloads) == 1
+    assert output["backtest_run_id"] == 42
     assert calls["provider"] == {
         "database_url": "postgresql://example/test",
         "source": "binance_spot",
@@ -161,9 +177,12 @@ def test_postgres_backtest_cli_reports_empty_candles(capsys):
         columns=["timestamp", "open", "high", "low", "close", "volume"]
     )
 
+    repository = FakeRepository()
+
     exit_code = postgres_runner_cli.main(
         [],
         provider_factory=lambda database_url, **kwargs: FakeProvider(empty_candles),
+        repository_factory=lambda database_url: repository,
     )
 
     output = json.loads(capsys.readouterr().out)
@@ -181,6 +200,8 @@ def test_postgres_backtest_cli_reports_empty_candles(capsys):
         "trade_count": 0,
     }
     assert output["trades"] == []
+    assert output["backtest_run_id"] == 42
+    assert repository.payloads[0].graph_points == ()
 
 
 def test_postgres_backtest_cli_does_not_open_network_connections(monkeypatch, capsys):
@@ -192,6 +213,7 @@ def test_postgres_backtest_cli_does_not_open_network_connections(monkeypatch, ca
     exit_code = postgres_runner_cli.main(
         [],
         provider_factory=lambda database_url, **kwargs: FakeProvider(make_candles([100])),
+        repository_factory=lambda database_url: FakeRepository(database_url),
     )
 
     assert exit_code == 0
@@ -201,3 +223,100 @@ def test_postgres_backtest_cli_does_not_open_network_connections(monkeypatch, ca
 def test_postgres_backtest_cli_rejects_invalid_thresholds():
     with pytest.raises(SystemExit):
         postgres_runner_cli.build_parser().parse_args(["--rsi-buy-threshold", "-1"])
+
+
+def test_parser_defaults_to_persisting_results_and_accepts_no_persist():
+    default_args = postgres_runner_cli.build_parser().parse_args([])
+    no_persist_args = postgres_runner_cli.build_parser().parse_args(["--no-persist"])
+
+    assert default_args.persist_results is True
+    assert no_persist_args.persist_results is False
+
+
+def test_no_persist_skips_repository_and_omits_run_id(capsys):
+    def fail_repository_factory(database_url: str) -> FakeRepository:
+        raise AssertionError("repository should not be created when --no-persist is used")
+
+    exit_code = postgres_runner_cli.main(
+        ["--no-persist"],
+        provider_factory=lambda database_url, **kwargs: FakeProvider(make_candles([100])),
+        repository_factory=fail_repository_factory,
+    )
+
+    output = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert "backtest_run_id" not in output
+
+
+def test_persistence_payload_contains_ordered_trades_and_graph_points():
+    candles = make_candles([100, 95, 90, 85, 120])
+    result = BasicBacktester(starting_cash=1000, trade_quantity=1).run(
+        candles, RsiStrategy(window=2, buy_threshold=30, sell_threshold=70)
+    )
+
+    payload = postgres_runner_cli.build_persistence_payload(
+        result,
+        candles=candles,
+        source="binance_spot",
+        symbol="BTCUSDT",
+        interval="1m",
+        start_time=datetime(2024, 1, 1, tzinfo=timezone.utc),
+        end_time=datetime(2024, 1, 1, 0, 4, tzinfo=timezone.utc),
+        starting_cash=1000,
+        trade_quantity=1,
+        rsi_window=2,
+        rsi_buy_threshold=30,
+        rsi_sell_threshold=70,
+    )
+
+    assert payload.strategy_config.parameters == {
+        "buy_threshold": 30.0,
+        "sell_threshold": 70.0,
+        "window": 2,
+    }
+    assert [trade.sequence for trade in payload.trades] == [1, 2]
+    assert [trade.signal for trade in payload.trades] == ["BUY", "SELL"]
+    assert [point.sequence for point in payload.graph_points] == [1, 2, 3, 4, 5]
+    assert [point.candle_open_time for point in payload.graph_points] == sorted(
+        point.candle_open_time for point in payload.graph_points
+    )
+    assert payload.graph_points[2].trade_sequence == 1
+    assert payload.graph_points[2].signal == "BUY"
+    assert payload.graph_points[2].cash == 910.0
+    assert payload.graph_points[2].position == 1.0
+    assert payload.graph_points[2].equity == 1000.0
+    assert payload.graph_points[4].trade_sequence == 2
+    assert payload.graph_points[4].signal == "SELL"
+    assert payload.graph_points[4].cash == 1030.0
+    assert payload.graph_points[4].position == 0.0
+    assert payload.graph_points[4].equity == 1030.0
+
+
+def test_persistence_payload_run_key_is_deterministic_and_sensitive_to_inputs():
+    candles = make_candles([100, 95, 90])
+    result = BasicBacktester(starting_cash=1000, trade_quantity=1).run(
+        candles, RsiStrategy(window=2, buy_threshold=30, sell_threshold=70)
+    )
+    kwargs = {
+        "result": result,
+        "candles": candles,
+        "source": "binance_spot",
+        "symbol": "BTCUSDT",
+        "interval": "1m",
+        "start_time": None,
+        "end_time": None,
+        "starting_cash": 1000,
+        "trade_quantity": 1,
+        "rsi_window": 2,
+        "rsi_buy_threshold": 30,
+        "rsi_sell_threshold": 70,
+    }
+
+    first = postgres_runner_cli.build_persistence_payload(**kwargs)
+    second = postgres_runner_cli.build_persistence_payload(**kwargs)
+    changed = postgres_runner_cli.build_persistence_payload(
+        **{**kwargs, "trade_quantity": 2}
+    )
+
+    assert first.run.run_key == second.run.run_key
+    assert first.run.run_key != changed.run.run_key
