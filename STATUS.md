@@ -6,32 +6,32 @@ Phase 21: Graph-Ready Backtest Persistence Planning
 
 # Current Step
 
-Tasks 021-023: Graph-ready backtest persistence task documents created; implementation not started.
+Task 021: Graph-ready backtest persistence schema documented and accepted; Task 022 implementation not started.
 
 # Current Goal
 
-Define the schema, write path, and read model needed to persist PostgreSQL backtest results for later graphing.
+Prepare the accepted graph-ready backtest persistence contract for Task 022 PostgreSQL result writes and Task 023 graph read models.
 
 # Current Active Task
 
-None. Task 021 should be assigned first before any DB result persistence implementation starts.
+None. Task 021 is completed as documentation/design only. No DB schema or write implementation has been added.
 
 # Last Completed Step
 
-Task 020: PostgreSQL Backtest Runner.
+Task 021: Graph-Ready Backtest Persistence Schema.
 
-Added the `quant-bitcoin-postgres-backtest` command to run existing PostgreSQL candles through `PostgresCandleDataProvider`, `RsiStrategy`, and `BasicBacktester`, then print deterministic JSON. Added mocked/fake-provider tests for CLI parsing, component wiring, empty-candle summaries, and no-network test behavior. Updated README usage instructions for running Task 014 backfill before local real-data backtests. Verified on 2026-05-15 with `pytest`, `git diff --check`, and `python -m compileall quant_bitcoin`. This task does not add live trading, signed requests, API-key handling, Binance network calls, or exchange order endpoint behavior.
+Documented and accepted a graph-ready PostgreSQL backtest persistence schema for `strategy_configs`, `backtest_runs`, `backtest_results`, `backtest_trades`, and first-class `backtest_graph_points`. The accepted design preserves the standard candle contract and existing `BasicBacktester.run(candles, strategy)` public boundary, keeps the existing CLI stdout JSON behavior for now, and requires later graphing workflows to read persisted summary/trade/graph-point rows without re-running the backtest. Verified on 2026-05-16 with `git diff --check`. This documentation-only task does not add migrations, SQL files, repository classes, graph UI, API services, schedulers, live trading, signed requests, API-key handling, Binance network calls, or exchange order endpoint behavior.
 
 # Next Step
 
-Recommended next task: Task 021 Graph-Ready Backtest Persistence Schema. Do not implement DB writes until Task 021 is accepted. After Task 021, implement Task 022 PostgreSQL Backtest Result Persistence, then Task 023 Backtest Result Read Model for Graphs. If PostgreSQL candles need to exist before local backtesting, run the accepted Task 014 PostgreSQL Binance backfill first. Local Docker Compose runtime startup verification for Task 018 remains deferred to a Docker-capable developer environment.
+Recommended next task: Task 022 PostgreSQL Backtest Result Persistence. Implement DB writes only against the accepted Task 021 schema, keep stdout JSON behavior unless Task 022 explicitly changes it, and defer graph-read APIs/models to Task 023. If PostgreSQL candles need to exist before local backtesting, run the accepted Task 014 PostgreSQL Binance backfill first. Local Docker Compose runtime startup verification for Task 018 remains deferred to a Docker-capable developer environment.
 
 # Parallel Work Status
 
 Parallel work is not currently recommended.
 
 Reason:
-No implementation task is active. Tasks 021-023 intentionally touch shared persistence contracts and should proceed sequentially: design first, write implementation second, read model third.
+Task 021 design is complete. Tasks 022-023 intentionally touch shared persistence contracts and should proceed sequentially: write implementation next, read model third.
 
 # Phase Checklist
 
@@ -75,7 +75,7 @@ No implementation task is active. Tasks 021-023 intentionally touch shared persi
 - [x] Task 021: Graph-Ready Backtest Persistence Schema task document created
 - [x] Task 022: PostgreSQL Backtest Result Persistence task document created
 - [x] Task 023: Backtest Result Read Model for Graphs task document created
-- [ ] Task 021: Graph-Ready Backtest Persistence Schema accepted
+- [x] Task 021: Graph-Ready Backtest Persistence Schema accepted
 - [ ] Task 022: PostgreSQL Backtest Result Persistence approved for implementation
 - [ ] Task 023: Backtest Result Read Model for Graphs approved for implementation
 
@@ -86,7 +86,7 @@ No implementation task is active. Tasks 021-023 intentionally touch shared persi
 - Should future live trading use Binance testnet/sandbox first?
 - What real-order endpoints, if any, are allowed?
 - What kill-switch or disable mechanism is required?
-- Should future PostgreSQL implementation use migrations, container init scripts, or another schema-management path? Current Task 014 uses container init SQL plus repository schema initialization; migrations remain a future decision if schema evolution is needed. Task 021 should decide the graph-ready backtest persistence schema before Task 022 writes results.
+- Should future PostgreSQL implementation use migrations, container init scripts, or another schema-management path? Current Task 014 uses container init SQL plus repository schema initialization; migrations remain a future decision if schema evolution is needed. Task 021 accepted the graph-ready backtest persistence schema; Task 022 should choose the minimal implementation path for creating/writing those tables.
 - Docker is not installed in the current cloud environment. Local PostgreSQL and WebSocket ingestor container startup are intentionally skipped here and remain optional local developer verification.
 
 # Blockers
