@@ -2,19 +2,19 @@
 
 # Current Phase
 
-Phase 35: Order Block Pattern Definition
+Phase 36: Fair Value Gap Pattern Definition
 
 # Current Step
 
-Order Block Pattern mechanical definition drafted for review.
+Fair Value Gap Pattern mechanical definition drafted for review.
 
 # Current Goal
 
-Review the Order Block Pattern mechanical definition without implementing pattern code.
+Review the Fair Value Gap Pattern mechanical definition without implementing pattern code.
 
 # Current Active Task
 
-Order Block Pattern mechanical definition. Owner-provided pattern requirements are being documented only; no implementation code is in scope.
+Fair Value Gap Pattern mechanical definition. Owner-provided pattern requirements are being documented only; no implementation code is in scope.
 
 # Last Completed Step
 
@@ -26,7 +26,7 @@ Previous completed step: Task 031: Volume Ratio.
 
 # Next Step
 
-Recommended next task: owner review of the Order Block Pattern mechanical definition, then explicitly assign a future implementation task if code should be created. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
+Recommended next task: owner review of the Fair Value Gap Pattern mechanical definition, then explicitly assign a future implementation task if code should be created. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
 
 # Parallel Work Status
 
@@ -105,6 +105,8 @@ Tasks 027-033 define multiple indicator implementation plans, but concrete indic
 - [x] Owner-provided Trendline Break Pattern source requirement saved under `tasks/patterns/trendline_break_pattern.md`
 - [x] Order Block Pattern mechanical definition drafted
 - [x] Owner-provided Order Block Pattern source requirement saved under `tasks/patterns/order_block_pattern.md`
+- [x] Fair Value Gap Pattern mechanical definition drafted
+- [x] Owner-provided Fair Value Gap Pattern source requirement saved under `tasks/patterns/fair_value_gap_pattern.md`
 
 # Open Questions
 
@@ -115,7 +117,7 @@ Tasks 027-033 define multiple indicator implementation plans, but concrete indic
 - What kill-switch or disable mechanism is required?
 - Task 024 decided the concrete PostgreSQL command-management path: `db/init/001_schema.sql` is the source-of-truth first-start schema DDL, `db/changes/` is reserved for future existing-database state-change SQL, repository initialization executes managed command files, and runtime persistence DML remains application-owned.
 - Task 025 defines the indicator document intake process. Future owner-provided indicator documents should be saved under `tasks/indicators/<INDICATOR_KEY>.md`, and concrete indicator code must wait for an explicit indicator-specific implementation task. Pattern definition documents may be saved under `tasks/patterns/` when explicitly assigned by the owner.
-- Tasks 027-033 define planned implementation tasks for the remaining indicator/filter modules. Task 028 Pivot High / Pivot Low, Task 029 Swing Structure, Task 030 ATR, Task 031 Volume Ratio, Task 032 Support / Resistance Zone, and Task 033 Displacement Candle have deterministic implementations pending review. The Order Block Pattern is documented as a mechanical definition only; any implementation still requires an explicit future implementation task.
+- Tasks 027-033 define planned implementation tasks for the remaining indicator/filter modules. Task 028 Pivot High / Pivot Low, Task 029 Swing Structure, Task 030 ATR, Task 031 Volume Ratio, Task 032 Support / Resistance Zone, and Task 033 Displacement Candle have deterministic implementations pending review. The Fair Value Gap Pattern is documented as a mechanical definition only; any implementation still requires an explicit future implementation task.
 - Docker is not installed in the current cloud environment. Local PostgreSQL and WebSocket ingestor container startup are intentionally skipped here and remain optional local developer verification.
 
 # Blockers
