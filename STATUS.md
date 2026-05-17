@@ -2,19 +2,19 @@
 
 # Current Phase
 
-Phase 33: Displacement Candle Implementation
+Phase 34: Trendline Break Pattern Definition
 
 # Current Step
 
-Task 033: Displacement Candle implemented and ready for review.
+Trendline Break Pattern mechanical definition drafted for review.
 
 # Current Goal
 
-Review the Displacement Candle implementation and continue one-indicator-at-a-time work without expanding scope.
+Review the Trendline Break Pattern mechanical definition without implementing pattern code.
 
 # Current Active Task
 
-Task 033: Implement Displacement Candle. Owner-provided Displacement Candle formula was confirmed in the task prompt; implementation and deterministic tests are complete pending review.
+Trendline Break Pattern mechanical definition. Owner-provided pattern requirements are being documented only; no implementation code is in scope.
 
 # Last Completed Step
 
@@ -26,7 +26,7 @@ Previous completed step: Task 031: Volume Ratio.
 
 # Next Step
 
-Recommended next task: owner review of Task 033 Displacement Candle, then explicitly assign the next one-indicator implementation task or review task. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
+Recommended next task: owner review of the Trendline Break Pattern mechanical definition, then explicitly assign a future implementation task if code should be created. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
 
 # Parallel Work Status
 
@@ -101,6 +101,7 @@ Tasks 027-033 define multiple indicator implementation plans, but concrete indic
 - [x] Task 032: Support / Resistance Zone complete and verified
 - [x] Task 033: Displacement Candle implementation task document created
 - [x] Task 033: Displacement Candle complete and verified
+- [x] Trendline Break Pattern mechanical definition drafted
 
 # Open Questions
 
@@ -110,8 +111,8 @@ Tasks 027-033 define multiple indicator implementation plans, but concrete indic
 - What real-order endpoints, if any, are allowed?
 - What kill-switch or disable mechanism is required?
 - Task 024 decided the concrete PostgreSQL command-management path: `db/init/001_schema.sql` is the source-of-truth first-start schema DDL, `db/changes/` is reserved for future existing-database state-change SQL, repository initialization executes managed command files, and runtime persistence DML remains application-owned.
-- Task 025 defines the indicator document intake process. Future owner-provided indicator documents should be saved under `tasks/indicators/<INDICATOR_KEY>.md`, and concrete indicator code must wait for an explicit indicator-specific implementation task.
-- Tasks 027-033 define planned implementation tasks for the remaining indicator/filter modules. Task 028 Pivot High / Pivot Low, Task 029 Swing Structure, Task 030 ATR, Task 031 Volume Ratio, Task 032 Support / Resistance Zone, and Task 033 Displacement Candle have deterministic implementations pending review. Remaining unimplemented indicator tasks still require explicit assignment and owner-approved detailed formulas before coding.
+- Task 025 defines the indicator document intake process. Future owner-provided indicator documents should be saved under `tasks/indicators/<INDICATOR_KEY>.md`, and concrete indicator code must wait for an explicit indicator-specific implementation task. Pattern definition documents may be saved under `tasks/patterns/` when explicitly assigned by the owner.
+- Tasks 027-033 define planned implementation tasks for the remaining indicator/filter modules. Task 028 Pivot High / Pivot Low, Task 029 Swing Structure, Task 030 ATR, Task 031 Volume Ratio, Task 032 Support / Resistance Zone, and Task 033 Displacement Candle have deterministic implementations pending review. The Trendline Break Pattern is documented as a mechanical definition only; any implementation still requires an explicit future implementation task.
 - Docker is not installed in the current cloud environment. Local PostgreSQL and WebSocket ingestor container startup are intentionally skipped here and remain optional local developer verification.
 
 # Blockers
