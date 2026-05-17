@@ -2,38 +2,38 @@
 
 # Current Phase
 
-Phase 31: Volume Ratio Implementation
+Phase 32: Support / Resistance Zone Implementation
 
 # Current Step
 
-Task 031: Volume Ratio implemented and ready for review.
+Task 032: Support / Resistance Zone implemented and ready for review.
 
 # Current Goal
 
-Review the Volume Ratio implementation and continue one-indicator-at-a-time work without expanding scope.
+Review the Support / Resistance Zone implementation and continue one-indicator-at-a-time work without expanding scope.
 
 # Current Active Task
 
-Task 031: Implement Volume Ratio. Owner-provided Volume Ratio formula was saved to `tasks/indicators/volume_ratio.md`; implementation and deterministic tests are complete pending review.
+Task 032: Implement Support / Resistance Zone. Owner-provided Support / Resistance Zone formula was saved to `tasks/indicators/support_resistance_zone.md`; implementation and deterministic tests are complete pending review.
 
 # Last Completed Step
 
-Task 030: ATR.
+Task 031: Volume Ratio.
 
-Implemented deterministic ATR calculation from already-provided OHLC candle data. Verified with deterministic tests and compile checks.
+Implemented deterministic Volume Ratio calculation from already-provided candle volume data. Verified with deterministic tests and compile checks.
 
-Previous completed step: Task 029: Swing Structure.
+Previous completed step: Task 030: ATR.
 
 # Next Step
 
-Recommended next task: owner review of Task 031, then explicitly assign the next one-indicator implementation task. Task 032 Support / Resistance Zone and Task 033 Displacement Candle remain planned future candidates; Displacement Candle can later consume ATR and Volume Ratio after review. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
+Recommended next task: owner review of Task 032, then explicitly assign Task 033 Displacement Candle or another one-indicator implementation task. Displacement Candle can later consume ATR and Volume Ratio after review. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
 
 # Parallel Work Status
 
 Parallel work is not currently recommended.
 
 Reason:
-Tasks 027-033 define multiple indicator implementation plans, but concrete indicator implementation should proceed one indicator at a time unless the owner explicitly approves independent parallel leaf tasks that do not change shared contracts. Pivot-derived tasks may depend on Task 028, and displacement/zone tasks may depend on ATR or Volume Ratio decisions.
+Tasks 027-033 define multiple indicator implementation plans, but concrete indicator implementation should proceed one indicator at a time unless the owner explicitly approves independent parallel leaf tasks that do not change shared contracts. Pivot-derived tasks may depend on Task 028, and displacement tasks may depend on ATR or Volume Ratio decisions.
 
 # Phase Checklist
 
@@ -98,6 +98,7 @@ Tasks 027-033 define multiple indicator implementation plans, but concrete indic
 - [x] Task 031: Volume Ratio implementation task document created
 - [x] Task 031: Volume Ratio complete and verified
 - [x] Task 032: Support / Resistance Zone implementation task document created
+- [x] Task 032: Support / Resistance Zone complete and verified
 - [x] Task 033: Displacement Candle implementation task document created
 
 # Open Questions
@@ -109,7 +110,7 @@ Tasks 027-033 define multiple indicator implementation plans, but concrete indic
 - What kill-switch or disable mechanism is required?
 - Task 024 decided the concrete PostgreSQL command-management path: `db/init/001_schema.sql` is the source-of-truth first-start schema DDL, `db/changes/` is reserved for future existing-database state-change SQL, repository initialization executes managed command files, and runtime persistence DML remains application-owned.
 - Task 025 defines the indicator document intake process. Future owner-provided indicator documents should be saved under `tasks/indicators/<INDICATOR_KEY>.md`, and concrete indicator code must wait for an explicit indicator-specific implementation task.
-- Tasks 027-033 define planned implementation tasks for the remaining indicator/filter modules. Task 028 Pivot High / Pivot Low, Task 029 Swing Structure, Task 030 ATR, and Task 031 Volume Ratio have owner-provided formulas saved under `tasks/indicators/` and deterministic implementations pending review. Remaining unimplemented indicator tasks still require explicit assignment and owner-approved detailed formulas before coding.
+- Tasks 027-033 define planned implementation tasks for the remaining indicator/filter modules. Task 028 Pivot High / Pivot Low, Task 029 Swing Structure, Task 030 ATR, Task 031 Volume Ratio, and Task 032 Support / Resistance Zone have owner-provided formulas saved under `tasks/indicators/` and deterministic implementations pending review. Remaining unimplemented indicator tasks still require explicit assignment and owner-approved detailed formulas before coding.
 - Docker is not installed in the current cloud environment. Local PostgreSQL and WebSocket ingestor container startup are intentionally skipped here and remain optional local developer verification.
 
 # Blockers
