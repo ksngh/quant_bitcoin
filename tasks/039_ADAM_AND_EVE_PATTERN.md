@@ -49,7 +49,7 @@ Adam and Eve Pattern
 
 ```text
 Double Bottom Pattern
-Reversal Pattern
+Bullish Reversal Pattern
 Bottom Formation Pattern
 Accumulation Pattern
 Neckline Breakout Pattern
@@ -103,10 +103,11 @@ The document must define how to detect a bullish Adam and Eve Pattern mechanical
 
 The initial version should focus on bullish Adam and Eve.
 
-Supported direction:
+Supported directions:
 
 ```text
 BULLISH
+NONE
 ```
 
 Optional future extension:
@@ -657,23 +658,24 @@ Task 039 creates the numbered task document for the Adam and Eve Pattern definit
 - Require `adam_low.index < neckline_pivot.index < eve_low.index`.
 - Require breakout after Eve low.
 - Define bottom similarity using `maximum_bottom_difference_rate = 0.05` by default.
-- Define Adam sharpness using bottom duration, decline/recovery slope, and local range ATR.
+- Use default pattern duration bounds `minimum_pattern_duration = 20` and `maximum_pattern_duration = 200`.
+- Define Adam sharpness using bottom duration, local range ATR, and decline/recovery slopes.
 - Use defaults `maximum_adam_bottom_duration = 5` and `minimum_adam_range_atr = 1.0`.
-- Define Eve roundness using bottom duration, bottom-zone duration, slopes, and local range ATR.
-- Use defaults `minimum_eve_bottom_duration = 5` and `minimum_eve_bottom_zone_duration = 3`.
+- Define Eve roundness using a bottom zone, bottom-zone duration, and Eve bottom duration.
+- Use defaults `minimum_eve_bottom_duration = 5`, `minimum_eve_bottom_zone_duration = 3`, and `bottom_zone_atr_multiplier = 0.5`.
 - Define shape difference with `minimum_eve_to_adam_duration_ratio = 1.5` by default.
-- Define neckline using `neckline = neckline_pivot.price` for the initial version.
+- Define neckline using `neckline = neckline_pivot.price` for the initial version, with resistance-zone neckline as an alternative.
+- Define pattern height using `minimum_pattern_height_atr = 1.0` and `maximum_pattern_height_atr = 8.0`.
 - Validate bullish breakout using `close > neckline + breakout_atr_multiplier * ATR` with default `breakout_atr_multiplier = 0.2`.
 - Validate breakout volume using default `minimum_breakout_volume_ratio = 1.5` and weak threshold `weak_breakout_volume_ratio = 1.3`.
 - Require `liquidity_pass = true` and `spread_pass = true` before validation.
 - Define optional breakout displacement confirmation with `require_displacement_breakout = false` by default.
 - Define allowed direction values `BULLISH` and `NONE`, with optional future `BEARISH_INVERTED`.
 - Define allowed status values `VALID`, `WEAK`, `INVALID`, and `PENDING`.
-- Define score components from `0.0` to `1.0`.
-- Define entry, stop, and target references without order execution.
-- Handle all listed edge cases explicitly.
-- Avoid implementation code beyond pseudocode-level logic.
-- Do not include a final summary section in the mechanical definition document.
+- Define score components from `0.0` to `1.0` using the owner-provided component weights.
+- Define entry, stop, target, and risk-reward references without order execution.
+- Include the owner-provided output schema, output fields, edge cases, detection logic, pseudocode, domain-model example, recommended initial configuration, and final mechanical rule.
+- Avoid implementation code beyond documentation and pseudocode-level logic.
 
 # Status Tracking
 
@@ -697,7 +699,7 @@ Task 039 creates the numbered task document for the Adam and Eve Pattern definit
 - `tasks/039_ADAM_AND_EVE_PATTERN.md` exists as the numbered Task 039 definition.
 - The mechanical definition deliverable exists under `tasks/patterns/adam_and_eve_pattern.md`.
 - The mechanical definition is Markdown and is limited to documentation/pseudocode-level logic.
-- The mechanical definition covers all required core modules, optional modules, input data, supported direction, prior downtrend, Adam/Eve structure, bottom similarity, Adam sharpness, Eve roundness, shape difference, neckline, breakout, liquidity/spread requirements, output schema, score components, risk references, edge cases, and non-goals.
+- The mechanical definition covers all required core modules, optional modules, input data, supported directions, prior downtrend, Adam/Eve structure, bottom similarity, Adam sharpness, Eve roundness, shape difference, neckline, pattern height, breakout, liquidity/spread requirements, output schema, score components, risk references, edge cases, detection logic, pseudocode, recommended initial configuration, final mechanical rule, and non-goals.
 - No application code is changed by this task.
 
 # Required Tests
