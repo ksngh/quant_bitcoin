@@ -2,19 +2,19 @@
 
 # Current Phase
 
-Phase 36: Fair Value Gap Pattern Definition
+Phase 37: Cup and Handle Pattern Definition
 
 # Current Step
 
-Task 036 Fair Value Gap Pattern mechanical definition updated from owner-provided final document for review.
+Task 037 Cup and Handle Pattern task document and mechanical definition drafted for review.
 
 # Current Goal
 
-Review the updated Task 036 Fair Value Gap Pattern mechanical definition without implementing pattern code.
+Review the Task 037 Cup and Handle Pattern mechanical definition without implementing pattern code.
 
 # Current Active Task
 
-Task 036 Fair Value Gap Pattern mechanical definition. Owner-provided final pattern document is saved under `tasks/patterns/`; no implementation code is in scope.
+Task 037 Cup and Handle Pattern mechanical definition. Owner-provided pattern requirements are documented only; no implementation code is in scope.
 
 # Last Completed Step
 
@@ -26,7 +26,7 @@ Previous completed step: Task 031: Volume Ratio.
 
 # Next Step
 
-Recommended next task: owner review of the updated Task 036 Fair Value Gap Pattern mechanical definition, then reconcile or create the remaining numbered pattern tasks 037-039 before any implementation. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
+Recommended next task: owner review of the Task 037 Cup and Handle Pattern mechanical definition, then reconcile or create the remaining numbered pattern tasks 038-039 before any implementation. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
 
 # Parallel Work Status
 
@@ -110,6 +110,9 @@ Tasks 027-033 define multiple indicator implementation plans, but concrete indic
 - [x] Task 036: Fair Value Gap Pattern task document created
 - [x] Fair Value Gap Pattern mechanical definition updated from owner-provided final document
 - [x] Owner-provided Fair Value Gap Pattern source requirement saved under `tasks/patterns/fair_value_gap_pattern.md`
+- [x] Task 037: Cup and Handle Pattern task document created
+- [x] Cup and Handle Pattern mechanical definition drafted
+- [x] Owner-provided Cup and Handle Pattern source requirement saved under `tasks/patterns/cup_and_handle_pattern.md`
 
 # Open Questions
 
@@ -120,7 +123,7 @@ Tasks 027-033 define multiple indicator implementation plans, but concrete indic
 - What kill-switch or disable mechanism is required?
 - Task 024 decided the concrete PostgreSQL command-management path: `db/init/001_schema.sql` is the source-of-truth first-start schema DDL, `db/changes/` is reserved for future existing-database state-change SQL, repository initialization executes managed command files, and runtime persistence DML remains application-owned.
 - Task 025 defines the indicator document intake process. Future owner-provided indicator documents should be saved under `tasks/indicators/<INDICATOR_KEY>.md`, and concrete indicator code must wait for an explicit indicator-specific implementation task. Pattern definition documents may be saved under `tasks/patterns/` when explicitly assigned by the owner.
-- Tasks 027-033 define planned implementation tasks for the remaining indicator/filter modules. Task 028 Pivot High / Pivot Low, Task 029 Swing Structure, Task 030 ATR, Task 031 Volume Ratio, Task 032 Support / Resistance Zone, and Task 033 Displacement Candle have deterministic implementations pending review. Task 034 has been restored as the Trendline Break Pattern mechanical-definition task, Task 035 has been restored as the Order Block Pattern mechanical-definition task, and Task 036 has been restored as the Fair Value Gap Pattern mechanical-definition task. The remaining numbered pattern tasks 037-039 should be reconciled or created before implementation proceeds. The Trendline Break, Order Block, and Fair Value Gap patterns are documented as mechanical definitions only; any implementation still requires explicit future implementation tasks.
+- Tasks 027-033 define planned implementation tasks for the remaining indicator/filter modules. Task 028 Pivot High / Pivot Low, Task 029 Swing Structure, Task 030 ATR, Task 031 Volume Ratio, Task 032 Support / Resistance Zone, and Task 033 Displacement Candle have deterministic implementations pending review. Task 034 has been restored as the Trendline Break Pattern mechanical-definition task, Task 035 has been restored as the Order Block Pattern mechanical-definition task, Task 036 has been restored as the Fair Value Gap Pattern mechanical-definition task, and Task 037 has been created as the Cup and Handle Pattern mechanical-definition task. The remaining numbered pattern tasks 038-039 should be reconciled or created before implementation proceeds. The Trendline Break, Order Block, Fair Value Gap, and Cup and Handle patterns are documented as mechanical definitions only; any implementation still requires explicit future implementation tasks.
 - Docker is not installed in the current cloud environment. Local PostgreSQL and WebSocket ingestor container startup are intentionally skipped here and remain optional local developer verification.
 
 # Blockers
