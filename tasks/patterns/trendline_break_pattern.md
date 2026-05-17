@@ -1,749 +1,1169 @@
 # Trendline Break Pattern Mechanical Definition
 
+# Source Requirement
+
 ## Purpose
 
-Define a deterministic, implementation-ready specification for detecting a
-Trendline Break Pattern from already-provided market data and previously defined
-core indicator outputs.
+Define the Trendline Break Pattern mechanically.
 
-This is a pattern definition only. It does not define order execution,
-position sizing, exchange integration, live trading, backtesting engine changes,
-machine learning, or UI visualization.
+This module detects when price breaks a valid trendline built from confirmed
+pivot points.
 
-## Pattern Classification
+This document defines detection logic only. It does not define order execution.
 
-- Pattern type: `TRENDLINE_BREAK_PATTERN`
-- Category: Structure Break; Breakout / Breakdown; Trend Reversal or Trend
-  Continuation
-- Supported directions:
-  - `BULLISH`: price breaks above a descending resistance trendline.
-  - `BEARISH`: price breaks below an ascending support trendline.
-  - `NONE`: no actionable trendline break is detected.
+## Pattern Type
+
+```text
+TRENDLINE_BREAK
+```
+
+Human-readable name:
+
+```text
+Trendline Break Pattern
+```
+
+## Pattern Categories
+
+```text
+Structure Break
+Breakout
+Breakdown
+Trend Reversal
+Trend Continuation
+```
+
+## Supported Directions
+
+```text
+BULLISH
+BEARISH
+NONE
+```
 
 ## Required Core Modules
 
-The detector must consume outputs from these existing core modules and must not
-recalculate their internal logic inside the pattern module:
+```text
+Liquidity: Trading Value / Volume
+Bid-Ask Spread
+Pivot High / Pivot Low
+Swing Structure
+ATR
+Volume Ratio
+Support / Resistance Zone
+```
 
-- Pivot High / Pivot Low
-- Swing Structure
-- ATR
-- Volume Ratio
-- Support / Resistance Zone
-- Liquidity: Trading Value / Volume
-- Bid-Ask Spread
+Optional:
 
-Optional strengthening input:
-
-- Displacement Candle
+```text
+Displacement Candle
+```
 
 ## Required Inputs
 
-For each evaluated candle, the pattern detector requires:
+```text
+symbol
+timestamp
+OHLCV candles
+confirmed pivot highs
+confirmed pivot lows
+swing structure snapshots
+ATR values
+volume ratio values
+support / resistance zones
+liquidity snapshot
+bid-ask spread snapshot
+```
 
-- OHLCV candles: `symbol`, `timestamp`, `open`, `high`, `low`, `close`,
-  `volume`.
-- Confirmed pivot highs from the Pivot High / Pivot Low module.
-- Confirmed pivot lows from the Pivot High / Pivot Low module.
-- Swing structure labels from the Swing Structure module.
-- ATR value aligned to the evaluated candle.
-- Volume ratio value aligned to the evaluated candle.
-- Support / resistance zones available at the evaluated candle.
-- Liquidity status aligned to the evaluated candle.
-- Bid-ask spread status aligned to the evaluated candle.
-- Optional displacement candle direction/status aligned to the evaluated candle.
+Optional:
 
-Only pivots with `is_confirmed = true` may be used. Unconfirmed pivot candidates
-must be ignored.
+```text
+displacement candle snapshot
+```
 
 ## Default Parameters
 
 ```yaml
-trendline_break_pattern:
+trendline_break:
   minimum_touch_count: 2
   strong_touch_count: 3
   maximum_pivot_lookback: 50
   minimum_trendline_length: 10
-  maximum_allowed_deviation_atr: 0.5
-  atr_multiplier: 0.2
-  volume_confirmation_threshold: 1.5
-  weak_volume_confirmation_threshold: 1.3
-  minimum_abs_slope_atr_per_candle: 0.02
-  maximum_abs_slope_atr_per_candle: 2.0
-  retest_lookahead_candles: 3
-  invalidation_close_back_inside_atr: 0.0
-  prefer_most_recent_trendline: true
+  maximum_trendline_length: 200
+  minimum_slope_abs: 0.0
+  maximum_slope_abs: null
+  maximum_allowed_touch_deviation_atr: 0.5
+  breakout_atr_multiplier: 0.2
+  minimum_volume_ratio: 1.5
+  weak_volume_ratio: 1.3
+  require_liquidity_pass: true
+  require_spread_pass: true
+  require_confirmed_pivots: true
+  allow_displacement_bonus: true
+  minimum_pattern_score: 0.7
 ```
 
-Parameter meanings:
+## Core Definitions
 
-- `minimum_touch_count`: minimum confirmed pivot touches required to construct a
-  candidate trendline.
-- `strong_touch_count`: touch count at or above which the trendline receives a
-  stronger quality score.
-- `maximum_pivot_lookback`: maximum number of most recent same-type confirmed
-  pivots to evaluate.
-- `minimum_trendline_length`: minimum candle-index distance between the first
-  and last anchor pivots.
-- `maximum_allowed_deviation_atr`: maximum distance from the trendline for
-  additional pivot touches, expressed in ATR units.
-- `atr_multiplier`: ATR buffer required beyond the trendline for a valid break.
-- `volume_confirmation_threshold`: default volume ratio required for full
-  confirmation.
-- `weak_volume_confirmation_threshold`: lower volume ratio that can classify the
-  pattern as `WEAK` when all other checks pass.
-- `minimum_abs_slope_atr_per_candle`: rejects nearly flat lines.
-- `maximum_abs_slope_atr_per_candle`: rejects trendlines that are too steep.
-- `retest_lookahead_candles`: optional post-break monitoring window for detecting
-  immediate failure back inside the trendline.
-- `invalidation_close_back_inside_atr`: close back inside the unbuffered
-  trendline by more than this ATR amount marks an immediate failure.
+### Bullish Trendline Break
 
-## Trendline Construction
+A bullish trendline break occurs when price closes above a descending resistance
+trendline.
 
-### Pivot Selection
+Required structure:
 
-Bullish trendline break candidates use confirmed pivot highs only:
+```text
+1. Use confirmed pivot highs.
+2. Build descending trendline from pivot highs.
+3. Current close breaks above the trendline.
+4. Break distance is greater than ATR buffer.
+5. Volume confirms the breakout.
+```
+
+Mechanical condition:
 
 ```text
 trendline_type = DESCENDING_RESISTANCE
-anchor_source = confirmed pivot highs
-required swing context = lower highs preferred
+close > trendline_value + breakout_atr_multiplier * ATR
+volume_ratio >= minimum_volume_ratio
 ```
 
-Bearish trendline break candidates use confirmed pivot lows only:
+### Bearish Trendline Break
+
+A bearish trendline break occurs when price closes below an ascending support
+trendline.
+
+Required structure:
+
+```text
+1. Use confirmed pivot lows.
+2. Build ascending trendline from pivot lows.
+3. Current close breaks below the trendline.
+4. Break distance is greater than ATR buffer.
+5. Volume confirms the breakdown.
+```
+
+Mechanical condition:
 
 ```text
 trendline_type = ASCENDING_SUPPORT
-anchor_source = confirmed pivot lows
-required swing context = higher lows preferred
+close < trendline_value - breakout_atr_multiplier * ATR
+volume_ratio >= minimum_volume_ratio
 ```
 
-For each direction:
+## Trendline Source Pivots
 
-1. Select same-type confirmed pivots whose `confirmed_index` is less than or
-   equal to the evaluated candle index.
-2. Limit the candidate set to the most recent `maximum_pivot_lookback` pivots.
-3. Ignore pivots that occur after the evaluated candle or are not confirmed by
-   the evaluated candle.
-4. Build candidate lines from ordered pivot pairs where the later anchor occurs
-   after the earlier anchor.
-5. Retain only candidate lines where the index distance between first and last
-   anchor is at least `minimum_trendline_length`.
+### Bullish Break Source
 
-### Anchor Pair Rules
-
-For a bullish break, the anchor pair must form a descending resistance line:
+Use pivot highs.
 
 ```text
-second_pivot_high.price < first_pivot_high.price
-trendline_slope < 0
+pivot_type = PIVOT_HIGH
 ```
 
-For a bearish break, the anchor pair must form an ascending support line:
+The selected pivot highs should generally form lower highs.
 
 ```text
-second_pivot_low.price > first_pivot_low.price
-trendline_slope > 0
+latest_pivot_high.price <= previous_pivot_high.price
 ```
 
-### Trendline Formula
+### Bearish Break Source
 
-Use candle index as the x-axis and price as the y-axis.
-
-For anchors `(x1, y1)` and `(x2, y2)`:
+Use pivot lows.
 
 ```text
-trendline_slope = (y2 - y1) / (x2 - x1)
-trendline_value(index) = y1 + trendline_slope * (index - x1)
+pivot_type = PIVOT_LOW
 ```
 
-At the evaluated candle:
+The selected pivot lows should generally form higher lows.
 
 ```text
-current_trendline_value = trendline_value(current_index)
+latest_pivot_low.price >= previous_pivot_low.price
 ```
 
-### Touch Count
+## Trendline Construction
 
-A pivot is a trendline touch when its price is close enough to the candidate
-trendline value at that pivot's index.
+### Method 1: Two-point Trendline
 
-For bullish resistance lines:
+Use two confirmed pivots.
 
 ```text
-pivot_touch = abs(pivot_high.price - trendline_value(pivot_high.index)) <= maximum_allowed_deviation_atr * ATR_at_pivot
+point_1 = older pivot
+point_2 = newer pivot
 ```
 
-For bearish support lines:
+Trendline slope:
 
 ```text
-pivot_touch = abs(pivot_low.price - trendline_value(pivot_low.index)) <= maximum_allowed_deviation_atr * ATR_at_pivot
+slope = (point_2.price - point_1.price) / (point_2.index - point_1.index)
 ```
 
-If ATR is unavailable at a historical pivot, use the evaluated candle ATR only
-for candidate scoring and classify the trendline as no better than `WEAK`.
+Trendline intercept:
 
-A candidate trendline is eligible only when:
+```text
+intercept = point_1.price - slope * point_1.index
+```
+
+Trendline value at index `i`:
+
+```text
+trendline_value[i] = slope * i + intercept
+```
+
+### Method 2: Multi-touch Regression Trendline
+
+Use two or more confirmed pivots and fit a linear regression line.
+
+```text
+price = slope * index + intercept
+```
+
+Recommended for initial module:
+
+```text
+Use two-point trendline first.
+Allow regression trendline later.
+```
+
+## Trendline Type
+
+### Descending Resistance Trendline
+
+```text
+source_pivots = PIVOT_HIGH
+slope < 0
+```
+
+Used for:
+
+```text
+BULLISH trendline break
+```
+
+### Ascending Support Trendline
+
+```text
+source_pivots = PIVOT_LOW
+slope > 0
+```
+
+Used for:
+
+```text
+BEARISH trendline break
+```
+
+### Flat Trendline
+
+```text
+abs(slope) <= minimum_slope_abs
+```
+
+Default handling:
+
+```text
+trendline_status = INVALID
+```
+
+Flat horizontal zones should be handled by the Support / Resistance Zone module,
+not this module.
+
+## Touch Count
+
+A pivot is considered a valid trendline touch when its price is close enough to
+the trendline value.
+
+```text
+deviation = abs(pivot.price - trendline_value[pivot.index])
+```
+
+Valid touch:
+
+```text
+deviation <= maximum_allowed_touch_deviation_atr * ATR[pivot.index]
+```
+
+Valid trendline:
 
 ```text
 touch_count >= minimum_touch_count
 ```
 
-### Trendline Rejection Rules
-
-Reject the candidate as `INVALID` when any of the following is true:
-
-- Fewer than `minimum_touch_count` confirmed touches exist.
-- Any anchor pivot is unconfirmed.
-- `x2 <= x1`.
-- `x2 - x1 < minimum_trendline_length`.
-- Bullish candidate slope is not negative.
-- Bearish candidate slope is not positive.
-- Normalized absolute slope is below `minimum_abs_slope_atr_per_candle`.
-- Normalized absolute slope is above `maximum_abs_slope_atr_per_candle`.
-- Touch deviation exceeds `maximum_allowed_deviation_atr` for required touches.
-- The line is built from only two weak touches and both touches have low pivot
-  strength or conflicting swing labels.
-- Liquidity or spread gating fails.
-
-Normalized slope:
+Strong trendline:
 
 ```text
-normalized_abs_slope = abs(trendline_slope) / ATR_current
+touch_count >= strong_touch_count
 ```
 
-If `ATR_current <= 0` or missing, the pattern cannot be validated and must be
-`INVALID`.
+## Trendline Length
 
-### Multiple Overlapping Trendlines
-
-When multiple candidate lines pass construction rules:
-
-1. Prefer the candidate with the largest `touch_count`.
-2. If tied, prefer the candidate with the smallest average touch deviation.
-3. If tied, prefer the candidate whose most recent anchor is closest to the
-   evaluated candle.
-4. If still tied and `prefer_most_recent_trendline = true`, choose the most
-   recent candidate.
-
-Only one selected trendline per direction should be emitted for a given symbol
-and timestamp unless a future task explicitly defines multi-line output.
-
-## Pre-Validation Filters
-
-Before validating a break:
+Trendline length:
 
 ```text
-liquidity_pass = true
-spread_pass = true
+trendline_length = latest_pivot.index - earliest_pivot.index
 ```
 
-If either check fails:
+Valid length:
 
 ```text
-pattern_status = INVALID
-pattern_score = 0.0
-reason = "liquidity_or_spread_filter_failed"
+minimum_trendline_length <= trendline_length <= maximum_trendline_length
 ```
 
-The pattern module must not fetch order-book data, calculate liquidity from raw
-exchange data, or call exchange APIs. It must only consume already-provided
-liquidity and spread outputs.
+## Break Distance
 
-## Break Validation
-
-### Bullish Trendline Break
-
-A bullish break is validated when all required conditions are true:
+### Bullish Break Distance
 
 ```text
-trendline_type = DESCENDING_RESISTANCE
-close > trendline_value + atr_multiplier * ATR
-volume_ratio >= weak_volume_confirmation_threshold
-liquidity_pass = true
-spread_pass = true
-```
-
-Full confirmation requires:
-
-```text
-close > trendline_value + atr_multiplier * ATR
-volume_ratio >= volume_confirmation_threshold
-```
-
-Break metrics:
-
-```text
-break_price = close
 break_distance = close - trendline_value
-break_distance_atr = break_distance / ATR
 ```
 
-### Bearish Trendline Break
-
-A bearish break is validated when all required conditions are true:
+Valid bullish break:
 
 ```text
-trendline_type = ASCENDING_SUPPORT
-close < trendline_value - atr_multiplier * ATR
-volume_ratio >= weak_volume_confirmation_threshold
-liquidity_pass = true
-spread_pass = true
+break_distance > breakout_atr_multiplier * ATR
 ```
 
-Full confirmation requires:
+### Bearish Break Distance
 
 ```text
-close < trendline_value - atr_multiplier * ATR
-volume_ratio >= volume_confirmation_threshold
-```
-
-Break metrics:
-
-```text
-break_price = close
 break_distance = trendline_value - close
+```
+
+Valid bearish break:
+
+```text
+break_distance > breakout_atr_multiplier * ATR
+```
+
+### Break Distance ATR
+
+```text
 break_distance_atr = break_distance / ATR
 ```
 
-### Pending Break
-
-A candidate is `PENDING` when a valid trendline exists and price is near the
-trendline but has not closed beyond the ATR buffer.
-
-Bullish pending condition:
+Example:
 
 ```text
-close > trendline_value
-and close <= trendline_value + atr_multiplier * ATR
+break_distance = 120
+ATR = 400
+break_distance_atr = 0.3
 ```
-
-Bearish pending condition:
-
-```text
-close < trendline_value
-and close >= trendline_value - atr_multiplier * ATR
-```
-
-### Weak Break
-
-A candidate is `WEAK` when price passes the ATR buffer and all liquidity/spread
-checks pass, but volume only reaches the weak confirmation threshold:
-
-```text
-weak_volume_confirmation_threshold <= volume_ratio < volume_confirmation_threshold
-```
-
-A candidate is also `WEAK` when the break is valid but the trendline has only
-`minimum_touch_count` touches and no support/resistance context.
-
-### Immediate Failure Back Inside
-
-If post-break evaluation is available, a previously valid or weak break becomes
-`INVALID` when price closes back inside the unbuffered trendline within
-`retest_lookahead_candles`.
-
-Bullish failure:
-
-```text
-future_close <= future_trendline_value - invalidation_close_back_inside_atr * ATR_future
-```
-
-Bearish failure:
-
-```text
-future_close >= future_trendline_value + invalidation_close_back_inside_atr * ATR_future
-```
-
-If future candles are unavailable, do not mark immediate failure; leave the
-initial break status unchanged.
 
 ## Volume Confirmation
 
-Use the Volume Ratio module output aligned to the evaluated candle.
+Strong confirmation:
 
 ```text
-full_volume_confirmation = volume_ratio >= 1.5
-weak_volume_confirmation = volume_ratio >= 1.3
+volume_ratio >= minimum_volume_ratio
 ```
 
-Volume status impact:
-
-- `volume_ratio >= 1.5`: eligible for `VALID`.
-- `1.3 <= volume_ratio < 1.5`: eligible for `WEAK`.
-- `volume_ratio < 1.3`: breakout or breakdown is `INVALID` unless it remains
-  only a `PENDING` setup that has not broken the ATR buffer.
-- Missing or invalid volume ratio: `INVALID` for completed breaks.
-
-## Optional Displacement Candle Strengthening
-
-When the Displacement Candle module output is available, it may improve score
-but must not replace ATR and volume validation.
-
-Bullish strong break:
+Weak confirmation:
 
 ```text
-breakout candle is bullish displacement candle
+volume_ratio >= weak_volume_ratio
+and
+volume_ratio < minimum_volume_ratio
 ```
 
-Bearish strong break:
+No confirmation:
 
 ```text
-breakdown candle is bearish displacement candle
+volume_ratio < weak_volume_ratio
 ```
 
-If displacement output is unavailable, set `displacement_score = 0.0` and do not
-penalize the required validation components.
+## Liquidity Filter
 
-## Swing Structure Alignment
+If `require_liquidity_pass = true`:
 
-Swing Structure labels are used as context, not as a replacement for trendline
-construction.
+```text
+liquidity_pass must be true
+```
 
-Bullish trendline break alignment is strongest when recent pivot highs include
-`LH` labels before the break and the break occurs after a downtrend or pullback
-sequence.
+If not:
 
-Bearish trendline break alignment is strongest when recent pivot lows include
-`HL` labels before the break and the break occurs after an uptrend or bounce
-sequence.
+```text
+pattern_status = INVALID
+```
 
-Conflicting structure lowers score or invalidates weak lines:
+## Spread Filter
 
-- Bullish line with recent `HH` dominance receives reduced structure score.
-- Bearish line with recent `LL` dominance receives reduced structure score.
-- If the only valid trendline has two touches and structure conflicts, mark the
-  candidate `INVALID`.
+If `require_spread_pass = true`:
 
-## Support / Resistance Context
+```text
+spread_pass must be true
+```
 
-Support / Resistance Zone output is used for target references and optional
-context scoring.
+If not:
 
-Bullish break context is stronger when:
+```text
+pattern_status = INVALID
+```
 
-- The descending resistance trendline break occurs near or through a resistance
-  zone.
-- The nearest upper resistance zone provides a clear target reference.
-- A broken resistance zone can act as a retest reference.
+## Optional Displacement Confirmation
 
-Bearish break context is stronger when:
+A bullish break is stronger when:
 
-- The ascending support trendline break occurs near or through a support zone.
-- The nearest lower support zone provides a clear target reference.
-- A broken support zone can act as a retest reference.
+```text
+displacement_direction = BULLISH
+displacement_status = VALID
+```
 
-If zones are unavailable, the pattern may still be detected, but
-`support_resistance_context_score = 0.0` and target reference must fall back to a
-risk-reward based reference.
+A bearish break is stronger when:
 
-## Pattern Status Rules
+```text
+displacement_direction = BEARISH
+displacement_status = VALID
+```
 
-Allowed statuses:
+If displacement is not present:
 
-- `VALID`
-- `WEAK`
-- `INVALID`
-- `PENDING`
+```text
+Do not invalidate the pattern.
+Only reduce or avoid bonus score.
+```
 
-Status assignment order:
+## Pattern Status
 
-1. If required inputs are missing or invalid, status is `INVALID`.
-2. If `liquidity_pass = false` or `spread_pass = false`, status is `INVALID`.
-3. If no eligible trendline exists, status is `INVALID` or `PENDING` only when
-   there are enough pivots forming a near-eligible setup.
-4. If a trendline exists but price has not crossed the unbuffered line, status is
-   `PENDING`.
-5. If price crosses the unbuffered line but not the ATR buffer, status is
-   `PENDING`.
-6. If price crosses the ATR buffer but volume ratio is below `1.3`, status is
-   `INVALID`.
-7. If price crosses the ATR buffer and `1.3 <= volume_ratio < 1.5`, status is
-   `WEAK`.
-8. If price crosses the ATR buffer and `volume_ratio >= 1.5`, status is `VALID`.
-9. If immediate failure back inside is detected, status is `INVALID`.
+Allowed values:
 
-## Pattern Scoring
+```text
+VALID
+WEAK
+INVALID
+PENDING
+```
 
-The final `pattern_score` must be clipped to the range `0.0` to `1.0`.
+### VALID
 
-Required components:
+```text
+liquidity_pass = true
+spread_pass = true
+valid trendline exists
+ATR break condition is satisfied
+volume_ratio >= minimum_volume_ratio
+pattern_score >= minimum_pattern_score
+```
+
+### WEAK
+
+```text
+valid trendline exists
+ATR break condition is satisfied
+volume_ratio >= weak_volume_ratio
+volume_ratio < minimum_volume_ratio
+```
+
+or:
+
+```text
+pattern_score < minimum_pattern_score
+but
+pattern_score >= 0.5
+```
+
+### PENDING
+
+```text
+valid trendline exists
+but close has not broken the trendline with ATR buffer
+```
+
+### INVALID
+
+```text
+liquidity filter fails
+spread filter fails
+not enough pivots
+trendline is invalid
+ATR is missing
+volume ratio is missing
+break condition fails
+```
+
+## Pattern Score
+
+Score range:
+
+```text
+0.0 to 1.0
+```
+
+Recommended components:
+
+```text
+trendline_quality_score: 0.30
+breakout_strength_score: 0.25
+volume_confirmation_score: 0.20
+liquidity_score: 0.10
+structure_alignment_score: 0.10
+displacement_score: 0.05
+```
+
+Total:
 
 ```text
 pattern_score =
-    0.25 * trendline_quality_score
-  + 0.25 * breakout_strength_score
-  + 0.20 * volume_confirmation_score
-  + 0.15 * liquidity_score
-  + 0.15 * structure_alignment_score
+    trendline_quality_score * 0.30
+  + breakout_strength_score * 0.25
+  + volume_confirmation_score * 0.20
+  + liquidity_score * 0.10
+  + structure_alignment_score * 0.10
+  + displacement_score * 0.05
 ```
 
-Optional implementation may reserve part of the structure component for
-additional context:
+### Trendline Quality Score
 
 ```text
-structure_alignment_score =
-    0.60 * swing_structure_score
-  + 0.25 * support_resistance_context_score
-  + 0.15 * displacement_score
+if touch_count >= strong_touch_count:
+    trendline_quality_score = 1.0
+
+else if touch_count >= minimum_touch_count:
+    trendline_quality_score = 0.7
+
+else:
+    trendline_quality_score = 0.0
 ```
 
-### Component Definitions
-
-`trendline_quality_score`:
-
-- `1.0`: at least `strong_touch_count` touches, acceptable slope, low average
-  deviation.
-- `0.7`: exactly `minimum_touch_count` touches, acceptable slope, acceptable
-  deviation.
-- `0.4`: eligible but weak historical ATR quality or marginal slope.
-- `0.0`: rejected trendline.
-
-`breakout_strength_score`:
+Optional penalty:
 
 ```text
-breakout_strength_score = min(break_distance_atr / 1.0, 1.0)
+if trendline_length < minimum_trendline_length:
+    trendline_quality_score = 0.0
 ```
 
-A break exactly at the default ATR buffer can be valid but should score lower
-than a break with larger displacement beyond the trendline.
-
-`volume_confirmation_score`:
-
-- `1.0`: `volume_ratio >= 2.0`.
-- `0.8`: `1.5 <= volume_ratio < 2.0`.
-- `0.5`: `1.3 <= volume_ratio < 1.5`.
-- `0.0`: `volume_ratio < 1.3` or invalid volume ratio.
-
-`liquidity_score`:
-
-- `1.0`: liquidity passes and spread status is tight or acceptable.
-- `0.7`: liquidity passes and spread passes, but one status is only normal or
-  acceptable rather than strong.
-- `0.0`: liquidity fails or spread fails.
-
-`structure_alignment_score`:
-
-- `1.0`: swing labels strongly align with the expected lower-high or higher-low
-  sequence.
-- `0.7`: mixed but not conflicting structure.
-- `0.3`: weak or sparse structure context.
-- `0.0`: conflicting structure.
-
-`support_resistance_context_score`:
-
-- `1.0`: break interacts with a relevant zone and a clear target zone exists.
-- `0.5`: relevant zone exists but target context is weak.
-- `0.0`: no relevant zone context.
-
-`displacement_score`:
-
-- `1.0`: breakout/breakdown candle is a matching displacement candle.
-- `0.0`: no matching displacement candle or displacement output unavailable.
-
-Status-to-score constraints:
-
-- `INVALID`: `pattern_score = 0.0`.
-- `PENDING`: `pattern_score <= 0.49`.
-- `WEAK`: `0.40 <= pattern_score <= 0.69`.
-- `VALID`: `pattern_score >= 0.70` after clipping and constraints.
-
-## Entry, Stop, and Target References
-
-These are reference levels only. They must not trigger real order placement,
-position sizing, or exchange calls.
-
-### Bullish Break References
+### Breakout Strength Score
 
 ```text
-entry_reference = breakout close or next candle open
-stop_reference = nearest swing low or broken trendline retest zone
-target_reference = nearest resistance zone or risk-reward based target
+if break_distance_atr >= 0.5:
+    breakout_strength_score = 1.0
+
+else if break_distance_atr >= 0.2:
+    breakout_strength_score = 0.7
+
+else:
+    breakout_strength_score = 0.0
 ```
 
-Mechanical selection:
-
-1. `entry_reference`: use breakout candle close by default; optionally use next
-   candle open if the consuming strategy requires confirmation.
-2. `stop_reference`: choose the nearest confirmed swing low below the break
-   price. If no swing low is available, use the broken trendline value or
-   retest zone minus `atr_multiplier * ATR`.
-3. `target_reference`: choose the nearest valid resistance zone above the break
-   price. If unavailable, use `entry_reference + 2 * abs(entry_reference - stop_reference)`.
-
-### Bearish Break References
+### Volume Confirmation Score
 
 ```text
-entry_reference = breakdown close or next candle open
-stop_reference = nearest swing high or broken trendline retest zone
-target_reference = nearest support zone or risk-reward based target
+if volume_ratio >= 2.0:
+    volume_confirmation_score = 1.0
+
+else if volume_ratio >= 1.5:
+    volume_confirmation_score = 0.8
+
+else if volume_ratio >= 1.3:
+    volume_confirmation_score = 0.5
+
+else:
+    volume_confirmation_score = 0.0
 ```
 
-Mechanical selection:
+### Liquidity Score
 
-1. `entry_reference`: use breakdown candle close by default; optionally use next
-   candle open if the consuming strategy requires confirmation.
-2. `stop_reference`: choose the nearest confirmed swing high above the break
-   price. If no swing high is available, use the broken trendline value or
-   retest zone plus `atr_multiplier * ATR`.
-3. `target_reference`: choose the nearest valid support zone below the break
-   price. If unavailable, use `entry_reference - 2 * abs(stop_reference - entry_reference)`.
+```text
+if liquidity_status = HIGH:
+    liquidity_score = 1.0
+
+else if liquidity_status = NORMAL:
+    liquidity_score = 0.8
+
+else:
+    liquidity_score = 0.0
+```
+
+### Structure Alignment Score
+
+For bullish trendline break:
+
+```text
+if market_structure_status = DOWNTREND:
+    structure_alignment_score = 1.0
+```
+
+Reason:
+
+```text
+A bullish break above descending resistance can indicate reversal or transition.
+```
+
+If market is range:
+
+```text
+structure_alignment_score = 0.6
+```
+
+For bearish trendline break:
+
+```text
+if market_structure_status = UPTREND:
+    structure_alignment_score = 1.0
+```
+
+Reason:
+
+```text
+A bearish break below ascending support can indicate reversal or transition.
+```
+
+If market is range:
+
+```text
+structure_alignment_score = 0.6
+```
+
+### Displacement Score
+
+```text
+if breakout candle displacement direction matches pattern direction:
+    displacement_score = 1.0
+
+else:
+    displacement_score = 0.0
+```
+
+## Reference Prices
+
+This module must not execute orders. It only defines reference prices.
+
+### Entry Reference
+
+Bullish:
+
+```text
+entry_reference = breakout_close
+```
+
+Bearish:
+
+```text
+entry_reference = breakdown_close
+```
+
+Alternative for either direction:
+
+```text
+entry_reference = next_candle_open
+```
+
+### Stop Reference
+
+Bullish default:
+
+```text
+stop_reference = nearest_recent_pivot_low
+```
+
+Bullish alternative:
+
+```text
+stop_reference = trendline_value - ATR
+```
+
+Bearish default:
+
+```text
+stop_reference = nearest_recent_pivot_high
+```
+
+Bearish alternative:
+
+```text
+stop_reference = trendline_value + ATR
+```
+
+### Target Reference
+
+Bullish preferred:
+
+```text
+target_reference = nearest_resistance_zone
+```
+
+Bullish fallback:
+
+```text
+target_reference = entry_reference + 2 * abs(entry_reference - stop_reference)
+```
+
+Bearish preferred:
+
+```text
+target_reference = nearest_support_zone
+```
+
+Bearish fallback:
+
+```text
+target_reference = entry_reference - 2 * abs(stop_reference - entry_reference)
+```
+
+## Risk Reward
+
+Bullish:
+
+```text
+risk = entry_reference - stop_reference
+reward = target_reference - entry_reference
+risk_reward = reward / risk
+```
+
+Bearish:
+
+```text
+risk = stop_reference - entry_reference
+reward = entry_reference - target_reference
+risk_reward = reward / risk
+```
+
+If:
+
+```text
+risk <= 0
+```
+
+Then:
+
+```text
+risk_reward = null
+pattern_status = INVALID
+```
 
 ## Output Schema
-
-Each evaluation emits one pattern result per selected direction or a single
-`NONE` result when no candidate exists.
 
 ```json
 {
   "symbol": "BTCUSDT",
-  "timestamp": "2026-05-17T10:00:00Z",
-  "pattern_type": "TRENDLINE_BREAK_PATTERN",
+  "timestamp": "2026-05-16T10:00:00Z",
+  "pattern_type": "TRENDLINE_BREAK",
   "direction": "BULLISH",
+  "pattern_status": "VALID",
   "trendline_type": "DESCENDING_RESISTANCE",
-  "trendline_slope": -42.5,
+  "trendline_slope": -25.4,
+  "trendline_intercept": 69000.0,
   "touch_count": 3,
-  "break_price": 67500.0,
-  "trendline_value": 67100.0,
-  "break_distance": 400.0,
-  "break_distance_atr": 0.8,
-  "volume_ratio": 1.65,
+  "source_pivot_indices": [120, 145, 171],
+  "trendline_value": 64200.0,
+  "break_price": 64500.0,
+  "break_distance": 300.0,
+  "break_distance_atr": 0.375,
+  "atr": 800.0,
+  "volume_ratio": 1.8,
   "liquidity_pass": true,
   "spread_pass": true,
-  "pattern_score": 0.82,
-  "pattern_status": "VALID",
-  "entry_reference": 67500.0,
-  "stop_reference": 66200.0,
-  "target_reference": 70100.0,
-  "reason": "bullish_break_confirmed_with_atr_buffer_and_volume"
+  "displacement_confirmed": true,
+  "pattern_score": 0.83,
+  "entry_reference": 64500.0,
+  "stop_reference": 63300.0,
+  "target_reference": 66900.0,
+  "risk_reward": 2.0,
+  "reason": "Price closed above descending resistance trendline with ATR buffer and volume confirmation."
 }
 ```
 
-Required fields:
+## Output Fields
 
-- `symbol`
-- `timestamp`
-- `pattern_type`
-- `direction`: `BULLISH`, `BEARISH`, or `NONE`
-- `trendline_type`: `DESCENDING_RESISTANCE`, `ASCENDING_SUPPORT`, or `NONE`
-- `trendline_slope`
-- `touch_count`
-- `break_price`
-- `trendline_value`
-- `break_distance`
-- `break_distance_atr`
-- `volume_ratio`
-- `liquidity_pass`
-- `spread_pass`
-- `pattern_score`
-- `pattern_status`: `VALID`, `WEAK`, `INVALID`, or `PENDING`
-- `entry_reference`
-- `stop_reference`
-- `target_reference`
-- `reason`
+- `pattern_type`: fixed value `TRENDLINE_BREAK`.
+- `direction`: `BULLISH`, `BEARISH`, or `NONE`.
+- `pattern_status`: `VALID`, `WEAK`, `INVALID`, or `PENDING`.
+- `trendline_type`: `DESCENDING_RESISTANCE`, `ASCENDING_SUPPORT`, or
+  `INVALID`.
+- `trendline_slope`: slope of the detected trendline.
+- `trendline_intercept`: intercept of the detected trendline.
+- `touch_count`: number of valid pivot touches on the trendline.
+- `source_pivot_indices`: pivot indices used to construct or validate the
+  trendline.
+- `trendline_value`: trendline price value at the breakout candle index.
+- `break_price`: close price of the breakout or breakdown candle.
+- `break_distance`: absolute distance between close and trendline value.
+- `break_distance_atr`: break distance normalized by ATR.
+- `atr`: ATR value at the breakout candle.
+- `volume_ratio`: volume ratio at the breakout candle.
+- `liquidity_pass`: result from Liquidity module.
+- `spread_pass`: result from Bid-Ask Spread module.
+- `displacement_confirmed`: true when the breakout candle is a valid
+  displacement candle matching the pattern direction; false otherwise.
+- `pattern_score`: final score between `0.0` and `1.0`.
+- `entry_reference`: reference price for possible entry.
+- `stop_reference`: reference price for invalidation.
+- `target_reference`: reference price for possible target.
+- `risk_reward`: reward-to-risk ratio.
+- `reason`: short explanation for detection result.
 
-## Pseudocode-Level Logic
+## Edge Cases
+
+### Not Enough Pivots
+
+If fewer than `minimum_touch_count` pivots exist:
 
 ```text
-for each evaluated candle:
-    read OHLCV, ATR, volume ratio, liquidity status, spread status
-
-    if liquidity_pass is false or spread_pass is false:
-        emit INVALID with score 0.0
-        stop evaluation for completed breaks
-
-    bullish_line = build descending resistance from confirmed pivot highs
-    bearish_line = build ascending support from confirmed pivot lows
-
-    bullish_result = evaluate bullish break if bullish_line exists
-    bearish_result = evaluate bearish break if bearish_line exists
-
-    if both directions are valid at the same timestamp:
-        choose the higher pattern_score
-        if scores are tied, prefer the direction aligned with swing structure
-
-    emit selected result
+pattern_status = INVALID
 ```
-
-## Edge Case Handling
-
-### Not Enough Pivot Points
-
-If fewer than `minimum_touch_count` confirmed same-type pivots exist, no valid
-trendline can be constructed. Emit `PENDING` only if one confirmed pivot exists
-and future pivots could complete the setup; otherwise emit `INVALID` or `NONE`.
 
 ### Unconfirmed Pivots
 
-Unconfirmed pivots must be ignored. A trendline built from any unconfirmed pivot
-is invalid.
+If pivots are not confirmed:
+
+```text
+ignore pivots
+```
 
 ### Flat Trendline
 
-If normalized absolute slope is below `minimum_abs_slope_atr_per_candle`, reject
-the trendline as too flat. Flat horizontal support/resistance belongs to the
-Support / Resistance Zone module, not this pattern.
+If trendline slope is too close to zero:
+
+```text
+pattern_status = INVALID
+```
+
+Use Support / Resistance Zone module instead.
 
 ### Too Steep Trendline
 
-If normalized absolute slope is above `maximum_abs_slope_atr_per_candle`, reject
-the trendline as unstable or overfit.
+If `maximum_slope_abs` is configured and:
 
-### Trendline With Only Two Weak Touches
+```text
+abs(slope) > maximum_slope_abs
+```
 
-A two-touch line is eligible only if slope, deviation, pivot strength, and swing
-structure alignment pass. If any of these are weak or conflicting, mark the
-candidate `INVALID`.
+Then:
 
-### Breakout Without ATR Buffer
+```text
+pattern_status = INVALID
+```
 
-A close through the unbuffered trendline but not beyond the ATR buffer is
-`PENDING`, not `VALID`.
+### ATR Missing
 
-### Breakout Without Volume Confirmation
+If ATR is missing:
 
-A completed break with `volume_ratio < 1.3` is `INVALID`. A completed break with
-`1.3 <= volume_ratio < 1.5` is `WEAK`.
+```text
+pattern_status = INVALID
+```
 
-### Low Liquidity Market
+### Volume Ratio Missing
 
-If `liquidity_pass = false`, pattern status is `INVALID` regardless of price,
-trendline quality, volume, or structure.
+If volume ratio is missing:
 
-### Wide Spread Market
+```text
+pattern_status = INVALID
+```
 
-If `spread_pass = false`, pattern status is `INVALID` regardless of price,
-trendline quality, volume, or structure.
+### Liquidity Failure
 
-### Price Immediately Returning Inside the Trendline
+If liquidity fails:
 
-If post-break candles are available and price closes back inside the unbuffered
-trendline within `retest_lookahead_candles`, invalidate the break. If future
-candles are not available, do not use future information in backtests or live
-simulation.
+```text
+pattern_status = INVALID
+```
 
-### Multiple Overlapping Trendlines
+### Spread Failure
 
-Select one trendline using touch count, average deviation, recency, and swing
-alignment. Do not emit multiple overlapping trendlines unless a future task
-explicitly changes the output contract.
+If spread fails:
 
-### Conflicting Swing Structure
+```text
+pattern_status = INVALID
+```
 
-Conflicting swing structure reduces score. If the line has only two touches and
-swing structure conflicts with the expected lower-high or higher-low setup,
-reject the candidate.
+### Break Without ATR Buffer
 
-## Non-Goals
+If close crosses trendline but does not exceed ATR buffer:
 
-This specification does not include:
+```text
+pattern_status = PENDING
+```
 
-- Actual trading execution.
-- Exchange API integration.
-- Position sizing implementation.
-- Backtesting engine implementation.
-- Live order placement.
-- Machine learning models.
-- UI visualization.
-- Fetching candles, liquidity data, spread data, or order-book data.
+### Break Without Volume
+
+If ATR break is valid but volume is weak:
+
+```text
+pattern_status = WEAK
+```
+
+### Immediate Re-entry
+
+If price breaks the trendline but returns inside the trendline within a short
+window:
+
+```text
+mark as FALSE_BREAK_CANDIDATE
+```
+
+Optional parameter:
+
+```yaml
+false_break_check_window: 3
+```
+
+### Multiple Trendlines
+
+If multiple valid trendlines exist:
+
+```text
+select the highest score trendline
+```
+
+Tie-breakers:
+
+```text
+1. higher touch_count
+2. longer trendline_length
+3. stronger volume_ratio
+4. larger break_distance_atr
+```
+
+## Detection Logic
+
+```text
+1. Check liquidity_pass.
+2. Check spread_pass.
+3. Load confirmed pivot highs and lows.
+4. Build descending resistance trendlines from pivot highs.
+5. Build ascending support trendlines from pivot lows.
+6. Calculate trendline value at current candle.
+7. Check bullish break above descending resistance.
+8. Check bearish break below ascending support.
+9. Apply ATR buffer.
+10. Apply volume confirmation.
+11. Optionally apply displacement confirmation.
+12. Calculate score.
+13. Set pattern status.
+14. Return best valid or pending signal.
+```
+
+## Pseudocode
+
+```python
+def detect_trendline_break(context, config):
+    if config.require_liquidity_pass and not context.liquidity.liquidity_pass:
+        return invalid_result("liquidity_failed")
+
+    if config.require_spread_pass and not context.spread.spread_pass:
+        return invalid_result("spread_failed")
+
+    if context.atr is None:
+        return invalid_result("missing_atr")
+
+    if context.volume_ratio is None:
+        return invalid_result("missing_volume_ratio")
+
+    bullish_candidates = build_descending_resistance_trendlines(
+        context.confirmed_pivot_highs,
+        context.atr_series,
+        config,
+    )
+
+    bearish_candidates = build_ascending_support_trendlines(
+        context.confirmed_pivot_lows,
+        context.atr_series,
+        config,
+    )
+
+    candidates = []
+
+    for trendline in bullish_candidates:
+        result = evaluate_bullish_break(trendline, context, config)
+        candidates.append(result)
+
+    for trendline in bearish_candidates:
+        result = evaluate_bearish_break(trendline, context, config)
+        candidates.append(result)
+
+    valid_candidates = [
+        candidate for candidate in candidates
+        if candidate["pattern_status"] in ["VALID", "WEAK", "PENDING"]
+    ]
+
+    if not valid_candidates:
+        return invalid_result("no_valid_trendline_break")
+
+    return select_best_candidate(valid_candidates)
+```
+
+### Bullish Break Evaluation
+
+```python
+def evaluate_bullish_break(trendline, context, config):
+    current = context.current_candle
+    trendline_value = trendline.value_at(current.index)
+    break_distance = current.close - trendline_value
+    break_distance_atr = break_distance / context.atr
+
+    if break_distance <= 0:
+        status = "PENDING"
+    elif break_distance_atr < config.breakout_atr_multiplier:
+        status = "PENDING"
+    elif context.volume_ratio < config.weak_volume_ratio:
+        status = "INVALID"
+    elif context.volume_ratio < config.minimum_volume_ratio:
+        status = "WEAK"
+    else:
+        status = "VALID"
+
+    score = calculate_pattern_score(
+        trendline=trendline,
+        direction="BULLISH",
+        break_distance_atr=break_distance_atr,
+        volume_ratio=context.volume_ratio,
+        liquidity=context.liquidity,
+        structure=context.swing_structure,
+        displacement=context.displacement,
+        config=config,
+    )
+
+    return build_output(
+        context=context,
+        trendline=trendline,
+        direction="BULLISH",
+        status=status,
+        break_distance=break_distance,
+        break_distance_atr=break_distance_atr,
+        score=score,
+    )
+```
+
+### Bearish Break Evaluation
+
+```python
+def evaluate_bearish_break(trendline, context, config):
+    current = context.current_candle
+    trendline_value = trendline.value_at(current.index)
+    break_distance = trendline_value - current.close
+    break_distance_atr = break_distance / context.atr
+
+    if break_distance <= 0:
+        status = "PENDING"
+    elif break_distance_atr < config.breakout_atr_multiplier:
+        status = "PENDING"
+    elif context.volume_ratio < config.weak_volume_ratio:
+        status = "INVALID"
+    elif context.volume_ratio < config.minimum_volume_ratio:
+        status = "WEAK"
+    else:
+        status = "VALID"
+
+    score = calculate_pattern_score(
+        trendline=trendline,
+        direction="BEARISH",
+        break_distance_atr=break_distance_atr,
+        volume_ratio=context.volume_ratio,
+        liquidity=context.liquidity,
+        structure=context.swing_structure,
+        displacement=context.displacement,
+        config=config,
+    )
+
+    return build_output(
+        context=context,
+        trendline=trendline,
+        direction="BEARISH",
+        status=status,
+        break_distance=break_distance,
+        break_distance_atr=break_distance_atr,
+        score=score,
+    )
+```
+
+## Domain Model Example
+
+Java-style example supplied by the owner:
+
+```java
+public enum TrendlineBreakDirection {
+    BULLISH,
+    BEARISH,
+    NONE
+}
+```
+
+```java
+public enum TrendlineType {
+    DESCENDING_RESISTANCE,
+    ASCENDING_SUPPORT,
+    INVALID
+}
+```
+
+```java
+public enum PatternStatus {
+    VALID,
+    WEAK,
+    INVALID,
+    PENDING
+}
+```
+
+```java
+public record TrendlineBreakSignal(
+    String symbol,
+    Instant timestamp,
+    String patternType,
+    TrendlineBreakDirection direction,
+    PatternStatus patternStatus,
+    TrendlineType trendlineType,
+    BigDecimal trendlineSlope,
+    BigDecimal trendlineIntercept,
+    int touchCount,
+    List<Integer> sourcePivotIndices,
+    BigDecimal trendlineValue,
+    BigDecimal breakPrice,
+    BigDecimal breakDistance,
+    BigDecimal breakDistanceAtr,
+    BigDecimal atr,
+    BigDecimal volumeRatio,
+    boolean liquidityPass,
+    boolean spreadPass,
+    boolean displacementConfirmed,
+    BigDecimal patternScore,
+    BigDecimal entryReference,
+    BigDecimal stopReference,
+    BigDecimal targetReference,
+    BigDecimal riskReward,
+    String reason
+) {
+}
+```
+
+## Final Mechanical Rule
+
+Bullish Trendline Break:
+
+```text
+1. Build descending resistance trendline from confirmed pivot highs.
+2. Require touch_count >= 2.
+3. Require slope < 0.
+4. Calculate trendline_value at current candle.
+5. Require close > trendline_value + 0.2 * ATR.
+6. Require volume_ratio >= 1.5.
+7. Require liquidity_pass = true.
+8. Require spread_pass = true.
+```
+
+Bearish Trendline Break:
+
+```text
+1. Build ascending support trendline from confirmed pivot lows.
+2. Require touch_count >= 2.
+3. Require slope > 0.
+4. Calculate trendline_value at current candle.
+5. Require close < trendline_value - 0.2 * ATR.
+6. Require volume_ratio >= 1.5.
+7. Require liquidity_pass = true.
+8. Require spread_pass = true.
+```
+
+# Implementation Notes
+
+- This document is a mechanical pattern definition only.
+- Do not implement Trendline Break Pattern code from this document unless a later
+  explicit implementation task is assigned.
+- The pattern may consume previously computed Liquidity, Bid-Ask Spread, Pivot,
+  Swing Structure, ATR, Volume Ratio, Support / Resistance Zone, and optional
+  Displacement Candle outputs.
+- The pattern must not execute orders, call exchange order APIs, read secrets, or
+  introduce live trading behavior.
+- Future implementation work should create a dedicated task document with
+  deterministic tests for bullish, bearish, weak, pending, invalid, missing ATR,
+  missing volume ratio, liquidity failure, spread failure, and multiple-trendline
+  tie-breaker scenarios.

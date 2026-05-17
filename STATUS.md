@@ -102,6 +102,7 @@ Tasks 027-033 define multiple indicator implementation plans, but concrete indic
 - [x] Task 033: Displacement Candle implementation task document created
 - [x] Task 033: Displacement Candle complete and verified
 - [x] Trendline Break Pattern mechanical definition drafted
+- [x] Owner-provided Trendline Break Pattern source requirement saved under `tasks/patterns/trendline_break_pattern.md`
 
 # Open Questions
 
