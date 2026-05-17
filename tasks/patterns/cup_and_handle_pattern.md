@@ -4,7 +4,7 @@
 
 Define the Cup and Handle Pattern mechanically.
 
-This module detects a bullish continuation breakout setup consisting of a prior uptrend, a rounded cup, a shallow handle, and a neckline breakout with volume confirmation.
+This module detects a bullish continuation pattern formed by a rounded cup, a shallow handle pullback, and a breakout above the neckline.
 
 This document defines detection logic only.
 It does not define order execution.
@@ -12,7 +12,6 @@ It does not define order execution.
 ## Pattern Type
 
 ```text
-CUP_AND_HANDLE
 Cup and Handle Pattern
 ```
 
@@ -72,7 +71,7 @@ liquidity snapshot
 bid-ask spread snapshot
 ```
 
-Optional inputs:
+Optional:
 
 ```text
 displacement candle snapshots
@@ -81,35 +80,51 @@ displacement candle snapshots
 ## Default Parameters
 
 ```yaml
-cup_and_handle:
-  maximum_rim_difference_rate: 0.05
-  minimum_cup_depth_rate: 0.10
-  maximum_cup_depth_rate: 0.40
-  minimum_cup_duration: 20
-  maximum_cup_duration: 200
-  minimum_bottom_zone_duration: 3
-  bottom_zone_atr_multiplier: 0.5
-  maximum_slope_imbalance_rate: 0.60
-  maximum_handle_depth_ratio: 0.35
-  minimum_handle_duration: 3
-  maximum_handle_duration: 40
-  breakout_atr_multiplier: 0.2
-  minimum_breakout_volume_ratio: 1.5
-  weak_breakout_volume_ratio: 1.3
-  require_liquidity_pass: true
-  require_spread_pass: true
-  require_displacement_breakout: false
-  minimum_pattern_score: 0.7
-  weak_pattern_score: 0.5
-  default_entry_reference: BREAKOUT_CLOSE
-  default_risk_reward: 2.0
+minimum_cup_duration: 20
+maximum_cup_duration: 200
+minimum_handle_duration: 3
+maximum_handle_duration: 40
+maximum_rim_difference_rate: 0.05
+minimum_cup_depth_rate: 0.10
+maximum_cup_depth_rate: 0.40
+maximum_handle_depth_ratio: 0.35
+minimum_bottom_zone_duration: 3
+bottom_zone_atr_multiplier: 0.5
+breakout_atr_multiplier: 0.2
+minimum_breakout_volume_ratio: 1.5
+weak_breakout_volume_ratio: 1.3
+require_prior_uptrend: true
+require_liquidity_pass: true
+require_spread_pass: true
+require_displacement_breakout: false
+minimum_pattern_score: 0.7
 ```
 
-## Prior Uptrend Requirement
+## Core Structure
 
-A bullish Cup and Handle candidate requires prior upward structure before the left rim.
+A bullish Cup and Handle Pattern consists of:
 
-Acceptable conditions:
+```text
+prior uptrend
+left rim
+cup bottom
+right rim
+handle low
+neckline
+breakout
+```
+
+Required index order:
+
+```text
+left_rim.index < cup_bottom.index < right_rim.index < handle_low.index < breakout.index
+```
+
+## Prior Uptrend Definition
+
+If `require_prior_uptrend = true`, the pattern requires bullish structure before the left rim.
+
+Valid prior uptrend:
 
 ```text
 market_structure_status = UPTREND
@@ -118,43 +133,76 @@ market_structure_status = UPTREND
 or:
 
 ```text
-recent swing labels before left_rim contain HH and HL
+recent swing labels contain HH and HL
 ```
 
-If no prior upward structure exists:
+Optional stricter rule:
+
+```text
+at least one HH and one HL exist before left_rim.index
+```
+
+If prior uptrend is required but not found:
 
 ```text
 pattern_status = INVALID
-reason = NO_PRIOR_UPTREND
 ```
 
-## Cup Structure
+## Pivot Roles
 
-The cup is defined by three confirmed pivots:
+### Left Rim
+
+The left rim is a confirmed pivot high.
 
 ```text
-left_rim = confirmed pivot high
-cup_bottom = confirmed pivot low
-right_rim = confirmed pivot high
+left_rim.pivot_type = PIVOT_HIGH
 ```
 
-Required order:
+### Cup Bottom
+
+The cup bottom is a confirmed pivot low after the left rim.
 
 ```text
-left_rim.index < cup_bottom.index < right_rim.index
+cup_bottom.pivot_type = PIVOT_LOW
+left_rim.index < cup_bottom.index
 ```
 
-The module must ignore unconfirmed pivots.
+### Right Rim
+
+The right rim is a confirmed pivot high after the cup bottom.
+
+```text
+right_rim.pivot_type = PIVOT_HIGH
+cup_bottom.index < right_rim.index
+```
+
+### Handle Low
+
+The handle low is a confirmed pivot low after the right rim.
+
+```text
+handle_low.pivot_type = PIVOT_LOW
+right_rim.index < handle_low.index
+```
+
+### Breakout
+
+The breakout is the candle that closes above the neckline with ATR buffer.
+
+```text
+breakout.index > handle_low.index
+```
 
 ## Rim Similarity
 
-The left and right rims should be near the same price level.
+Left rim and right rim must be near the same price level.
 
 ```text
-rim_difference_rate = abs(left_rim.price - right_rim.price) / left_rim.price
+rim_difference = abs(left_rim.price - right_rim.price)
+rim_difference_rate = rim_difference / left_rim.price
 ```
 
-Valid condition:
+Valid rim similarity:
 
 ```text
 rim_difference_rate <= maximum_rim_difference_rate
@@ -166,22 +214,51 @@ Default:
 maximum_rim_difference_rate = 0.05
 ```
 
-If rims are too different:
+If rim prices are too different:
 
 ```text
 pattern_status = INVALID
-reason = RIM_PRICES_TOO_DIFFERENT
+```
+
+## Neckline Definition
+
+Recommended initial version:
+
+```text
+neckline = max(left_rim.price, right_rim.price)
+```
+
+Alternative:
+
+```text
+neckline = resistance_zone.center_price
+```
+
+Use resistance zone only when a valid resistance zone overlaps the rim area.
+
+Rim zone match:
+
+```text
+left_rim.price is inside resistance zone
+or
+right_rim.price is inside resistance zone
+```
+
+Default:
+
+```text
+use neckline = max(left_rim.price, right_rim.price)
 ```
 
 ## Cup Depth
 
 ```text
-rim_reference_price = min(left_rim.price, right_rim.price)
-cup_depth = rim_reference_price - cup_bottom.price
-cup_depth_rate = cup_depth / rim_reference_price
+cup_reference_price = min(left_rim.price, right_rim.price)
+cup_depth = cup_reference_price - cup_bottom.price
+cup_depth_rate = cup_depth / cup_reference_price
 ```
 
-Valid range:
+Valid cup depth:
 
 ```text
 minimum_cup_depth_rate <= cup_depth_rate <= maximum_cup_depth_rate
@@ -194,7 +271,13 @@ minimum_cup_depth_rate = 0.10
 maximum_cup_depth_rate = 0.40
 ```
 
-If the cup is too shallow or too deep:
+If cup is too shallow:
+
+```text
+pattern_status = INVALID
+```
+
+If cup is too deep:
 
 ```text
 pattern_status = INVALID
@@ -206,7 +289,7 @@ pattern_status = INVALID
 cup_duration = right_rim.index - left_rim.index
 ```
 
-Valid range:
+Valid cup duration:
 
 ```text
 minimum_cup_duration <= cup_duration <= maximum_cup_duration
@@ -219,7 +302,7 @@ minimum_cup_duration = 20
 maximum_cup_duration = 200
 ```
 
-If the cup duration is outside the valid range:
+If cup duration is outside valid range:
 
 ```text
 pattern_status = INVALID
@@ -227,23 +310,48 @@ pattern_status = INVALID
 
 ## Cup Roundness
 
-The pattern should reject sharp V-shaped recoveries.
+The cup should not be a sharp V-shaped recovery.
 
-### Bottom Zone Duration
-
-Define bottom zone as candles near the cup bottom:
+Use the following mechanical checks:
 
 ```text
-abs(candle.close - cup_bottom.price) <= bottom_zone_atr_multiplier * ATR
+bottom_zone_duration
+left_decline_duration
+right_recovery_duration
+slope_balance
+bottom_stability
+```
+
+## Bottom Zone
+
+Define a bottom zone around `cup_bottom.price`.
+
+```text
+bottom_zone_low = cup_bottom.price - bottom_zone_atr_multiplier * ATR
+bottom_zone_high = cup_bottom.price + bottom_zone_atr_multiplier * ATR
+```
+
+Default:
+
+```text
+bottom_zone_atr_multiplier = 0.5
+```
+
+A candle is inside the bottom zone when:
+
+```text
+bottom_zone_low <= candle.low
+and
+candle.high <= bottom_zone_high
 ```
 
 Bottom zone duration:
 
 ```text
-bottom_zone_duration = count of candles satisfying bottom zone condition between left_rim and right_rim
+bottom_zone_duration = number of candles near cup_bottom inside bottom zone
 ```
 
-Valid condition:
+Valid rounded bottom:
 
 ```text
 bottom_zone_duration >= minimum_bottom_zone_duration
@@ -253,68 +361,86 @@ Default:
 
 ```text
 minimum_bottom_zone_duration = 3
-bottom_zone_atr_multiplier = 0.5
 ```
 
-### Decline and Recovery Durations
+If bottom zone duration is too short:
+
+```text
+cup_shape_status = V_SHAPED
+pattern_status = INVALID or WEAK
+```
+
+Recommended initial handling:
+
+```text
+V_SHAPED = INVALID
+```
+
+## Left Decline Duration
 
 ```text
 left_decline_duration = cup_bottom.index - left_rim.index
+```
+
+## Right Recovery Duration
+
+```text
 right_recovery_duration = right_rim.index - cup_bottom.index
 ```
 
-Both durations must be positive.
-
-### Slope Balance
+## Slope Balance
 
 ```text
-slope_imbalance_rate = abs(left_decline_duration - right_recovery_duration) / cup_duration
+duration_ratio = min(left_decline_duration, right_recovery_duration) / max(left_decline_duration, right_recovery_duration)
 ```
 
-Recommended valid condition:
+Valid slope balance:
 
 ```text
-slope_imbalance_rate <= maximum_slope_imbalance_rate
+duration_ratio >= minimum_slope_balance_ratio
 ```
 
-Default:
+Recommended default:
+
+```yaml
+minimum_slope_balance_ratio: 0.3
+```
+
+If one side is too short:
 
 ```text
-maximum_slope_imbalance_rate = 0.60
+cup_shape_status = UNBALANCED
 ```
 
-If bottom duration is too short or slope balance fails:
+Recommended initial handling:
 
 ```text
-pattern_status = INVALID
-reason = V_SHAPED_RECOVERY
+UNBALANCED = WEAK
 ```
 
-## Handle Structure
+## Handle Definition
 
-The handle occurs after the right rim and before breakout.
+The handle is a shallow pullback after the right rim and before breakout.
+
+Required order:
 
 ```text
 right_rim.index < handle_low.index < breakout.index
 ```
 
-The handle low should be selected from confirmed pivot lows after the right rim, or from the lowest candle low in the handle window when no confirmed pivot low exists yet.
-
-If no handle low exists:
-
-```text
-pattern_status = INVALID
-reason = HANDLE_MISSING
-```
-
-## Handle Depth
+Handle depth:
 
 ```text
 handle_depth = right_rim.price - handle_low.price
+```
+
+Handle depth ratio:
+
+```text
 handle_depth_ratio = handle_depth / cup_depth
 ```
 
-Valid condition:
+Valid handle depth:
 
 ```text
 handle_depth_ratio <= maximum_handle_depth_ratio
@@ -326,11 +452,10 @@ Default:
 maximum_handle_depth_ratio = 0.35
 ```
 
-If the handle is too deep:
+If handle is too deep:
 
 ```text
 pattern_status = INVALID
-reason = HANDLE_TOO_DEEP
 ```
 
 ## Handle Duration
@@ -339,7 +464,7 @@ reason = HANDLE_TOO_DEEP
 handle_duration = breakout.index - right_rim.index
 ```
 
-Valid range:
+Valid handle duration:
 
 ```text
 minimum_handle_duration <= handle_duration <= maximum_handle_duration
@@ -352,42 +477,40 @@ minimum_handle_duration = 3
 maximum_handle_duration = 40
 ```
 
-If handle duration is too short or too long:
+If handle duration is outside valid range:
 
 ```text
 pattern_status = INVALID
 ```
 
-## Neckline
+## Handle Position
 
-Recommended initial neckline:
+The handle should form in the upper part of the cup.
+
+Handle low must not fall below the midpoint of the cup.
 
 ```text
-neckline = max(left_rim.price, right_rim.price)
+cup_midpoint = cup_bottom.price + cup_depth * 0.5
 ```
 
-Alternative context from Support / Resistance Zone:
+Valid handle position:
 
 ```text
-neckline = resistance_zone.center_price
+handle_low.price >= cup_midpoint
 ```
 
-Use the pivot-based neckline for the initial version. Use resistance zone context only for scoring and target/reference context unless a future task explicitly changes the neckline rule.
-
-## Breakout Validation
-
-Bullish breakout occurs when the breakout candle closes above the neckline by an ATR buffer.
+If handle low is below cup midpoint:
 
 ```text
-breakout_price = breakout.close
-breakout_distance = breakout.close - neckline
-breakout_distance_atr = breakout_distance / ATR
+pattern_status = INVALID
 ```
 
-Valid breakout:
+## Breakout Definition
+
+A bullish breakout occurs when price closes above the neckline with ATR buffer.
 
 ```text
-breakout.close > neckline + breakout_atr_multiplier * ATR
+breakout_close > neckline + breakout_atr_multiplier * ATR
 ```
 
 Default:
@@ -396,7 +519,14 @@ Default:
 breakout_atr_multiplier = 0.2
 ```
 
-If price is below the neckline or does not clear the ATR buffer:
+Breakout distance:
+
+```text
+breakout_distance = breakout_close - neckline
+breakout_distance_atr = breakout_distance / ATR
+```
+
+If close is above neckline but does not exceed ATR buffer:
 
 ```text
 pattern_status = PENDING
@@ -404,9 +534,7 @@ pattern_status = PENDING
 
 ## Volume Confirmation
 
-Use the breakout candle volume ratio.
-
-Strong confirmation:
+Breakout candle must satisfy:
 
 ```text
 volume_ratio >= minimum_breakout_volume_ratio
@@ -418,7 +546,7 @@ Default:
 minimum_breakout_volume_ratio = 1.5
 ```
 
-Weak confirmation:
+Weak volume confirmation:
 
 ```text
 weak_breakout_volume_ratio <= volume_ratio < minimum_breakout_volume_ratio
@@ -430,17 +558,40 @@ Default:
 weak_breakout_volume_ratio = 1.3
 ```
 
-If volume ratio is missing:
+If volume ratio is weak:
+
+```text
+pattern_status = WEAK
+```
+
+If volume ratio is below weak threshold:
 
 ```text
 pattern_status = INVALID
 ```
 
-If breakout exists but volume is weak:
+## Optional Displacement Breakout
+
+If `require_displacement_breakout = true`, breakout candle must satisfy:
 
 ```text
-pattern_status = WEAK
+displacement_direction = BULLISH
+displacement_status = VALID
 ```
+
+If not satisfied:
+
+```text
+pattern_status = INVALID
+```
+
+If `require_displacement_breakout = false`:
+
+```text
+displacement_confirmed = false
+```
+
+but the pattern can still be valid.
 
 ## Liquidity Filter
 
@@ -470,23 +621,6 @@ If not:
 pattern_status = INVALID
 ```
 
-## Optional Displacement Breakout
-
-Recommended initial setting:
-
-```text
-require_displacement_breakout = false
-```
-
-If enabled, breakout candle must satisfy:
-
-```text
-breakout.displacement_direction = BULLISH
-breakout.displacement_status = VALID
-```
-
-If disabled, displacement confirmation should only affect `displacement_score`.
-
 ## Pattern Status
 
 Allowed values:
@@ -498,72 +632,73 @@ INVALID
 PENDING
 ```
 
-### VALID
+## VALID
 
 ```text
 liquidity_pass = true
 spread_pass = true
-prior uptrend confirmed
-valid cup pivots exist
-rim similarity valid
-cup depth valid
-cup duration valid
-cup roundness valid
-handle valid
-breakout clears neckline with ATR buffer
+prior uptrend condition is satisfied
+left rim exists
+cup bottom exists
+right rim exists
+handle low exists
+rim similarity is valid
+cup depth is valid
+cup duration is valid
+cup is not V-shaped
+handle depth is valid
+handle duration is valid
+handle position is valid
+breakout exceeds ATR buffer
 volume_ratio >= minimum_breakout_volume_ratio
 pattern_score >= minimum_pattern_score
 ```
 
-### WEAK
+## WEAK
 
 ```text
-valid cup and handle exists
-breakout clears neckline with ATR buffer
-volume_ratio >= weak_breakout_volume_ratio
-volume_ratio < minimum_breakout_volume_ratio
+core structure exists
+but one or more non-critical quality conditions are weak
+```
+
+Examples:
+
+```text
+volume_ratio is between weak threshold and strong threshold
+cup shape is unbalanced
+pattern_score >= 0.5 and pattern_score < minimum_pattern_score
+```
+
+## PENDING
+
+```text
+cup and handle structure exists
+but breakout has not occurred yet
 ```
 
 or:
 
 ```text
-pattern_score >= weak_pattern_score
-and
-pattern_score < minimum_pattern_score
+close is above neckline but does not exceed ATR buffer
 ```
 
-### PENDING
-
-```text
-valid cup and handle exists
-but breakout is missing
-```
-
-or:
-
-```text
-breakout does not clear ATR buffer yet
-```
-
-### INVALID
+## INVALID
 
 ```text
 liquidity filter fails
 spread filter fails
-no prior uptrend
+prior uptrend missing
 not enough pivots
-missing left rim
-missing cup bottom
-missing right rim
-rim prices too different
-cup too shallow
-cup too deep
+rim similarity invalid
+cup depth invalid
 cup duration invalid
-V-shaped recovery
+V-shaped cup
 handle missing
 handle too deep
 handle duration invalid
-volume ratio missing
+handle below cup midpoint
+breakout volume missing
+breakout volume too low
 ```
 
 ## Pattern Score
@@ -583,9 +718,7 @@ rim_similarity_score: 0.15
 handle_quality_score: 0.15
 breakout_strength_score: 0.15
 volume_confirmation_score: 0.10
-liquidity_score: 0.05
-support_resistance_context_score: 0.03
-displacement_score: 0.02
+liquidity_score: 0.10
 ```
 
 Formula:
@@ -598,163 +731,175 @@ pattern_score =
   + handle_quality_score * 0.15
   + breakout_strength_score * 0.15
   + volume_confirmation_score * 0.10
-  + liquidity_score * 0.05
-  + support_resistance_context_score * 0.03
-  + displacement_score * 0.02
+  + liquidity_score * 0.10
 ```
 
-## Score Components
-
-### Prior Trend Score
+## Prior Trend Score
 
 ```text
 if market_structure_status = UPTREND:
     prior_trend_score = 1.0
+
 else if recent swing labels contain HH and HL:
     prior_trend_score = 0.8
+
 else:
     prior_trend_score = 0.0
 ```
 
-### Cup Shape Score
+## Cup Shape Score
 
 ```text
-if cup_depth_rate is within default range and bottom_zone_duration >= minimum_bottom_zone_duration:
+if bottom_zone_duration >= minimum_bottom_zone_duration
+and duration_ratio >= 0.5:
     cup_shape_score = 1.0
-else if cup_depth_rate is valid but roundness is marginal:
-    cup_shape_score = 0.6
+
+else if bottom_zone_duration >= minimum_bottom_zone_duration
+and duration_ratio >= 0.3:
+    cup_shape_score = 0.7
+
 else:
     cup_shape_score = 0.0
 ```
 
-### Rim Similarity Score
+## Rim Similarity Score
 
 ```text
 if rim_difference_rate <= 0.02:
     rim_similarity_score = 1.0
-else if rim_difference_rate <= maximum_rim_difference_rate:
+
+else if rim_difference_rate <= 0.05:
     rim_similarity_score = 0.7
+
 else:
     rim_similarity_score = 0.0
 ```
 
-### Handle Quality Score
+## Handle Quality Score
 
 ```text
-if handle_depth_ratio <= 0.20 and handle duration is valid:
+if handle_depth_ratio <= 0.25
+and handle_low.price >= cup_midpoint:
     handle_quality_score = 1.0
-else if handle_depth_ratio <= maximum_handle_depth_ratio and handle duration is valid:
+
+else if handle_depth_ratio <= 0.35
+and handle_low.price >= cup_midpoint:
     handle_quality_score = 0.7
+
 else:
     handle_quality_score = 0.0
 ```
 
-### Breakout Strength Score
+## Breakout Strength Score
 
 ```text
 if breakout_distance_atr >= 0.5:
     breakout_strength_score = 1.0
-else if breakout_distance_atr >= breakout_atr_multiplier:
+
+else if breakout_distance_atr >= 0.2:
     breakout_strength_score = 0.7
+
 else:
     breakout_strength_score = 0.0
 ```
 
-### Volume Confirmation Score
+## Volume Confirmation Score
 
 ```text
 if volume_ratio >= 2.0:
     volume_confirmation_score = 1.0
-else if volume_ratio >= minimum_breakout_volume_ratio:
+
+else if volume_ratio >= 1.5:
     volume_confirmation_score = 0.8
-else if volume_ratio >= weak_breakout_volume_ratio:
+
+else if volume_ratio >= 1.3:
     volume_confirmation_score = 0.5
+
 else:
     volume_confirmation_score = 0.0
 ```
 
-### Liquidity Score
+## Liquidity Score
 
 ```text
 if liquidity_status = HIGH:
     liquidity_score = 1.0
+
 else if liquidity_status = NORMAL:
     liquidity_score = 0.8
+
 else:
     liquidity_score = 0.0
-```
-
-### Support / Resistance Context Score
-
-```text
-if neckline overlaps resistance zone:
-    support_resistance_context_score = 1.0
-else if neckline is near resistance zone within 0.5 * ATR:
-    support_resistance_context_score = 0.7
-else:
-    support_resistance_context_score = 0.5
-```
-
-### Displacement Score
-
-```text
-if breakout candle is bullish displacement candle:
-    displacement_score = 1.0
-else:
-    displacement_score = 0.0
 ```
 
 ## Entry Reference
 
 This module must not execute orders.
 
-Supported bullish entry references:
+It only defines reference prices.
+
+Recommended:
 
 ```text
-breakout close
-next candle open
-neckline retest
+entry_reference = breakout_close
 ```
 
-Recommended default:
+Alternative:
 
 ```text
-entry_reference = breakout close
+entry_reference = next_candle_open
+```
+
+Retest-based alternative:
+
+```text
+entry_reference = neckline retest area
 ```
 
 ## Stop Reference
 
-Supported bullish stop references:
+Recommended:
 
 ```text
-handle_low
-neckline - breakout_atr_multiplier * ATR
+stop_reference = handle_low.price - breakout_atr_multiplier * ATR
 ```
 
-Recommended default:
+Alternative:
 
 ```text
-stop_reference = handle_low
+stop_reference = neckline - ATR
 ```
 
-If neckline retest failure is used:
+Invalid if:
 
 ```text
-stop_reference = neckline - breakout_atr_multiplier * ATR
+stop_reference >= entry_reference
 ```
 
 ## Target Reference
 
-Primary measured-move target:
+Classic measured move target:
 
 ```text
 target_reference = neckline + cup_depth
 ```
 
-Alternative risk-reward target:
+Risk-reward fallback:
 
 ```text
 target_reference = entry_reference + 2 * abs(entry_reference - stop_reference)
+```
+
+If both exist, preferred target:
+
+```text
+target_reference = min(classic_target, nearest_resistance_zone)
+```
+
+If no resistance zone exists:
+
+```text
+target_reference = classic_target
 ```
 
 ## Risk Reward
@@ -793,176 +938,372 @@ pattern_status = INVALID
   "handle_low_index": 182,
   "breakout_index": 190,
   "left_rim_price": 65000.0,
-  "cup_bottom_price": 52000.0,
+  "cup_bottom_price": 56000.0,
   "right_rim_price": 64800.0,
-  "handle_low_price": 61000.0,
+  "handle_low_price": 62000.0,
   "neckline": 65000.0,
-  "cup_depth": 12800.0,
-  "cup_depth_rate": 0.1975,
+  "cup_depth": 8800.0,
+  "cup_depth_rate": 0.1354,
   "cup_duration": 70,
-  "handle_depth": 3800.0,
-  "handle_depth_ratio": 0.2969,
+  "bottom_zone_duration": 5,
+  "duration_ratio": 0.92,
+  "handle_depth": 2800.0,
+  "handle_depth_ratio": 0.3182,
   "handle_duration": 20,
   "breakout_price": 65400.0,
+  "breakout_distance": 400.0,
   "breakout_distance_atr": 0.5,
   "volume_ratio": 1.8,
   "liquidity_pass": true,
   "spread_pass": true,
+  "displacement_confirmed": false,
   "pattern_score": 0.84,
   "entry_reference": 65400.0,
-  "stop_reference": 61000.0,
-  "target_reference": 77800.0,
-  "risk_reward": 2.82,
-  "reason": "Bullish Cup and Handle detected with prior uptrend, rounded cup, valid handle, ATR breakout, and volume confirmation."
+  "stop_reference": 61840.0,
+  "target_reference": 73800.0,
+  "risk_reward": 2.36,
+  "reason": "Bullish Cup and Handle detected with valid rim similarity, rounded cup, shallow handle, and volume-confirmed breakout."
 }
 ```
 
 ## Output Fields
 
-- `pattern_type`: fixed value `CUP_AND_HANDLE`.
-- `direction`: `BULLISH` or `NONE`; `BEARISH_INVERTED` is reserved for a future task.
-- `pattern_status`: `VALID`, `WEAK`, `INVALID`, or `PENDING`.
-- `left_rim_index`: candle index of the left rim pivot high.
-- `cup_bottom_index`: candle index of the cup bottom pivot low.
-- `right_rim_index`: candle index of the right rim pivot high.
-- `handle_low_index`: candle index of the handle low.
-- `breakout_index`: candle index of the breakout candle.
-- `left_rim_price`: price of the left rim pivot high.
-- `cup_bottom_price`: price of the cup bottom pivot low.
-- `right_rim_price`: price of the right rim pivot high.
-- `handle_low_price`: price of the handle low.
-- `neckline`: rim resistance level used for breakout validation.
-- `cup_depth`: distance from rim reference to cup bottom.
-- `cup_depth_rate`: cup depth normalized by rim reference price.
-- `cup_duration`: number of candles from left rim to right rim.
-- `handle_depth`: distance from right rim to handle low.
-- `handle_depth_ratio`: handle depth divided by cup depth.
-- `handle_duration`: number of candles from right rim to breakout.
-- `breakout_price`: close price of the breakout candle.
-- `breakout_distance_atr`: breakout distance normalized by ATR.
-- `volume_ratio`: breakout candle volume ratio.
-- `liquidity_pass`: result from Liquidity module.
-- `spread_pass`: result from Bid-Ask Spread module.
-- `pattern_score`: final score between `0.0` and `1.0`.
-- `entry_reference`: reference price for possible entry.
-- `stop_reference`: reference price for invalidation.
-- `target_reference`: reference price for possible target.
-- `risk_reward`: reward-to-risk ratio.
-- `reason`: short explanation for detection result.
+### pattern_type
+
+Fixed value:
+
+```text
+CUP_AND_HANDLE
+```
+
+### direction
+
+One of:
+
+```text
+BULLISH
+NONE
+```
+
+### pattern_status
+
+One of:
+
+```text
+VALID
+WEAK
+INVALID
+PENDING
+```
+
+### left_rim_index
+
+Index of the left rim pivot high.
+
+### cup_bottom_index
+
+Index of the cup bottom pivot low.
+
+### right_rim_index
+
+Index of the right rim pivot high.
+
+### handle_low_index
+
+Index of the handle low pivot.
+
+### breakout_index
+
+Index of the breakout candle.
+
+### left_rim_price
+
+Price of the left rim pivot high.
+
+### cup_bottom_price
+
+Price of the cup bottom pivot low.
+
+### right_rim_price
+
+Price of the right rim pivot high.
+
+### handle_low_price
+
+Price of the handle low pivot.
+
+### neckline
+
+Breakout reference level.
+
+### cup_depth
+
+Distance between cup reference price and cup bottom.
+
+### cup_depth_rate
+
+Cup depth normalized by rim price.
+
+### cup_duration
+
+Number of candles between left rim and right rim.
+
+### bottom_zone_duration
+
+Number of candles near cup bottom zone.
+
+### duration_ratio
+
+Balance between left decline duration and right recovery duration.
+
+### handle_depth
+
+Distance between right rim and handle low.
+
+### handle_depth_ratio
+
+Handle depth divided by cup depth.
+
+### handle_duration
+
+Number of candles between right rim and breakout.
+
+### breakout_price
+
+Close price of breakout candle.
+
+### breakout_distance
+
+Distance between breakout close and neckline.
+
+### breakout_distance_atr
+
+Breakout distance normalized by ATR.
+
+### volume_ratio
+
+Volume ratio of breakout candle.
+
+### liquidity_pass
+
+Result from Liquidity module.
+
+### spread_pass
+
+Result from Bid-Ask Spread module.
+
+### displacement_confirmed
+
+Boolean value.
+
+```text
+true = breakout candle is bullish displacement candle
+false = breakout candle is not bullish displacement candle
+```
+
+### pattern_score
+
+Final score between `0.0` and `1.0`.
+
+### entry_reference
+
+Reference price for possible entry.
+
+### stop_reference
+
+Reference price for invalidation.
+
+### target_reference
+
+Reference price for possible target.
+
+### risk_reward
+
+Reward-to-risk ratio.
+
+### reason
+
+Short explanation for detection result.
 
 ## Edge Cases
 
-### No Prior Uptrend
+### No prior uptrend
 
-If prior uptrend is not confirmed:
-
-```text
-pattern_status = INVALID
-```
-
-### Not Enough Pivots
-
-If there are not enough confirmed pivot highs and lows to form left rim, cup bottom, and right rim:
+If `require_prior_uptrend = true` and prior uptrend is missing:
 
 ```text
 pattern_status = INVALID
 ```
 
-### Missing Rim or Bottom
+### Not enough pivots
 
-If left rim, cup bottom, or right rim is missing:
-
-```text
-pattern_status = INVALID
-```
-
-### Rim Prices Too Different
-
-If `rim_difference_rate > maximum_rim_difference_rate`:
+If valid left rim, cup bottom, right rim, and handle low cannot be found:
 
 ```text
 pattern_status = INVALID
 ```
 
-### Cup Too Shallow or Too Deep
+### Rim prices too different
 
-If cup depth is outside the valid range:
+If:
+
+```text
+rim_difference_rate > maximum_rim_difference_rate
+```
+
+Then:
 
 ```text
 pattern_status = INVALID
 ```
 
-### Cup Duration Invalid
+### Cup too shallow
 
-If cup duration is too short or too long:
+If:
+
+```text
+cup_depth_rate < minimum_cup_depth_rate
+```
+
+Then:
 
 ```text
 pattern_status = INVALID
 ```
 
-### V-Shaped Recovery
+### Cup too deep
 
-If bottom zone duration is too short or slope balance fails:
+If:
+
+```text
+cup_depth_rate > maximum_cup_depth_rate
+```
+
+Then:
 
 ```text
 pattern_status = INVALID
 ```
 
-### Handle Missing
+### Cup duration invalid
 
-If no valid handle low exists after the right rim:
+If:
+
+```text
+cup_duration < minimum_cup_duration
+or
+cup_duration > maximum_cup_duration
+```
+
+Then:
 
 ```text
 pattern_status = INVALID
 ```
 
-### Handle Too Deep
+### V-shaped cup
 
-If `handle_depth_ratio > maximum_handle_depth_ratio`:
+If:
+
+```text
+bottom_zone_duration < minimum_bottom_zone_duration
+```
+
+Then:
 
 ```text
 pattern_status = INVALID
 ```
 
-### Handle Too Long or Too Short
+### Handle missing
 
-If handle duration is outside the valid range:
-
-```text
-pattern_status = INVALID
-```
-
-### Breakout Missing
-
-If a valid cup and handle exists but price has not broken the neckline:
+If no valid handle low exists after right rim:
 
 ```text
 pattern_status = PENDING
 ```
 
-### Breakout Without ATR Buffer
+### Handle too deep
 
-If close is above neckline but does not exceed the ATR buffer:
+If:
+
+```text
+handle_depth_ratio > maximum_handle_depth_ratio
+```
+
+Then:
+
+```text
+pattern_status = INVALID
+```
+
+### Handle below cup midpoint
+
+If:
+
+```text
+handle_low.price < cup_midpoint
+```
+
+Then:
+
+```text
+pattern_status = INVALID
+```
+
+### Breakout missing
+
+If price has not broken neckline:
 
 ```text
 pattern_status = PENDING
 ```
 
-### Breakout Without Volume Confirmation
+### Breakout without ATR buffer
 
-If breakout exists but volume is below strong confirmation and above weak confirmation:
+If:
+
+```text
+close > neckline
+and
+close <= neckline + breakout_atr_multiplier * ATR
+```
+
+Then:
+
+```text
+pattern_status = PENDING
+```
+
+### Breakout volume weak
+
+If:
+
+```text
+weak_breakout_volume_ratio <= volume_ratio < minimum_breakout_volume_ratio
+```
+
+Then:
 
 ```text
 pattern_status = WEAK
 ```
 
-If volume is below weak confirmation:
+### Breakout volume too low
+
+If:
+
+```text
+volume_ratio < weak_breakout_volume_ratio
+```
+
+Then:
 
 ```text
 pattern_status = INVALID
 ```
 
-### Low Liquidity
+### Low liquidity
 
 If liquidity fails:
 
@@ -970,7 +1311,7 @@ If liquidity fails:
 pattern_status = INVALID
 ```
 
-### Wide Spread
+### Wide spread
 
 If spread fails:
 
@@ -978,44 +1319,22 @@ If spread fails:
 pattern_status = INVALID
 ```
 
-### Overlapping Cup Candidates
+### Multiple candidate cups
 
-If multiple valid cup candidates overlap:
+If multiple candidates exist:
 
 ```text
-select highest pattern_score candidate
+select highest pattern_score
 ```
 
-Tie-break priority:
+Tie-breakers:
 
 ```text
-1. higher pattern_score
+1. stronger volume_ratio
 2. better rim similarity
-3. stronger breakout volume_ratio
-4. longer valid cup duration within range
-5. shallower valid handle_depth_ratio
-```
-
-### Multiple Possible Handles
-
-If multiple handle lows exist after the right rim:
-
-```text
-select the handle with the highest handle_quality_score that still produces a valid breakout
-```
-
-### False Breakout
-
-If price breaks the neckline and then closes back below the neckline within a short confirmation window:
-
-```text
-mark as FALSE_BREAKOUT_CANDIDATE
-```
-
-Recommended optional parameter:
-
-```yaml
-false_breakout_check_window: 3
+3. better handle quality
+4. more balanced cup duration
+5. more recent breakout
 ```
 
 ## Detection Logic
@@ -1023,22 +1342,25 @@ false_breakout_check_window: 3
 ```text
 1. Check liquidity_pass.
 2. Check spread_pass.
-3. Confirm prior uptrend using Swing Structure.
-4. Load confirmed pivot highs and lows.
-5. Select left_rim pivot high, cup_bottom pivot low, and right_rim pivot high in required order.
+3. Load confirmed pivot highs and pivot lows.
+4. Find prior uptrend context.
+5. Search pivot sequence: left_rim -> cup_bottom -> right_rim.
 6. Validate rim similarity.
 7. Validate cup depth.
 8. Validate cup duration.
-9. Validate cup roundness and reject V-shaped recoveries.
-10. Identify handle low after right rim.
-11. Validate handle depth and duration.
-12. Define neckline as max(left_rim.price, right_rim.price).
-13. Check bullish breakout above neckline with ATR buffer.
-14. Validate breakout volume ratio.
-15. Optionally evaluate breakout displacement candle.
-16. Calculate pattern score.
-17. Define entry, stop, target, and risk/reward references.
-18. Return VALID, WEAK, PENDING, or INVALID pattern output.
+9. Validate cup roundness.
+10. Search handle low after right rim.
+11. Validate handle depth.
+12. Validate handle duration.
+13. Validate handle position.
+14. Define neckline.
+15. Search breakout candle after handle.
+16. Apply ATR breakout buffer.
+17. Apply volume confirmation.
+18. Optionally check displacement breakout.
+19. Calculate score.
+20. Set pattern status.
+21. Return best valid, weak, or pending signal.
 ```
 
 ## Pseudocode
@@ -1051,56 +1373,243 @@ def detect_cup_and_handle(context, config):
     if config.require_spread_pass and not context.spread.spread_pass:
         return invalid_result("spread_failed")
 
-    if not has_prior_uptrend(context.swing_structure):
-        return invalid_result("no_prior_uptrend")
-
     candidates = []
 
-    for left_rim in context.confirmed_pivot_highs:
-        for cup_bottom in context.confirmed_pivot_lows_after(left_rim.index):
-            for right_rim in context.confirmed_pivot_highs_after(cup_bottom.index):
-                if not valid_pivot_order(left_rim, cup_bottom, right_rim):
+    pivot_highs = context.confirmed_pivot_highs
+    pivot_lows = context.confirmed_pivot_lows
+
+    for left_rim in pivot_highs:
+        if config.require_prior_uptrend:
+            if not has_prior_uptrend(left_rim, context.swing_structure, config):
+                continue
+
+        possible_bottoms = [
+            pivot for pivot in pivot_lows
+            if pivot.index > left_rim.index
+        ]
+
+        for cup_bottom in possible_bottoms:
+            possible_right_rims = [
+                pivot for pivot in pivot_highs
+                if pivot.index > cup_bottom.index
+            ]
+
+            for right_rim in possible_right_rims:
+                cup = build_cup_candidate(
+                    left_rim,
+                    cup_bottom,
+                    right_rim,
+                    context,
+                    config
+                )
+
+                if not validate_cup(cup, context, config):
                     continue
 
-                cup = build_cup_candidate(left_rim, cup_bottom, right_rim, context, config)
+                handle_candidates = find_handle_candidates(
+                    right_rim,
+                    cup,
+                    context,
+                    config
+                )
 
-                if not cup.is_valid:
-                    continue
+                for handle_low in handle_candidates:
+                    pattern = build_pattern_candidate(
+                        cup,
+                        handle_low,
+                        context,
+                        config
+                    )
 
-                handle = find_best_handle(cup, context, config)
+                    evaluated = evaluate_cup_and_handle(
+                        pattern,
+                        context,
+                        config
+                    )
 
-                if handle is None:
-                    candidates.append(pending_result(cup, "handle_missing"))
-                    continue
+                    if evaluated["pattern_status"] in ["VALID", "WEAK", "PENDING"]:
+                        candidates.append(evaluated)
 
-                breakout = find_breakout(cup, handle, context, config)
-
-                result = evaluate_candidate(cup, handle, breakout, context, config)
-                candidates.append(result)
+    if not candidates:
+        return invalid_result("no_valid_cup_and_handle")
 
     return select_best_candidate(candidates)
+```
+
+## Cup Validation
+
+```python
+def validate_cup(cup, context, config):
+    if cup.rim_difference_rate > config.maximum_rim_difference_rate:
+        return False
+
+    if cup.cup_depth_rate < config.minimum_cup_depth_rate:
+        return False
+
+    if cup.cup_depth_rate > config.maximum_cup_depth_rate:
+        return False
+
+    if cup.cup_duration < config.minimum_cup_duration:
+        return False
+
+    if cup.cup_duration > config.maximum_cup_duration:
+        return False
+
+    if cup.bottom_zone_duration < config.minimum_bottom_zone_duration:
+        return False
+
+    return True
+```
+
+## Handle Validation
+
+```python
+def validate_handle(pattern, context, config):
+    if pattern.handle_depth_ratio > config.maximum_handle_depth_ratio:
+        return False
+
+    if pattern.handle_duration < config.minimum_handle_duration:
+        return False
+
+    if pattern.handle_duration > config.maximum_handle_duration:
+        return False
+
+    if pattern.handle_low_price < pattern.cup_midpoint:
+        return False
+
+    return True
+```
+
+## Breakout Evaluation
+
+```python
+def evaluate_breakout(pattern, context, config):
+    breakout_candles = context.candles_after(pattern.handle_low_index)
+
+    for candle in breakout_candles:
+        atr = context.atr_at(candle.index)
+        volume_ratio = context.volume_ratio_at(candle.index)
+
+        if atr is None or volume_ratio is None:
+            continue
+
+        breakout_threshold = pattern.neckline + config.breakout_atr_multiplier * atr
+
+        if candle.close > breakout_threshold:
+            pattern.breakout_index = candle.index
+            pattern.breakout_price = candle.close
+            pattern.breakout_distance = candle.close - pattern.neckline
+            pattern.breakout_distance_atr = pattern.breakout_distance / atr
+            pattern.volume_ratio = volume_ratio
+            return pattern
+
+    pattern.pattern_status = "PENDING"
+    return pattern
+```
+
+## Java-style Domain Model Example
+
+```java
+public enum CupAndHandleDirection {
+    BULLISH,
+    NONE
+}
+```
+
+```java
+public enum CupAndHandleStatus {
+    VALID,
+    WEAK,
+    INVALID,
+    PENDING
+}
+```
+
+```java
+public record CupAndHandleSignal(
+    String symbol,
+    Instant timestamp,
+    String patternType,
+    CupAndHandleDirection direction,
+    CupAndHandleStatus patternStatus,
+    int leftRimIndex,
+    int cupBottomIndex,
+    int rightRimIndex,
+    int handleLowIndex,
+    int breakoutIndex,
+    BigDecimal leftRimPrice,
+    BigDecimal cupBottomPrice,
+    BigDecimal rightRimPrice,
+    BigDecimal handleLowPrice,
+    BigDecimal neckline,
+    BigDecimal cupDepth,
+    BigDecimal cupDepthRate,
+    int cupDuration,
+    int bottomZoneDuration,
+    BigDecimal durationRatio,
+    BigDecimal handleDepth,
+    BigDecimal handleDepthRatio,
+    int handleDuration,
+    BigDecimal breakoutPrice,
+    BigDecimal breakoutDistance,
+    BigDecimal breakoutDistanceAtr,
+    BigDecimal volumeRatio,
+    boolean liquidityPass,
+    boolean spreadPass,
+    boolean displacementConfirmed,
+    BigDecimal patternScore,
+    BigDecimal entryReference,
+    BigDecimal stopReference,
+    BigDecimal targetReference,
+    BigDecimal riskReward,
+    String reason
+) {
+}
+```
+
+## Recommended Initial Configuration
+
+```yaml
+cup_and_handle:
+  minimum_cup_duration: 20
+  maximum_cup_duration: 200
+  minimum_handle_duration: 3
+  maximum_handle_duration: 40
+  maximum_rim_difference_rate: 0.05
+  minimum_cup_depth_rate: 0.10
+  maximum_cup_depth_rate: 0.40
+  maximum_handle_depth_ratio: 0.35
+  minimum_bottom_zone_duration: 3
+  bottom_zone_atr_multiplier: 0.5
+  minimum_slope_balance_ratio: 0.3
+  breakout_atr_multiplier: 0.2
+  minimum_breakout_volume_ratio: 1.5
+  weak_breakout_volume_ratio: 1.3
+  require_prior_uptrend: true
+  require_liquidity_pass: true
+  require_spread_pass: true
+  require_displacement_breakout: false
+  minimum_pattern_score: 0.7
 ```
 
 ## Final Mechanical Rule
 
 ```text
 Bullish Cup and Handle:
-1. Require prior uptrend by Swing Structure or recent HH/HL labels.
-2. Use confirmed pivot high as left_rim.
-3. Use confirmed pivot low as cup_bottom.
-4. Use confirmed pivot high as right_rim.
-5. Require left_rim.index < cup_bottom.index < right_rim.index.
-6. Require rim_difference_rate <= 0.05.
-7. Require 0.10 <= cup_depth_rate <= 0.40.
-8. Require 20 <= cup_duration <= 200.
-9. Require bottom_zone_duration >= 3 to reject V-shaped recoveries.
-10. Identify handle_low after right_rim and before breakout.
-11. Require handle_depth_ratio <= 0.35.
-12. Require 3 <= handle_duration <= 40.
-13. Set neckline = max(left_rim.price, right_rim.price).
-14. Require breakout close > neckline + 0.2 * ATR.
-15. Require breakout volume_ratio >= 1.5 for VALID, or >= 1.3 for WEAK.
-16. Require liquidity_pass = true.
-17. Require spread_pass = true.
-18. Define entry, stop, and target references only; do not execute orders.
+1. Require prior uptrend.
+2. Find left_rim as pivot high.
+3. Find cup_bottom as pivot low after left_rim.
+4. Find right_rim as pivot high after cup_bottom.
+5. Require rim_difference_rate <= 0.05.
+6. Require 0.10 <= cup_depth_rate <= 0.40.
+7. Require 20 <= cup_duration <= 200.
+8. Require bottom_zone_duration >= 3.
+9. Find handle_low after right_rim.
+10. Require handle_depth_ratio <= 0.35.
+11. Require handle_low.price >= cup_midpoint.
+12. Define neckline = max(left_rim.price, right_rim.price).
+13. Require breakout close > neckline + 0.2 * ATR.
+14. Require breakout volume_ratio >= 1.5.
+15. Require liquidity_pass = true.
+16. Require spread_pass = true.
 ```

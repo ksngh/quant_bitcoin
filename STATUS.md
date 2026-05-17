@@ -6,15 +6,15 @@ Phase 37: Cup and Handle Pattern Definition
 
 # Current Step
 
-Task 037 Cup and Handle Pattern task document and mechanical definition drafted for review.
+Task 037 Cup and Handle Pattern mechanical definition updated from owner-provided final document for review.
 
 # Current Goal
 
-Review the Task 037 Cup and Handle Pattern mechanical definition without implementing pattern code.
+Review the updated Task 037 Cup and Handle Pattern mechanical definition without implementing pattern code.
 
 # Current Active Task
 
-Task 037 Cup and Handle Pattern mechanical definition. Owner-provided pattern requirements are documented only; no implementation code is in scope.
+Task 037 Cup and Handle Pattern mechanical definition. Owner-provided final pattern document is saved under `tasks/patterns/`; no implementation code is in scope.
 
 # Last Completed Step
 
@@ -26,7 +26,7 @@ Previous completed step: Task 031: Volume Ratio.
 
 # Next Step
 
-Recommended next task: owner review of the Task 037 Cup and Handle Pattern mechanical definition, then reconcile or create the remaining numbered pattern tasks 038-039 before any implementation. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
+Recommended next task: owner review of the updated Task 037 Cup and Handle Pattern mechanical definition, then reconcile or create the remaining numbered pattern tasks 038-039 before any implementation. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
 
 # Parallel Work Status
 
@@ -111,7 +111,7 @@ Tasks 027-033 define multiple indicator implementation plans, but concrete indic
 - [x] Fair Value Gap Pattern mechanical definition updated from owner-provided final document
 - [x] Owner-provided Fair Value Gap Pattern source requirement saved under `tasks/patterns/fair_value_gap_pattern.md`
 - [x] Task 037: Cup and Handle Pattern task document created
-- [x] Cup and Handle Pattern mechanical definition drafted
+- [x] Cup and Handle Pattern mechanical definition updated from owner-provided final document
 - [x] Owner-provided Cup and Handle Pattern source requirement saved under `tasks/patterns/cup_and_handle_pattern.md`
 
 # Open Questions
