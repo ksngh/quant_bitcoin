@@ -67,16 +67,16 @@ Add a pure candle-based ATR indicator that calculates true range and rolling or 
 
 ## Before Implementation
 
-- [ ] Read required project files and this task.
-- [ ] Confirm owner-approved ATR formula, smoothing method, and parameters.
-- [ ] Confirm implementation is limited to ATR only.
+- [x] Read required project files and this task.
+- [x] Confirm owner-approved ATR formula, smoothing method, and parameters.
+- [x] Confirm implementation is limited to ATR only.
 
 ## After Implementation
 
-- [ ] Add or update deterministic tests.
-- [ ] Run required verification.
-- [ ] Complete Codex self-review.
-- [ ] Update `STATUS.md` if active task, current step, next step, or completion state changed.
+- [x] Add or update deterministic tests.
+- [x] Run required verification.
+- [x] Complete Codex self-review.
+- [x] Update `STATUS.md` if active task, current step, next step, or completion state changed.
 
 # Acceptance Criteria
 
