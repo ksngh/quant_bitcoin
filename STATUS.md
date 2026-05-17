@@ -2,31 +2,31 @@
 
 # Current Phase
 
-Phase 30: ATR Implementation
+Phase 31: Volume Ratio Implementation
 
 # Current Step
 
-Task 030: ATR implemented and ready for review.
+Task 031: Volume Ratio implemented and ready for review.
 
 # Current Goal
 
-Review the ATR implementation and continue one-indicator-at-a-time work without expanding scope.
+Review the Volume Ratio implementation and continue one-indicator-at-a-time work without expanding scope.
 
 # Current Active Task
 
-Task 030: Implement ATR. Owner-provided ATR formula was saved to `tasks/indicators/atr.md`; implementation and deterministic tests are complete pending review.
+Task 031: Implement Volume Ratio. Owner-provided Volume Ratio formula was saved to `tasks/indicators/volume_ratio.md`; implementation and deterministic tests are complete pending review.
 
 # Last Completed Step
 
-Task 029: Swing Structure.
+Task 030: ATR.
 
-Implemented deterministic swing structure classification from confirmed pivot events. Verified with deterministic tests and compile checks.
+Implemented deterministic ATR calculation from already-provided OHLC candle data. Verified with deterministic tests and compile checks.
 
-Previous completed step: Task 028: Pivot High / Pivot Low.
+Previous completed step: Task 029: Swing Structure.
 
 # Next Step
 
-Recommended next task: owner review of Task 030, then explicitly assign the next one-indicator implementation task. Task 031: Volume Ratio is a likely next independent indicator candidate; Task 032 Support / Resistance Zone and Task 033 Displacement Candle can later consume ATR after review. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
+Recommended next task: owner review of Task 031, then explicitly assign the next one-indicator implementation task. Task 032 Support / Resistance Zone and Task 033 Displacement Candle remain planned future candidates; Displacement Candle can later consume ATR and Volume Ratio after review. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
 
 # Parallel Work Status
 
@@ -96,6 +96,7 @@ Tasks 027-033 define multiple indicator implementation plans, but concrete indic
 - [x] Task 030: ATR implementation task document created
 - [x] Task 030: ATR complete and verified
 - [x] Task 031: Volume Ratio implementation task document created
+- [x] Task 031: Volume Ratio complete and verified
 - [x] Task 032: Support / Resistance Zone implementation task document created
 - [x] Task 033: Displacement Candle implementation task document created
 
@@ -108,7 +109,7 @@ Tasks 027-033 define multiple indicator implementation plans, but concrete indic
 - What kill-switch or disable mechanism is required?
 - Task 024 decided the concrete PostgreSQL command-management path: `db/init/001_schema.sql` is the source-of-truth first-start schema DDL, `db/changes/` is reserved for future existing-database state-change SQL, repository initialization executes managed command files, and runtime persistence DML remains application-owned.
 - Task 025 defines the indicator document intake process. Future owner-provided indicator documents should be saved under `tasks/indicators/<INDICATOR_KEY>.md`, and concrete indicator code must wait for an explicit indicator-specific implementation task.
-- Tasks 027-033 define planned implementation tasks for the remaining indicator/filter modules. Task 028 Pivot High / Pivot Low, Task 029 Swing Structure, and Task 030 ATR have owner-provided formulas saved under `tasks/indicators/` and deterministic implementations pending review. Remaining unimplemented indicator tasks still require explicit assignment and owner-approved detailed formulas before coding.
+- Tasks 027-033 define planned implementation tasks for the remaining indicator/filter modules. Task 028 Pivot High / Pivot Low, Task 029 Swing Structure, Task 030 ATR, and Task 031 Volume Ratio have owner-provided formulas saved under `tasks/indicators/` and deterministic implementations pending review. Remaining unimplemented indicator tasks still require explicit assignment and owner-approved detailed formulas before coding.
 - Docker is not installed in the current cloud environment. Local PostgreSQL and WebSocket ingestor container startup are intentionally skipped here and remain optional local developer verification.
 
 # Blockers
