@@ -2,26 +2,18 @@
 
 ## Purpose
 
-Define the Fair Value Gap Pattern mechanically.
+Define the Fair Value Gap pattern mechanically.
 
-This pattern identifies a three-candle price imbalance where the first and third
-candles do not overlap in the impulse direction. The resulting gap is a
-potential continuation or reversion reaction zone. This document defines
-detection logic only. It does not define order execution, position sizing,
-exchange integration, backtesting engine behavior, live order placement, machine
-learning, UI visualization, or manual chart drawing.
+This module detects bullish and bearish price imbalance zones using a three-candle structure.
+
+This document defines detection logic only.
+It does not define order execution.
 
 ## Pattern Type
 
 ```text
-FAIR_VALUE_GAP
+Fair Value Gap
 FVG
-```
-
-Human-readable name:
-
-```text
-Fair Value Gap Pattern
 ```
 
 ## Pattern Categories
@@ -30,7 +22,8 @@ Fair Value Gap Pattern
 Price Imbalance
 Inefficient Price Delivery
 Three-Candle Gap Structure
-Continuation or Reversion Zone
+Continuation Zone
+Reversion Zone
 ```
 
 ## Supported Directions
@@ -43,8 +36,6 @@ NONE
 
 ## Required Core Modules
 
-The pattern must reuse snapshots produced by these core modules:
-
 ```text
 Liquidity: Trading Value / Volume
 Bid-Ask Spread
@@ -55,14 +46,11 @@ Swing Structure
 Support / Resistance Zone
 ```
 
-Optional core modules:
+Optional:
 
 ```text
 Pivot High / Pivot Low
 ```
-
-The pattern module must not recalculate these indicators internally except for
-simple comparisons against already-provided snapshot fields.
 
 ## Required Inputs
 
@@ -75,78 +63,45 @@ volume ratio values
 displacement candle snapshots
 swing structure snapshots
 support / resistance zones
-liquidity status
-bid-ask spread status
-```
-
-Optional inputs:
-
-```text
-confirmed pivot highs
-confirmed pivot lows
-```
-
-Required candle fields:
-
-```text
-open
-high
-low
-close
-volume
-timestamp
-index
+liquidity snapshot
+bid-ask spread snapshot
 ```
 
 ## Default Parameters
 
 ```yaml
-fair_value_gap:
-  minimum_gap_size_atr_multiplier: 0.1
-  maximum_gap_size_atr_multiplier: 2.0
-  require_displacement_candle: true
-  minimum_volume_ratio: 1.3
-  strong_volume_ratio: 1.5
-  require_liquidity_pass: true
-  require_spread_pass: true
-  near_support_resistance_atr_multiplier: 0.5
-  broken_atr_buffer_multiplier: 0.2
-  stop_atr_buffer_multiplier: 0.2
-  minimum_pattern_score: 0.7
-  weak_pattern_score: 0.5
-  default_entry_reference: ZONE_MID
-  default_risk_reward: 2.0
-  large_gap_handling: WEAK
+minimum_gap_size_atr_multiplier: 0.1
+maximum_gap_size_atr_multiplier: 2.0
+require_displacement_candle: true
+minimum_volume_ratio: 1.3
+strong_volume_ratio: 1.5
+break_buffer_atr_multiplier: 0.2
+fill_threshold: 1.0
+partial_fill_threshold: 0.01
+require_liquidity_pass: true
+require_spread_pass: true
+minimum_pattern_score: 0.7
 ```
 
-## Core Definitions
+## Three-Candle Structure
 
-### Three-Candle Window
-
-An FVG is evaluated using exactly three consecutive candles:
+The module evaluates three consecutive candles.
 
 ```text
 candle_1 = candles[i - 2]
 candle_2 = candles[i - 1]
 candle_3 = candles[i]
+```
+
+The middle candle is used for displacement validation.
+
+```text
 middle_candle = candle_2
 ```
 
-The middle candle is used for displacement and volume confirmation. The pattern
-is created at `candle_3.timestamp` only after Candle 3 is closed.
+## Bullish FVG Definition
 
-If fewer than three consecutive candles are available:
-
-```text
-pattern_status = INVALID
-fvg_state = INVALID
-direction = NONE
-reason = NOT_ENOUGH_CANDLES
-```
-
-### Bullish FVG
-
-A bullish FVG exists when Candle 1 high is lower than Candle 3 low:
+A bullish FVG exists when:
 
 ```text
 candle_1.high < candle_3.low
@@ -158,26 +113,28 @@ Gap size:
 gap_size = candle_3.low - candle_1.high
 ```
 
-Zone boundaries:
+Zone:
 
 ```text
 zone_low = candle_1.high
 zone_high = candle_3.low
+```
+
+Zone mid:
+
+```text
 zone_mid = (zone_low + zone_high) / 2
 ```
 
-Preferred displacement confirmation:
+Expected displacement:
 
 ```text
-displacement_direction = BULLISH
-displacement_status = VALID
+candle_2 displacement_direction = BULLISH
 ```
 
-The zone is a potential bullish reaction zone.
+## Bearish FVG Definition
 
-### Bearish FVG
-
-A bearish FVG exists when Candle 1 low is higher than Candle 3 high:
+A bearish FVG exists when:
 
 ```text
 candle_1.low > candle_3.high
@@ -189,211 +146,184 @@ Gap size:
 gap_size = candle_1.low - candle_3.high
 ```
 
-Zone boundaries:
+Zone:
 
 ```text
 zone_low = candle_3.high
 zone_high = candle_1.low
+```
+
+Zone mid:
+
+```text
 zone_mid = (zone_low + zone_high) / 2
 ```
 
-Preferred displacement confirmation:
+Expected displacement:
 
 ```text
-displacement_direction = BEARISH
-displacement_status = VALID
+candle_2 displacement_direction = BEARISH
 ```
 
-The zone is a potential bearish reaction zone.
-
-## Detection Sequence
-
-For each closed candle index `i`:
-
-```text
-1. Select exactly candle_1, candle_2, and candle_3.
-2. Reject the window if required OHLC fields are missing.
-3. Require liquidity_pass = true when require_liquidity_pass = true.
-4. Require spread_pass = true when require_spread_pass = true.
-5. Check bullish structure: candle_1.high < candle_3.low.
-6. Check bearish structure: candle_1.low > candle_3.high.
-7. If neither structure exists, return direction = NONE and pattern_status = INVALID.
-8. Calculate zone_low, zone_high, zone_mid, gap_size, and gap_size_atr.
-9. Validate gap size using ATR.
-10. Validate Candle 2 with the Displacement Candle snapshot.
-11. Confirm volume using Candle 2 Volume Ratio snapshot.
-12. Add Swing Structure and Support / Resistance context.
-13. Calculate state, fill_ratio, pattern_score, and reference levels.
-```
-
-If both bullish and bearish structure appear due to malformed candle data, reject
-the window:
-
-```text
-pattern_status = INVALID
-fvg_state = INVALID
-direction = NONE
-reason = CONFLICTING_FVG_DIRECTION
-```
-
-## Liquidity and Spread Filters
-
-Before validating the pattern:
-
-```text
-liquidity_pass = true
-spread_pass = true
-```
-
-If `require_liquidity_pass = true` and the Liquidity snapshot fails:
-
-```text
-pattern_status = INVALID
-fvg_state = INVALID
-reason = LIQUIDITY_FILTER_FAILED
-```
-
-If `require_spread_pass = true` and the Bid-Ask Spread snapshot fails:
-
-```text
-pattern_status = INVALID
-fvg_state = INVALID
-reason = SPREAD_FILTER_FAILED
-```
-
-Low liquidity or wide spread can indicate an illiquid price jump rather than a
-valid inefficiency. These failures are hard invalidations in the initial version.
-
-## ATR Gap Size Validation
-
-Use the ATR snapshot aligned to Candle 3 unless a project-level consumer
-explicitly provides another evaluation timestamp.
+## Gap Size ATR
 
 ```text
 gap_size_atr = gap_size / ATR
 ```
 
-Minimum valid gap:
+Valid gap size:
 
 ```text
-gap_size >= minimum_gap_size_atr_multiplier * ATR
+gap_size_atr >= minimum_gap_size_atr_multiplier
+and
+gap_size_atr <= maximum_gap_size_atr_multiplier
 ```
 
-Maximum valid gap:
-
-```text
-gap_size <= maximum_gap_size_atr_multiplier * ATR
-```
-
-Default thresholds:
+Default:
 
 ```text
 minimum_gap_size_atr_multiplier = 0.1
 maximum_gap_size_atr_multiplier = 2.0
 ```
 
-If ATR is missing, non-positive, or invalid:
+If gap is too small:
 
 ```text
 pattern_status = INVALID
-fvg_state = INVALID
-reason = ATR_UNAVAILABLE
 ```
 
-If the gap is too small:
-
-```text
-pattern_status = INVALID
-fvg_state = INVALID
-reason = GAP_TOO_SMALL
-```
-
-If the gap is too large and `large_gap_handling = WEAK`:
+If gap is too large:
 
 ```text
 pattern_status = WEAK
-reason includes GAP_TOO_LARGE
 ```
 
-If the gap is too large and `large_gap_handling = INVALID`:
+Recommended initial handling:
 
 ```text
-pattern_status = INVALID
-fvg_state = INVALID
-reason = GAP_TOO_LARGE
+gap_size_atr > maximum_gap_size_atr_multiplier = WEAK
+not INVALID
+```
+
+Reason:
+
+```text
+Large FVG may represent extreme imbalance but may also have poor risk reference.
 ```
 
 ## Displacement Validation
 
-The middle candle is validated using the Displacement Candle snapshot aligned to
-`candle_2`.
+If `require_displacement_candle = true`, the middle candle must be a valid displacement candle.
 
-Initial version default:
-
-```text
-require_displacement_candle = true
-```
-
-Bullish FVG displacement requirement:
+### Bullish FVG Displacement
 
 ```text
-candle_2 displacement_direction = BULLISH
-candle_2 displacement_status = VALID
+candle_2.displacement_direction = BULLISH
+candle_2.displacement_status = VALID
 ```
 
-Bearish FVG displacement requirement:
+### Bearish FVG Displacement
 
 ```text
-candle_2 displacement_direction = BEARISH
-candle_2 displacement_status = VALID
+candle_2.displacement_direction = BEARISH
+candle_2.displacement_status = VALID
 ```
 
-If displacement is required and Candle 2 does not satisfy the directional
-requirement:
+If displacement is missing and required:
 
 ```text
 pattern_status = INVALID
-fvg_state = INVALID
-reason = DISPLACEMENT_NOT_CONFIRMED
 ```
 
-If displacement is not required, the FVG can still be detected, but
-`displacement_score` is reduced and `pattern_status` cannot be stronger than
-`WEAK` unless other project-level rules override this in a future task.
+If displacement is missing but not required:
+
+```text
+displacement_confirmed = false
+```
+
+and:
+
+```text
+reduce displacement_score
+```
 
 ## Volume Confirmation
 
-Use the Volume Ratio snapshot aligned to Candle 2.
-
-Default confirmation:
+Use the volume ratio of the middle candle.
 
 ```text
-candle_2.volume_ratio >= minimum_volume_ratio
-minimum_volume_ratio = 1.3
+volume_ratio = candle_2.volume_ratio
 ```
 
 Strong confirmation:
 
 ```text
 volume_ratio >= strong_volume_ratio
+```
+
+Default:
+
+```text
 strong_volume_ratio = 1.5
+```
+
+Valid confirmation:
+
+```text
+volume_ratio >= minimum_volume_ratio
+```
+
+Default:
+
+```text
+minimum_volume_ratio = 1.3
+```
+
+If:
+
+```text
+volume_ratio < minimum_volume_ratio
+```
+
+Then:
+
+```text
+pattern_status = WEAK
 ```
 
 If volume ratio is missing:
 
 ```text
-volume_confirmation_score = 0.0
-reason includes VOLUME_RATIO_UNAVAILABLE
+pattern_status = INVALID
 ```
 
-If `candle_2.volume_ratio < minimum_volume_ratio`:
+## Liquidity Filter
+
+If `require_liquidity_pass = true`:
 
 ```text
-pattern_status = WEAK
-reason includes VOLUME_CONFIRMATION_FAILED
+liquidity_pass must be true
 ```
 
-Volume confirmation alone must not override failed liquidity or spread filters.
+If not:
+
+```text
+pattern_status = INVALID
+```
+
+## Spread Filter
+
+If `require_spread_pass = true`:
+
+```text
+spread_pass must be true
+```
+
+If not:
+
+```text
+pattern_status = INVALID
+```
 
 ## FVG State
 
@@ -408,29 +338,25 @@ BROKEN
 INVALID
 ```
 
-State is evaluated using candles after Candle 3:
+## Fresh State
 
-```text
-later_candles = candles where index > candle_3.index
-```
+An FVG is fresh when price has not returned to the zone after creation.
 
-### Fresh
-
-A bullish FVG is fresh when no later candle has returned to the zone:
+### Bullish FVG Fresh
 
 ```text
 no later candle has low <= zone_high
 ```
 
-A bearish FVG is fresh when no later candle has returned to the zone:
+### Bearish FVG Fresh
 
 ```text
 no later candle has high >= zone_low
 ```
 
-### Touched
+## Touched State
 
-A bullish FVG is touched when a later candle overlaps the zone:
+### Bullish FVG Touched
 
 ```text
 later_candle.low <= zone_high
@@ -438,7 +364,7 @@ and
 later_candle.high >= zone_low
 ```
 
-A bearish FVG is touched when a later candle overlaps the zone:
+### Bearish FVG Touched
 
 ```text
 later_candle.high >= zone_low
@@ -446,14 +372,9 @@ and
 later_candle.low <= zone_high
 ```
 
-`TOUCHED` is an event label. The persistent state should be
-`PARTIALLY_FILLED`, `FILLED`, or `BROKEN` when the fill-ratio or broken rules are
-satisfied.
+## Partially Filled State
 
-### Partially Filled
-
-A bullish FVG is partially filled when price enters the gap but does not fully
-fill it:
+### Bullish FVG Partially Filled
 
 ```text
 later_candle.low < zone_high
@@ -461,8 +382,7 @@ and
 later_candle.low > zone_low
 ```
 
-A bearish FVG is partially filled when price enters the gap but does not fully
-fill it:
+### Bearish FVG Partially Filled
 
 ```text
 later_candle.high > zone_low
@@ -470,65 +390,48 @@ and
 later_candle.high < zone_high
 ```
 
-### Filled
+## Filled State
 
-A bullish FVG is filled when:
+### Bullish FVG Filled
 
 ```text
 later_candle.low <= zone_low
 ```
 
-A bearish FVG is filled when:
+### Bearish FVG Filled
 
 ```text
 later_candle.high >= zone_high
 ```
 
-Initial version interpretation:
+## Broken State
+
+### Bullish FVG Broken
 
 ```text
-filled FVG = FILLED
-not tradable as fresh imbalance
+close < zone_low - break_buffer_atr_multiplier * ATR
 ```
 
-A filled FVG is not automatically `BROKEN`.
-
-### Broken
-
-A bullish FVG is broken when a later close moves below the zone by an ATR buffer:
+### Bearish FVG Broken
 
 ```text
-later_candle.close < zone_low - (broken_atr_buffer_multiplier * ATR)
-```
-
-A bearish FVG is broken when a later close moves above the zone by an ATR buffer:
-
-```text
-later_candle.close > zone_high + (broken_atr_buffer_multiplier * ATR)
+close > zone_high + break_buffer_atr_multiplier * ATR
 ```
 
 Default:
 
 ```text
-broken_atr_buffer_multiplier = 0.2
+break_buffer_atr_multiplier = 0.2
 ```
-
-Broken state takes precedence over fresh, touched, partially filled, and filled.
 
 ## Fill Ratio
 
-For bullish FVGs, use the lowest later price that enters the zone:
+### Bullish Fill Ratio
+
+Use the lowest price after FVG creation.
 
 ```text
-lowest_price_inside_zone = minimum later low clipped to [zone_low, zone_high]
-fill_ratio = (zone_high - lowest_price_inside_zone) / gap_size
-```
-
-For bearish FVGs, use the highest later price that enters the zone:
-
-```text
-highest_price_inside_zone = maximum later high clipped to [zone_low, zone_high]
-fill_ratio = (highest_price_inside_zone - zone_low) / gap_size
+fill_ratio = (zone_high - lowest_price_after_creation) / gap_size
 ```
 
 Clamp:
@@ -537,97 +440,102 @@ Clamp:
 fill_ratio = max(0.0, min(fill_ratio, 1.0))
 ```
 
-State mapping before applying the broken rule:
+### Bearish Fill Ratio
+
+Use the highest price after FVG creation.
 
 ```text
-fill_ratio = 0.0 -> FRESH
-0.0 < fill_ratio < 1.0 -> PARTIALLY_FILLED
-fill_ratio >= 1.0 -> FILLED
+fill_ratio = (highest_price_after_creation - zone_low) / gap_size
 ```
 
-If a later candle overlaps the zone but the calculated fill ratio remains `0.0`
-due to boundary equality, the event may be recorded as `TOUCHED` while the
-persistent state remains `FRESH`.
+Clamp:
 
-## Swing Structure Context
+```text
+fill_ratio = max(0.0, min(fill_ratio, 1.0))
+```
 
-Use the Swing Structure snapshot aligned to Candle 3 or the latest confirmed
-snapshot before Candle 3.
+## Fill Ratio State Mapping
 
-Bullish FVG is stronger when:
+```text
+fill_ratio = 0.0:
+    fvg_state = FRESH
+
+0.0 < fill_ratio < 1.0:
+    fvg_state = PARTIALLY_FILLED
+
+fill_ratio >= 1.0:
+    fvg_state = FILLED
+```
+
+If broken condition is satisfied:
+
+```text
+fvg_state = BROKEN
+```
+
+## Structure Context
+
+### Bullish Structure Alignment
+
+Bullish FVG is aligned when:
 
 ```text
 market_structure_status = UPTREND
 or
-market_structure_status = TRANSITION from DOWNTREND to UPTREND
+market_structure_status = TRANSITION
 ```
 
-Bearish FVG is stronger when:
+Optional stricter condition:
+
+```text
+latest swing label includes HH or HL
+```
+
+### Bearish Structure Alignment
+
+Bearish FVG is aligned when:
 
 ```text
 market_structure_status = DOWNTREND
 or
-market_structure_status = TRANSITION from UPTREND to DOWNTREND
+market_structure_status = TRANSITION
 ```
 
-If structure conflicts with FVG direction:
+Optional stricter condition:
 
 ```text
-structure_alignment_score is reduced
-reason includes CONFLICTING_SWING_STRUCTURE
+latest swing label includes LH or LL
 ```
 
-If structure is missing or unknown:
+If structure conflicts:
 
 ```text
-structure_alignment_score = neutral value
-reason includes STRUCTURE_CONTEXT_UNAVAILABLE
+reduce structure_alignment_score
 ```
 
-Optional confirmed pivot highs and confirmed pivot lows may be used only as
-context already produced by the Pivot High / Pivot Low module. They must not be
-used to redefine the three-candle FVG structure.
+Do not invalidate by default.
 
 ## Support / Resistance Context
 
-Use Support / Resistance Zone snapshots available at Candle 3 or the latest
-confirmed snapshot before Candle 3.
+### Bullish FVG Context
 
 Bullish FVG is stronger when:
 
 ```text
-FVG zone overlaps a support zone
+FVG zone overlaps support zone
 or
-FVG zone is near a support zone
+distance_to_nearest_support <= 0.5 * ATR
 ```
+
+### Bearish FVG Context
 
 Bearish FVG is stronger when:
 
 ```text
-FVG zone overlaps a resistance zone
+FVG zone overlaps resistance zone
 or
-FVG zone is near a resistance zone
+distance_to_nearest_resistance <= 0.5 * ATR
 ```
-
-Overlap condition:
-
-```text
-fvg.zone_low <= sr.zone_high
-and
-fvg.zone_high >= sr.zone_low
-```
-
-Near condition:
-
-```text
-distance_to_zone <= near_support_resistance_atr_multiplier * ATR
-near_support_resistance_atr_multiplier = 0.5
-```
-
-A bullish FVG inside or near major resistance receives reduced context score. A
-bearish FVG inside or near major support receives reduced context score. A mixed
-support/resistance zone is neutral unless project-level rules classify it as
-supportive or conflicting.
 
 ## Pattern Status
 
@@ -640,156 +548,327 @@ INVALID
 PENDING
 ```
 
-Default status mapping:
+### VALID
 
 ```text
-INVALID: hard validation failed, state invalid, or required data is missing
-PENDING: three-candle structure exists but later confirmation data is not closed or available
-WEAK: structure exists but non-hard confirmations are weak or conflicting
-VALID: structure exists and hard filters, size, displacement, and score pass
+liquidity_pass = true
+spread_pass = true
+three-candle FVG exists
+gap_size_atr >= minimum_gap_size_atr_multiplier
+gap_size_atr <= maximum_gap_size_atr_multiplier
+displacement requirement satisfied
+volume_ratio >= minimum_volume_ratio
+fvg_state is not FILLED
+fvg_state is not BROKEN
+pattern_score >= minimum_pattern_score
 ```
 
-A fresh or partially filled FVG can be `VALID` or `WEAK`. A filled FVG remains a
-valid historical detection but is not tradable as a fresh imbalance. A broken FVG
-should not produce fresh-entry references except for historical analysis fields.
-
-## Pattern Scoring
-
-`pattern_score` is normalized from `0.0` to `1.0`.
-
-Required score components:
+### WEAK
 
 ```text
-gap_quality_score
-displacement_score
-volume_confirmation_score
-structure_alignment_score
-support_resistance_context_score
-liquidity_score
-freshness_score
+three-candle FVG exists
+but volume_ratio is weak
 ```
 
-Recommended default weights:
+or:
 
-```yaml
+```text
+gap_size_atr > maximum_gap_size_atr_multiplier
+```
+
+or:
+
+```text
+pattern_score >= 0.5
+and
+pattern_score < minimum_pattern_score
+```
+
+### PENDING
+
+```text
+FVG exists
+fvg_state = FRESH
+price has not returned to the zone
+```
+
+### INVALID
+
+```text
+liquidity filter fails
+spread filter fails
+not enough candles
+OHLC data missing
+no valid FVG structure
+gap size too small
+required displacement missing
+volume ratio missing
+FVG is filled
+FVG is broken
+```
+
+## Pattern Score
+
+Score range:
+
+```text
+0.0 to 1.0
+```
+
+Recommended components:
+
+```text
 gap_quality_score: 0.20
-displacement_score: 0.20
+displacement_score: 0.25
 volume_confirmation_score: 0.15
 structure_alignment_score: 0.15
-support_resistance_context_score: 0.15
+support_resistance_context_score: 0.10
 liquidity_score: 0.10
 freshness_score: 0.05
 ```
 
-Weighted score:
+Formula:
 
 ```text
-pattern_score = sum(component_score * component_weight)
-pattern_score = max(0.0, min(pattern_score, 1.0))
+pattern_score =
+    gap_quality_score * 0.20
+  + displacement_score * 0.25
+  + volume_confirmation_score * 0.15
+  + structure_alignment_score * 0.15
+  + support_resistance_context_score * 0.10
+  + liquidity_score * 0.10
+  + freshness_score * 0.05
 ```
 
-Component guidance:
+## Gap Quality Score
 
 ```text
-gap_quality_score = 1.0 when gap_size_atr is inside preferred range and not too large
-                  = 0.0 when gap is below minimum
-                  = reduced when gap exceeds maximum and large_gap_handling = WEAK
+if 0.2 <= gap_size_atr <= 1.0:
+    gap_quality_score = 1.0
 
-displacement_score = 1.0 when directional displacement is valid
-                   = 0.0 when required displacement fails
-                   = reduced when displacement is optional and absent
+else if 0.1 <= gap_size_atr < 0.2:
+    gap_quality_score = 0.6
 
-volume_confirmation_score = 1.0 when volume_ratio >= strong_volume_ratio
-                          = 0.7 when minimum_volume_ratio <= volume_ratio < strong_volume_ratio
-                          = 0.0 when volume confirmation is missing or below minimum
+else if 1.0 < gap_size_atr <= 2.0:
+    gap_quality_score = 0.7
 
-structure_alignment_score = 1.0 when swing structure aligns
-                          = 0.5 when unavailable or neutral
-                          = 0.0 when conflicting
-
-support_resistance_context_score = 1.0 when directional S/R context aligns
-                                 = 0.5 when unavailable or neutral
-                                 = 0.0 when opposing major zone conflicts
-
-liquidity_score = 1.0 when liquidity_pass and spread_pass are true
-                = 0.0 when either hard filter fails
-
-freshness_score = 1.0 when FRESH
-                = 0.7 when TOUCHED without meaningful fill
-                = 0.4 when PARTIALLY_FILLED
-                = 0.0 when FILLED, BROKEN, or INVALID
-```
-
-Final classification:
-
-```text
-if hard validation failed:
-    pattern_status = INVALID
-else if pattern_score >= minimum_pattern_score:
-    pattern_status = VALID
-else if pattern_score >= weak_pattern_score:
-    pattern_status = WEAK
 else:
-    pattern_status = INVALID
+    gap_quality_score = 0.0
 ```
 
-Defaults:
+## Displacement Score
 
 ```text
-minimum_pattern_score = 0.7
-weak_pattern_score = 0.5
+if displacement_confirmed = true:
+    displacement_score = 1.0
+
+else if require_displacement_candle = false:
+    displacement_score = 0.4
+
+else:
+    displacement_score = 0.0
 ```
 
-## Entry, Stop, and Target References
-
-Reference levels are mechanical planning fields only. They are not orders,
-position sizing, execution instructions, or live trading decisions.
-
-Default ATR buffer:
+## Volume Confirmation Score
 
 ```text
-atr_buffer = stop_atr_buffer_multiplier * ATR
-stop_atr_buffer_multiplier = 0.2
+if volume_ratio >= 2.0:
+    volume_confirmation_score = 1.0
+
+else if volume_ratio >= 1.5:
+    volume_confirmation_score = 0.8
+
+else if volume_ratio >= 1.3:
+    volume_confirmation_score = 0.5
+
+else:
+    volume_confirmation_score = 0.0
 ```
 
-### Bullish FVG References
+## Structure Alignment Score
 
 ```text
-entry_reference = zone_mid or zone_low
-stop_reference = zone_low - atr_buffer
-target_reference = nearest resistance zone or risk-reward based target
+if FVG direction aligns with market_structure_status:
+    structure_alignment_score = 1.0
+
+else if market_structure_status = TRANSITION:
+    structure_alignment_score = 0.7
+
+else if market_structure_status = RANGE:
+    structure_alignment_score = 0.5
+
+else:
+    structure_alignment_score = 0.2
 ```
 
-If no resistance zone is available:
+## Support / Resistance Context Score
+
+### Bullish FVG
 
 ```text
-target_reference = entry_reference + default_risk_reward * (entry_reference - stop_reference)
+if FVG overlaps support zone:
+    support_resistance_context_score = 1.0
+
+else if FVG is near support zone within 0.5 * ATR:
+    support_resistance_context_score = 0.7
+
+else:
+    support_resistance_context_score = 0.5
 ```
 
-### Bearish FVG References
+### Bearish FVG
 
 ```text
-entry_reference = zone_mid or zone_high
-stop_reference = zone_high + atr_buffer
-target_reference = nearest support zone or risk-reward based target
+if FVG overlaps resistance zone:
+    support_resistance_context_score = 1.0
+
+else if FVG is near resistance zone within 0.5 * ATR:
+    support_resistance_context_score = 0.7
+
+else:
+    support_resistance_context_score = 0.5
 ```
 
-If no support zone is available:
+## Liquidity Score
 
 ```text
-target_reference = entry_reference - default_risk_reward * (stop_reference - entry_reference)
+if liquidity_status = HIGH:
+    liquidity_score = 1.0
+
+else if liquidity_status = NORMAL:
+    liquidity_score = 0.8
+
+else:
+    liquidity_score = 0.0
 ```
 
-Risk-reward:
+## Freshness Score
 
 ```text
-risk_reward = abs(target_reference - entry_reference) / abs(entry_reference - stop_reference)
+if fvg_state = FRESH:
+    freshness_score = 1.0
+
+else if fvg_state = TOUCHED:
+    freshness_score = 0.8
+
+else if fvg_state = PARTIALLY_FILLED:
+    freshness_score = 0.5
+
+else:
+    freshness_score = 0.0
 ```
 
-If the denominator is zero or any reference is unavailable:
+## Entry Reference
+
+This module must not execute orders.
+
+It only defines reference prices.
+
+### Bullish Entry Reference
+
+Supported values:
+
+```text
+zone_high
+zone_mid
+zone_low
+```
+
+Recommended default:
+
+```text
+entry_reference = zone_mid
+```
+
+### Bearish Entry Reference
+
+Supported values:
+
+```text
+zone_low
+zone_mid
+zone_high
+```
+
+Recommended default:
+
+```text
+entry_reference = zone_mid
+```
+
+## Stop Reference
+
+### Bullish Stop Reference
+
+```text
+stop_reference = zone_low - break_buffer_atr_multiplier * ATR
+```
+
+### Bearish Stop Reference
+
+```text
+stop_reference = zone_high + break_buffer_atr_multiplier * ATR
+```
+
+## Target Reference
+
+### Bullish Target Reference
+
+Preferred:
+
+```text
+target_reference = nearest_resistance_zone
+```
+
+Fallback:
+
+```text
+target_reference = entry_reference + 2 * abs(entry_reference - stop_reference)
+```
+
+### Bearish Target Reference
+
+Preferred:
+
+```text
+target_reference = nearest_support_zone
+```
+
+Fallback:
+
+```text
+target_reference = entry_reference - 2 * abs(stop_reference - entry_reference)
+```
+
+## Risk Reward
+
+### Bullish
+
+```text
+risk = entry_reference - stop_reference
+reward = target_reference - entry_reference
+risk_reward = reward / risk
+```
+
+### Bearish
+
+```text
+risk = stop_reference - entry_reference
+reward = entry_reference - target_reference
+risk_reward = reward / risk
+```
+
+If:
+
+```text
+risk <= 0
+```
+
+Then:
 
 ```text
 risk_reward = null
+pattern_status = INVALID
 ```
 
 ## Output Schema
@@ -797,45 +876,49 @@ risk_reward = null
 ```json
 {
   "symbol": "BTCUSDT",
-  "timestamp": "2026-05-17T00:00:00Z",
+  "timestamp": "2026-05-16T10:00:00Z",
   "pattern_type": "FAIR_VALUE_GAP",
   "direction": "BULLISH",
   "pattern_status": "VALID",
   "fvg_state": "FRESH",
-  "candle_1_index": 100,
-  "candle_2_index": 101,
-  "candle_3_index": 102,
-  "zone_low": 65000.0,
-  "zone_high": 65150.0,
-  "zone_mid": 65075.0,
-  "gap_size": 150.0,
-  "gap_size_atr": 0.25,
+  "candle_1_index": 120,
+  "candle_2_index": 121,
+  "candle_3_index": 122,
+  "zone_low": 64200.0,
+  "zone_high": 64500.0,
+  "zone_mid": 64350.0,
+  "gap_size": 300.0,
+  "gap_size_atr": 0.375,
   "fill_ratio": 0.0,
   "displacement_confirmed": true,
   "displacement_direction": "BULLISH",
-  "volume_ratio": 1.45,
+  "volume_ratio": 1.7,
   "liquidity_pass": true,
   "spread_pass": true,
-  "structure_context": {
-    "market_structure_status": "UPTREND",
-    "alignment": "ALIGNED"
-  },
-  "support_resistance_context": {
-    "nearest_zone_type": "SUPPORT",
-    "relationship": "NEAR"
-  },
+  "structure_context": "UPTREND",
+  "support_resistance_context": "NEAR_SUPPORT",
   "pattern_score": 0.82,
-  "entry_reference": 65075.0,
-  "stop_reference": 64900.0,
-  "target_reference": 65425.0,
+  "entry_reference": 64350.0,
+  "stop_reference": 64140.0,
+  "target_reference": 64770.0,
   "risk_reward": 2.0,
-  "reason": ["BULLISH_FVG_DETECTED", "DISPLACEMENT_CONFIRMED"]
+  "reason": "Bullish FVG detected with valid three-candle imbalance, bullish displacement, and volume confirmation."
 }
 ```
 
-## Allowed Values
+## Output Fields
 
-Direction:
+### pattern_type
+
+Fixed value:
+
+```text
+FAIR_VALUE_GAP
+```
+
+### direction
+
+One of:
 
 ```text
 BULLISH
@@ -843,7 +926,9 @@ BEARISH
 NONE
 ```
 
-Pattern status:
+### pattern_status
+
+One of:
 
 ```text
 VALID
@@ -852,7 +937,9 @@ INVALID
 PENDING
 ```
 
-FVG state:
+### fvg_state
+
+One of:
 
 ```text
 FRESH
@@ -863,87 +950,616 @@ BROKEN
 INVALID
 ```
 
+### candle_1_index
+
+Index of the first candle in the three-candle structure.
+
+### candle_2_index
+
+Index of the middle candle.
+
+### candle_3_index
+
+Index of the third candle.
+
+### zone_low
+
+Lower boundary of the FVG zone.
+
+### zone_high
+
+Upper boundary of the FVG zone.
+
+### zone_mid
+
+Middle price of the FVG zone.
+
+```text
+zone_mid = (zone_low + zone_high) / 2
+```
+
+### gap_size
+
+Absolute size of the FVG zone.
+
+```text
+gap_size = zone_high - zone_low
+```
+
+### gap_size_atr
+
+Gap size normalized by ATR.
+
+```text
+gap_size_atr = gap_size / ATR
+```
+
+### fill_ratio
+
+How much of the FVG has been filled.
+
+```text
+0.0 = not filled
+1.0 = fully filled
+```
+
+### displacement_confirmed
+
+Boolean value.
+
+```text
+true = middle candle is valid displacement candle
+false = middle candle is not valid displacement candle
+```
+
+### displacement_direction
+
+One of:
+
+```text
+BULLISH
+BEARISH
+NONE
+INVALID
+```
+
+### volume_ratio
+
+Volume ratio of the middle candle.
+
+### liquidity_pass
+
+Result from Liquidity module.
+
+### spread_pass
+
+Result from Bid-Ask Spread module.
+
+### structure_context
+
+Market structure status at FVG creation.
+
+### support_resistance_context
+
+Possible values:
+
+```text
+OVERLAPS_SUPPORT
+OVERLAPS_RESISTANCE
+NEAR_SUPPORT
+NEAR_RESISTANCE
+NONE
+```
+
+### pattern_score
+
+Final score between `0.0` and `1.0`.
+
+### entry_reference
+
+Reference price for possible entry.
+
+### stop_reference
+
+Reference price for invalidation.
+
+### target_reference
+
+Reference price for possible target.
+
+### risk_reward
+
+Reward-to-risk ratio.
+
+### reason
+
+Short explanation for detection result.
+
 ## Edge Cases
 
-### Not Enough Candles
+### Not enough candles
 
-If fewer than three consecutive candles are available, return `INVALID` with
-`reason = NOT_ENOUGH_CANDLES`.
+If fewer than three candles exist:
 
-### Missing OHLC Data
+```text
+pattern_status = INVALID
+```
 
-If Candle 1, Candle 2, or Candle 3 is missing required OHLC fields, return
-`INVALID` with `reason = MISSING_OHLC_DATA`.
+### Missing OHLC data
 
-### Gap Size Too Small
+If required high or low values are missing:
 
-If `gap_size < minimum_gap_size_atr_multiplier * ATR`, return `INVALID` with
-`reason = GAP_TOO_SMALL`.
+```text
+pattern_status = INVALID
+```
 
-### Gap Size Too Large
+### No FVG structure
 
-If `gap_size > maximum_gap_size_atr_multiplier * ATR`, classify as `WEAK` or
-`INVALID` according to `large_gap_handling` and include `GAP_TOO_LARGE`.
+If neither condition is true:
 
-### Middle Candle Is Not Displacement Candle
+```text
+candle_1.high < candle_3.low
+candle_1.low > candle_3.high
+```
 
-If `require_displacement_candle = true`, return `INVALID`. If false, reduce
-score and classify no stronger than `WEAK`.
+Then:
 
-### Volume Confirmation Missing
+```text
+pattern_status = INVALID
+```
 
-If Volume Ratio is unavailable, set `volume_confirmation_score = 0.0` and include
-`VOLUME_RATIO_UNAVAILABLE`. Do not invalidate unless a future task makes volume a
-hard requirement.
+### Gap too small
 
-### FVG Already Filled
+If:
 
-Set `fvg_state = FILLED`, `fill_ratio = 1.0`, and do not treat the zone as a
-fresh imbalance.
+```text
+gap_size_atr < minimum_gap_size_atr_multiplier
+```
 
-### FVG Already Broken
+Then:
 
-Set `fvg_state = BROKEN`, reduce `freshness_score` to `0.0`, and suppress fresh
-entry interpretation.
+```text
+pattern_status = INVALID
+```
+
+### Gap too large
+
+If:
+
+```text
+gap_size_atr > maximum_gap_size_atr_multiplier
+```
+
+Then:
+
+```text
+pattern_status = WEAK
+```
+
+### Missing displacement
+
+If `require_displacement_candle = true` and middle candle is not displacement:
+
+```text
+pattern_status = INVALID
+```
+
+### Missing volume ratio
+
+If volume ratio is missing:
+
+```text
+pattern_status = INVALID
+```
+
+### FVG already filled
+
+If:
+
+```text
+fvg_state = FILLED
+```
+
+Then:
+
+```text
+pattern_status = INVALID
+```
+
+### FVG broken
+
+If:
+
+```text
+fvg_state = BROKEN
+```
+
+Then:
+
+```text
+pattern_status = INVALID
+```
+
+### Low liquidity
+
+If liquidity fails:
+
+```text
+pattern_status = INVALID
+```
+
+### Wide spread
+
+If spread fails:
+
+```text
+pattern_status = INVALID
+```
 
 ### Overlapping FVGs
 
-Multiple same-direction FVG zones may coexist. Preserve each detected three-candle
-window as a separate historical pattern. A future implementation may optionally
-merge overlapping zones, but this document does not require merging.
+If multiple FVGs overlap:
 
-### Opposite-Direction FVGs Nearby
+```text
+keep all initially
+```
 
-Do not cancel either FVG solely because an opposite-direction FVG is nearby.
-Record context in `reason` and reduce score only when swing structure or
-support/resistance context conflicts.
+Optional later rule:
 
-### Low Liquidity Market
+```text
+merge overlapping FVGs of same direction
+```
 
-If liquidity fails, return `INVALID` because the imbalance may be an illiquid
-price jump.
+Tie-break priority:
 
-### Wide Spread Market
+```text
+1. higher pattern_score
+2. fresher FVG
+3. larger volume_ratio
+4. better structure alignment
+```
 
-If spread fails, return `INVALID` because the imbalance may not be actionable or
-reliably measured.
+## Detection Logic
 
-### Conflicting Swing Structure
+```text
+1. Check liquidity_pass.
+2. Check spread_pass.
+3. Iterate candles from index 2.
+4. Assign candle_1, candle_2, candle_3.
+5. Check bullish FVG condition.
+6. Check bearish FVG condition.
+7. Calculate zone boundaries.
+8. Calculate gap_size and gap_size_atr.
+9. Validate gap size.
+10. Validate middle candle displacement.
+11. Validate volume ratio.
+12. Determine FVG state.
+13. Check structure context.
+14. Check support / resistance context.
+15. Calculate pattern score.
+16. Set pattern status.
+17. Return valid, weak, or pending FVG signals.
+```
 
-Keep the structural FVG detection, but reduce `structure_alignment_score` and
-classify as `WEAK` if the final score falls below the valid threshold.
+## Pseudocode
 
-### FVG Formed by Illiquid Price Jump
+```python
+def detect_fvg_patterns(context, config):
+    if config.require_liquidity_pass and not context.liquidity.liquidity_pass:
+        return []
 
-If liquidity or spread filters fail at creation, return `INVALID` even when the
-three-candle price structure exists.
+    if config.require_spread_pass and not context.spread.spread_pass:
+        return []
 
-### FVG Inside Major Support Zone
+    signals = []
 
-A bullish FVG inside support is supportive. A bearish FVG inside support is
-conflicting unless other context marks the support as broken.
+    candles = context.candles
 
-### FVG Inside Major Resistance Zone
+    for i in range(2, len(candles)):
+        candle_1 = candles[i - 2]
+        candle_2 = candles[i - 1]
+        candle_3 = candles[i]
 
-A bearish FVG inside resistance is supportive. A bullish FVG inside resistance is
-conflicting unless other context marks the resistance as broken.
+        bullish_signal = evaluate_bullish_fvg(
+            candle_1,
+            candle_2,
+            candle_3,
+            context,
+            config
+        )
+
+        bearish_signal = evaluate_bearish_fvg(
+            candle_1,
+            candle_2,
+            candle_3,
+            context,
+            config
+        )
+
+        if bullish_signal is not None:
+            signals.append(bullish_signal)
+
+        if bearish_signal is not None:
+            signals.append(bearish_signal)
+
+    return signals
+```
+
+## Bullish FVG Evaluation
+
+```python
+def evaluate_bullish_fvg(candle_1, candle_2, candle_3, context, config):
+    if candle_1.high >= candle_3.low:
+        return None
+
+    zone_low = candle_1.high
+    zone_high = candle_3.low
+    gap_size = zone_high - zone_low
+
+    atr = context.atr_at(candle_3.index)
+
+    if atr is None:
+        return invalid_fvg("missing_atr")
+
+    gap_size_atr = gap_size / atr
+
+    if gap_size_atr < config.minimum_gap_size_atr_multiplier:
+        return invalid_fvg("gap_too_small")
+
+    displacement = context.displacement_at(candle_2.index)
+
+    displacement_confirmed = (
+        displacement is not None
+        and displacement["displacement_direction"] == "BULLISH"
+        and displacement["displacement_status"] == "VALID"
+    )
+
+    if config.require_displacement_candle and not displacement_confirmed:
+        return invalid_fvg("missing_bullish_displacement")
+
+    volume_ratio = context.volume_ratio_at(candle_2.index)
+
+    if volume_ratio is None:
+        return invalid_fvg("missing_volume_ratio")
+
+    fvg_state, fill_ratio = classify_bullish_fvg_state(
+        zone_low,
+        zone_high,
+        context.candles_after(candle_3.index),
+        atr,
+        config
+    )
+
+    if fvg_state in ["FILLED", "BROKEN"]:
+        return invalid_fvg("fvg_already_filled_or_broken")
+
+    score = calculate_fvg_score(
+        direction="BULLISH",
+        gap_size_atr=gap_size_atr,
+        displacement_confirmed=displacement_confirmed,
+        volume_ratio=volume_ratio,
+        fvg_state=fvg_state,
+        context=context,
+        config=config
+    )
+
+    status = classify_fvg_status(
+        score=score,
+        gap_size_atr=gap_size_atr,
+        volume_ratio=volume_ratio,
+        fvg_state=fvg_state,
+        config=config
+    )
+
+    return build_fvg_output(
+        direction="BULLISH",
+        status=status,
+        fvg_state=fvg_state,
+        candle_1=candle_1,
+        candle_2=candle_2,
+        candle_3=candle_3,
+        zone_low=zone_low,
+        zone_high=zone_high,
+        gap_size=gap_size,
+        gap_size_atr=gap_size_atr,
+        fill_ratio=fill_ratio,
+        displacement_confirmed=displacement_confirmed,
+        volume_ratio=volume_ratio,
+        score=score,
+        context=context,
+        config=config
+    )
+```
+
+## Bearish FVG Evaluation
+
+```python
+def evaluate_bearish_fvg(candle_1, candle_2, candle_3, context, config):
+    if candle_1.low <= candle_3.high:
+        return None
+
+    zone_low = candle_3.high
+    zone_high = candle_1.low
+    gap_size = zone_high - zone_low
+
+    atr = context.atr_at(candle_3.index)
+
+    if atr is None:
+        return invalid_fvg("missing_atr")
+
+    gap_size_atr = gap_size / atr
+
+    if gap_size_atr < config.minimum_gap_size_atr_multiplier:
+        return invalid_fvg("gap_too_small")
+
+    displacement = context.displacement_at(candle_2.index)
+
+    displacement_confirmed = (
+        displacement is not None
+        and displacement["displacement_direction"] == "BEARISH"
+        and displacement["displacement_status"] == "VALID"
+    )
+
+    if config.require_displacement_candle and not displacement_confirmed:
+        return invalid_fvg("missing_bearish_displacement")
+
+    volume_ratio = context.volume_ratio_at(candle_2.index)
+
+    if volume_ratio is None:
+        return invalid_fvg("missing_volume_ratio")
+
+    fvg_state, fill_ratio = classify_bearish_fvg_state(
+        zone_low,
+        zone_high,
+        context.candles_after(candle_3.index),
+        atr,
+        config
+    )
+
+    if fvg_state in ["FILLED", "BROKEN"]:
+        return invalid_fvg("fvg_already_filled_or_broken")
+
+    score = calculate_fvg_score(
+        direction="BEARISH",
+        gap_size_atr=gap_size_atr,
+        displacement_confirmed=displacement_confirmed,
+        volume_ratio=volume_ratio,
+        fvg_state=fvg_state,
+        context=context,
+        config=config
+    )
+
+    status = classify_fvg_status(
+        score=score,
+        gap_size_atr=gap_size_atr,
+        volume_ratio=volume_ratio,
+        fvg_state=fvg_state,
+        config=config
+    )
+
+    return build_fvg_output(
+        direction="BEARISH",
+        status=status,
+        fvg_state=fvg_state,
+        candle_1=candle_1,
+        candle_2=candle_2,
+        candle_3=candle_3,
+        zone_low=zone_low,
+        zone_high=zone_high,
+        gap_size=gap_size,
+        gap_size_atr=gap_size_atr,
+        fill_ratio=fill_ratio,
+        displacement_confirmed=displacement_confirmed,
+        volume_ratio=volume_ratio,
+        score=score,
+        context=context,
+        config=config
+    )
+```
+
+## Java-style Domain Model Example
+
+```java
+public enum FvgDirection {
+    BULLISH,
+    BEARISH,
+    NONE
+}
+```
+
+```java
+public enum FvgState {
+    FRESH,
+    TOUCHED,
+    PARTIALLY_FILLED,
+    FILLED,
+    BROKEN,
+    INVALID
+}
+```
+
+```java
+public enum FvgStatus {
+    VALID,
+    WEAK,
+    INVALID,
+    PENDING
+}
+```
+
+```java
+public record FairValueGapSignal(
+    String symbol,
+    Instant timestamp,
+    String patternType,
+    FvgDirection direction,
+    FvgStatus patternStatus,
+    FvgState fvgState,
+    int candle1Index,
+    int candle2Index,
+    int candle3Index,
+    BigDecimal zoneLow,
+    BigDecimal zoneHigh,
+    BigDecimal zoneMid,
+    BigDecimal gapSize,
+    BigDecimal gapSizeAtr,
+    BigDecimal fillRatio,
+    boolean displacementConfirmed,
+    DisplacementDirection displacementDirection,
+    BigDecimal volumeRatio,
+    boolean liquidityPass,
+    boolean spreadPass,
+    String structureContext,
+    String supportResistanceContext,
+    BigDecimal patternScore,
+    BigDecimal entryReference,
+    BigDecimal stopReference,
+    BigDecimal targetReference,
+    BigDecimal riskReward,
+    String reason
+) {
+}
+```
+
+## Recommended Initial Configuration
+
+```yaml
+fair_value_gap:
+  minimum_gap_size_atr_multiplier: 0.1
+  maximum_gap_size_atr_multiplier: 2.0
+  require_displacement_candle: true
+  minimum_volume_ratio: 1.3
+  strong_volume_ratio: 1.5
+  break_buffer_atr_multiplier: 0.2
+  fill_threshold: 1.0
+  partial_fill_threshold: 0.01
+  require_liquidity_pass: true
+  require_spread_pass: true
+  minimum_pattern_score: 0.7
+```
+
+## Final Mechanical Rule
+
+```text
+Bullish FVG:
+1. Use three consecutive candles.
+2. Require candle_1.high < candle_3.low.
+3. zone_low = candle_1.high.
+4. zone_high = candle_3.low.
+5. Require gap_size >= 0.1 * ATR.
+6. Require candle_2 to be bullish displacement candle.
+7. Require candle_2.volume_ratio >= 1.3.
+8. Require liquidity_pass = true.
+9. Require spread_pass = true.
+
+Bearish FVG:
+1. Use three consecutive candles.
+2. Require candle_1.low > candle_3.high.
+3. zone_low = candle_3.high.
+4. zone_high = candle_1.low.
+5. Require gap_size >= 0.1 * ATR.
+6. Require candle_2 to be bearish displacement candle.
+7. Require candle_2.volume_ratio >= 1.3.
+8. Require liquidity_pass = true.
+9. Require spread_pass = true.
+```

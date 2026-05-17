@@ -6,15 +6,15 @@ Phase 36: Fair Value Gap Pattern Definition
 
 # Current Step
 
-Task 036 Fair Value Gap Pattern task document restored for review.
+Task 036 Fair Value Gap Pattern mechanical definition updated from owner-provided final document for review.
 
 # Current Goal
 
-Review the restored Task 036 Fair Value Gap Pattern task document and mechanical definition without implementing pattern code.
+Review the updated Task 036 Fair Value Gap Pattern mechanical definition without implementing pattern code.
 
 # Current Active Task
 
-Task 036 Fair Value Gap Pattern mechanical definition. Owner-provided pattern requirements are documented only; no implementation code is in scope.
+Task 036 Fair Value Gap Pattern mechanical definition. Owner-provided final pattern document is saved under `tasks/patterns/`; no implementation code is in scope.
 
 # Last Completed Step
 
@@ -26,7 +26,7 @@ Previous completed step: Task 031: Volume Ratio.
 
 # Next Step
 
-Recommended next task: owner review of the restored Task 036 Fair Value Gap Pattern task document and mechanical definition, then reconcile or create the remaining numbered pattern tasks 037-039 before any implementation. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
+Recommended next task: owner review of the updated Task 036 Fair Value Gap Pattern mechanical definition, then reconcile or create the remaining numbered pattern tasks 037-039 before any implementation. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
 
 # Parallel Work Status
 
@@ -108,7 +108,7 @@ Tasks 027-033 define multiple indicator implementation plans, but concrete indic
 - [x] Order Block Pattern mechanical definition drafted
 - [x] Owner-provided Order Block Pattern source requirement saved under `tasks/patterns/order_block_pattern.md`
 - [x] Task 036: Fair Value Gap Pattern task document created
-- [x] Fair Value Gap Pattern mechanical definition drafted
+- [x] Fair Value Gap Pattern mechanical definition updated from owner-provided final document
 - [x] Owner-provided Fair Value Gap Pattern source requirement saved under `tasks/patterns/fair_value_gap_pattern.md`
 
 # Open Questions
