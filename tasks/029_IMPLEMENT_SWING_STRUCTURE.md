@@ -10,7 +10,7 @@ This task must classify market structure only. It must not fetch market data, pl
 
 Owner listed Swing Structure as one of the remaining indicators to add on 2026-05-16.
 
-Detailed formulas, default parameters, output schema, and edge-case behavior are not yet fully specified in an owner-provided indicator document. This task should not be implemented until Pivot High / Pivot Low behavior is approved and available, or until the owner explicitly provides an alternative Swing Structure definition.
+Detailed formulas, default parameters, output schema, and edge-case behavior were provided by the owner on 2026-05-16 and saved to `tasks/indicators/swing_structure.md`. Pivot High / Pivot Low behavior is available from Task 028 output.
 
 # Clean Requirement
 
@@ -62,27 +62,30 @@ Add a pure structure module that consumes confirmed swing pivots and labels stru
 
 # Open Questions Before Implementation
 
-- Which labels are required: `HH`, `HL`, `LH`, `LL`, bullish/bearish/neutral trend, break of structure, change of character, or another set?
-- How many confirmed pivots are required before returning a valid structure state?
-- Should output align to candles, pivot events, or a single latest snapshot?
-- How should equal highs/lows be classified?
-- Should internal and external swing structure be separate concepts?
+Resolved by `tasks/indicators/swing_structure.md`:
+
+- Required labels are `HH`, `HL`, `LH`, `LL`, `EQUAL_HIGH`, `EQUAL_LOW`, `EQUAL_OR_NOISE`, and `UNKNOWN`.
+- Market statuses are `UPTREND`, `DOWNTREND`, `RANGE`, `TRANSITION`, and `UNKNOWN`.
+- Output aligns to confirmed pivot events.
+- First same-type pivots and missing prices return `UNKNOWN`.
+- Equal highs/lows return `EQUAL_OR_NOISE` by default, or `EQUAL_HIGH` / `EQUAL_LOW` when `ignore_equal_price = false`.
+- Internal and external swing structure separation is out of scope for this task.
 
 # Status Tracking
 
 ## Before Implementation
 
-- [ ] Read required project files and this task.
-- [ ] Confirm Task 028 is complete or confirm a self-contained owner-approved input contract.
-- [ ] Confirm owner-approved structure labels and transition rules.
-- [ ] Confirm implementation is limited to Swing Structure only.
+- [x] Read required project files and this task.
+- [x] Confirm Task 028 is complete or confirm a self-contained owner-approved input contract.
+- [x] Confirm owner-approved structure labels and transition rules.
+- [x] Confirm implementation is limited to Swing Structure only.
 
 ## After Implementation
 
-- [ ] Add or update deterministic tests.
-- [ ] Run required verification.
-- [ ] Complete Codex self-review.
-- [ ] Update `STATUS.md` if active task, current step, next step, or completion state changed.
+- [x] Add or update deterministic tests.
+- [x] Run required verification.
+- [x] Complete Codex self-review.
+- [x] Update `STATUS.md` if active task, current step, next step, or completion state changed.
 
 # Acceptance Criteria
 

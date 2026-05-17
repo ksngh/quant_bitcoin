@@ -2,32 +2,31 @@
 
 # Current Phase
 
-Phase 27: Pivot High / Pivot Low Implementation
+Phase 28: Swing Structure Implementation
 
 # Current Step
 
-Task 028: Pivot High / Pivot Low implemented and ready for review.
+Task 029: Swing Structure implemented and ready for review.
 
 # Current Goal
 
-Review the Pivot High / Pivot Low implementation and continue one-indicator-at-a-time work without expanding scope.
+Review the Swing Structure implementation and continue one-indicator-at-a-time work without expanding scope.
 
 # Current Active Task
 
-Task 028: Implement Pivot High / Pivot Low. Owner-provided pivot formula was saved to `tasks/indicators/pivot_high_low.md`; implementation and deterministic tests are complete pending review.
+Task 029: Implement Swing Structure. Owner-provided swing structure formula was saved to `tasks/indicators/swing_structure.md`; implementation and deterministic tests are complete pending review.
 
 # Last Completed Step
 
-Task 025: WebSocket Unbounded Ingestion Service.
+Task 028: Pivot High / Pivot Low.
 
-Implemented unbounded long-running WebSocket ingestion defaults for the CLI and Docker Compose service. `INGEST_MAX_MESSAGES` now treats unset, empty, `0`, `none`, `null`, and `unbounded` as no message limit, positive values still enable bounded smoke-test mode, and `--no-max-messages` forces unbounded mode even when the environment contains a limit. Updated tests and README documentation. Verified on 2026-05-16 with `pytest`, `git diff --check`, and `python -m compileall quant_bitcoin`. This task remained market-data-only and did not add strategy execution, paper trading, live trading, signed requests, API-key handling, Binance order endpoints, exchange account API behavior, scheduler, dashboard, FastAPI, or Streamlit.
+Implemented deterministic confirmed pivot high / pivot low event detection from already-provided candle data. Verified with deterministic tests and compile checks.
 
-
-Previous completed step: Task 024: Database Schema Command Management.
+Previous completed step: Task 025: WebSocket Unbounded Ingestion Service.
 
 # Next Step
 
-Recommended next task: owner review of Tasks 027-033, then explicitly assign one indicator implementation task. Task 027: Bid-Ask Spread is the most implementation-ready because the owner provided detailed formulas and edge cases. Tasks 028-033 still need owner confirmation for detailed formulas, parameters, output schemas, and edge-case behavior before implementation. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
+Recommended next task: owner review of Task 029, then explicitly assign the next one-indicator implementation task. Task 030: ATR is a likely next dependency for ATR-thresholded structure and other indicators. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
 
 # Parallel Work Status
 
@@ -89,10 +88,11 @@ Tasks 027-033 define multiple indicator implementation plans, but concrete indic
 - [x] Task 025: WebSocket Unbounded Ingestion Service approved for implementation by owner prompt on 2026-05-16
 - [x] Task 025: WebSocket Unbounded Ingestion Service complete and verified
 - [x] Task 025: Indicator Document Intake Process task document created
-- [ ] First owner-provided indicator document saved under `tasks/indicators/`
+- [x] First owner-provided indicator document saved under `tasks/indicators/`
 - [x] Task 027: Bid-Ask Spread implementation task document created
 - [x] Task 028: Pivot High / Pivot Low implementation task document created
 - [x] Task 029: Swing Structure implementation task document created
+- [x] Task 029: Swing Structure complete and verified
 - [x] Task 030: ATR implementation task document created
 - [x] Task 031: Volume Ratio implementation task document created
 - [x] Task 032: Support / Resistance Zone implementation task document created
@@ -107,7 +107,7 @@ Tasks 027-033 define multiple indicator implementation plans, but concrete indic
 - What kill-switch or disable mechanism is required?
 - Task 024 decided the concrete PostgreSQL command-management path: `db/init/001_schema.sql` is the source-of-truth first-start schema DDL, `db/changes/` is reserved for future existing-database state-change SQL, repository initialization executes managed command files, and runtime persistence DML remains application-owned.
 - Task 025 defines the indicator document intake process. Future owner-provided indicator documents should be saved under `tasks/indicators/<INDICATOR_KEY>.md`, and concrete indicator code must wait for an explicit indicator-specific implementation task.
-- Tasks 027-033 define planned implementation tasks for the remaining indicator/filter modules. Task 027 has detailed owner-provided Bid-Ask Spread formulas. Tasks 028-033 intentionally record open questions because the owner has provided names but not complete formulas, parameters, output schemas, or edge-case rules yet.
+- Tasks 027-033 define planned implementation tasks for the remaining indicator/filter modules. Task 028 Pivot High / Pivot Low and Task 029 Swing Structure have owner-provided formulas saved under `tasks/indicators/` and deterministic implementations pending review. Remaining unimplemented indicator tasks still require explicit assignment and owner-approved detailed formulas before coding.
 - Docker is not installed in the current cloud environment. Local PostgreSQL and WebSocket ingestor container startup are intentionally skipped here and remain optional local developer verification.
 
 # Blockers
