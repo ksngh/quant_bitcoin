@@ -2,19 +2,19 @@
 
 # Current Phase
 
-Phase 34: Trendline Break Pattern Definition
+Phase 35: Order Block Pattern Definition
 
 # Current Step
 
-Task 034 Trendline Break Pattern task document restored for review.
+Task 035 Order Block Pattern task document restored for review.
 
 # Current Goal
 
-Review the restored Task 034 Trendline Break Pattern task document and mechanical definition without implementing pattern code.
+Review the restored Task 035 Order Block Pattern task document and mechanical definition without implementing pattern code.
 
 # Current Active Task
 
-Task 034 Trendline Break Pattern mechanical definition. Owner-provided pattern requirements are documented only; no implementation code is in scope.
+Task 035 Order Block Pattern mechanical definition. Owner-provided pattern requirements are documented only; no implementation code is in scope.
 
 # Last Completed Step
 
@@ -26,7 +26,7 @@ Previous completed step: Task 031: Volume Ratio.
 
 # Next Step
 
-Recommended next task: owner review of the restored Task 034 Trendline Break Pattern task document and mechanical definition, then reconcile or create the remaining numbered pattern tasks 035-039 before any implementation. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
+Recommended next task: owner review of the restored Task 035 Order Block Pattern task document and mechanical definition, then reconcile or create the remaining numbered pattern tasks 036-039 before any implementation. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
 
 # Parallel Work Status
 
@@ -104,6 +104,7 @@ Tasks 027-033 define multiple indicator implementation plans, but concrete indic
 - [x] Task 034: Trendline Break Pattern task document created
 - [x] Trendline Break Pattern mechanical definition drafted
 - [x] Owner-provided Trendline Break Pattern source requirement saved under `tasks/patterns/trendline_break_pattern.md`
+- [x] Task 035: Order Block Pattern task document created
 - [x] Order Block Pattern mechanical definition drafted
 - [x] Owner-provided Order Block Pattern source requirement saved under `tasks/patterns/order_block_pattern.md`
 - [x] Fair Value Gap Pattern mechanical definition drafted
@@ -118,7 +119,7 @@ Tasks 027-033 define multiple indicator implementation plans, but concrete indic
 - What kill-switch or disable mechanism is required?
 - Task 024 decided the concrete PostgreSQL command-management path: `db/init/001_schema.sql` is the source-of-truth first-start schema DDL, `db/changes/` is reserved for future existing-database state-change SQL, repository initialization executes managed command files, and runtime persistence DML remains application-owned.
 - Task 025 defines the indicator document intake process. Future owner-provided indicator documents should be saved under `tasks/indicators/<INDICATOR_KEY>.md`, and concrete indicator code must wait for an explicit indicator-specific implementation task. Pattern definition documents may be saved under `tasks/patterns/` when explicitly assigned by the owner.
-- Tasks 027-033 define planned implementation tasks for the remaining indicator/filter modules. Task 028 Pivot High / Pivot Low, Task 029 Swing Structure, Task 030 ATR, Task 031 Volume Ratio, Task 032 Support / Resistance Zone, and Task 033 Displacement Candle have deterministic implementations pending review. Task 034 has been restored as the Trendline Break Pattern mechanical-definition task. The remaining numbered pattern tasks 035-039 should be reconciled or created before implementation proceeds. The Trendline Break, Order Block, and Fair Value Gap patterns are documented as mechanical definitions only; any implementation still requires explicit future implementation tasks.
+- Tasks 027-033 define planned implementation tasks for the remaining indicator/filter modules. Task 028 Pivot High / Pivot Low, Task 029 Swing Structure, Task 030 ATR, Task 031 Volume Ratio, Task 032 Support / Resistance Zone, and Task 033 Displacement Candle have deterministic implementations pending review. Task 034 has been restored as the Trendline Break Pattern mechanical-definition task, and Task 035 has been restored as the Order Block Pattern mechanical-definition task. The remaining numbered pattern tasks 036-039 should be reconciled or created before implementation proceeds. The Trendline Break, Order Block, and Fair Value Gap patterns are documented as mechanical definitions only; any implementation still requires explicit future implementation tasks.
 - Docker is not installed in the current cloud environment. Local PostgreSQL and WebSocket ingestor container startup are intentionally skipped here and remain optional local developer verification.
 
 # Blockers
