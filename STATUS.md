@@ -2,19 +2,19 @@
 
 # Current Phase
 
-Phase 39: Adam and Eve Pattern Definition
+Phase 40: Pattern Detection Engine Task Definition
 
 # Current Step
 
-Task 039 Adam and Eve Pattern mechanical definition updated from owner-provided final document for review.
+Task 040 Pattern Detection Engine implementation task document created for owner review; no application code is in scope for this create-task step.
 
 # Current Goal
 
-Review the updated Task 039 Adam and Eve Pattern mechanical definition without implementing pattern code.
+Review Task 040 Pattern Detection Engine task document before any implementation.
 
 # Current Active Task
 
-Task 039 Adam and Eve Pattern mechanical definition. Owner-provided final pattern document is saved under `tasks/patterns/`; no implementation code is in scope.
+Task 040 Pattern Detection Engine task document. This create-task step defines future implementation scope only; no application code is in scope.
 
 # Last Completed Step
 
@@ -26,7 +26,7 @@ Previous completed step: Task 032: Support / Resistance Zone.
 
 # Next Step
 
-Recommended next task: owner review of the updated Task 039 Adam and Eve Pattern mechanical definition before any implementation. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
+Recommended next task: owner review of Task 040 Pattern Detection Engine task document before any implementation. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
 
 # Parallel Work Status
 
@@ -120,6 +120,7 @@ Tasks 027-033 define multiple indicator implementation plans, but concrete indic
 - [x] Task 039: Adam and Eve Pattern task document created
 - [x] Adam and Eve Pattern mechanical definition updated from owner-provided final document
 - [x] Owner-provided Adam and Eve Pattern source requirement saved under `tasks/patterns/adam_and_eve_pattern.md`
+- [x] Task 040: Pattern Detection Engine implementation task document created
 
 # Open Questions
 
@@ -130,7 +131,7 @@ Tasks 027-033 define multiple indicator implementation plans, but concrete indic
 - What kill-switch or disable mechanism is required?
 - Task 024 decided the concrete PostgreSQL command-management path: `db/init/001_schema.sql` is the source-of-truth first-start schema DDL, `db/changes/` is reserved for future existing-database state-change SQL, repository initialization executes managed command files, and runtime persistence DML remains application-owned.
 - Task 025 defines the indicator document intake process. Future owner-provided indicator documents should be saved under `tasks/indicators/<INDICATOR_KEY>.md`, and concrete indicator code must wait for an explicit indicator-specific implementation task. Pattern definition documents may be saved under `tasks/patterns/` when explicitly assigned by the owner.
-- Tasks 027-033 define planned implementation tasks for the remaining indicator/filter modules. Task 028 Pivot High / Pivot Low, Task 029 Swing Structure, Task 030 ATR, Task 031 Volume Ratio, Task 032 Support / Resistance Zone, and Task 033 Displacement Candle have deterministic implementations pending review. Task 034 has been restored as the Trendline Break Pattern mechanical-definition task, Task 035 has been restored as the Order Block Pattern mechanical-definition task, Task 036 has been restored as the Fair Value Gap Pattern mechanical-definition task, Task 037 has been created as the Cup and Handle Pattern mechanical-definition task, Task 038 has been created as the Diamond Pattern mechanical-definition task and reviewed by the owner, and Task 039 has been created as the Adam and Eve Pattern mechanical-definition task and updated from the owner-provided final document. The Trendline Break, Order Block, Fair Value Gap, Cup and Handle, Diamond, and Adam and Eve patterns are documented as mechanical definitions only; any implementation still requires explicit future implementation tasks.
+- Tasks 027-033 define planned implementation tasks for the remaining indicator/filter modules. Task 028 Pivot High / Pivot Low, Task 029 Swing Structure, Task 030 ATR, Task 031 Volume Ratio, Task 032 Support / Resistance Zone, and Task 033 Displacement Candle have deterministic implementations pending review. Task 034 has been restored as the Trendline Break Pattern mechanical-definition task, Task 035 has been restored as the Order Block Pattern mechanical-definition task, Task 036 has been restored as the Fair Value Gap Pattern mechanical-definition task, Task 037 has been created as the Cup and Handle Pattern mechanical-definition task, Task 038 has been created as the Diamond Pattern mechanical-definition task and reviewed by the owner, and Task 039 has been created as the Adam and Eve Pattern mechanical-definition task and updated from the owner-provided final document. The Trendline Break, Order Block, Fair Value Gap, Cup and Handle, Diamond, and Adam and Eve patterns are documented as mechanical definitions. Task 040 now defines a future first implementation batch for a pattern detection engine focused on Fair Value Gap detection; implementation still requires an explicit implement-mode prompt.
 - Docker is not installed in the current cloud environment. Local PostgreSQL and WebSocket ingestor container startup are intentionally skipped here and remain optional local developer verification.
 
 # Blockers
