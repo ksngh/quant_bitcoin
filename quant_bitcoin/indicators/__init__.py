@@ -18,6 +18,17 @@ from quant_bitcoin.indicators.pivots import (
     remove_close_duplicate_pivots,
 )
 
+from quant_bitcoin.indicators.volume_ratio import (
+    REQUIRED_VOLUME_RATIO_COLUMNS,
+    VOLUME_RATIO_OUTPUT_COLUMNS,
+    VolumeAverageMethod,
+    VolumeRatioConfig,
+    VolumeStatus,
+    calculate_volume_ratio,
+    calculate_volume_ratio_snapshot,
+    classify_volume_status,
+)
+
 from quant_bitcoin.indicators.swing_structure import (
     MarketStructureStatus,
     SwingLabel,
@@ -41,6 +52,14 @@ __all__ = [
     "PivotType",
     "detect_pivots",
     "remove_close_duplicate_pivots",
+    "REQUIRED_VOLUME_RATIO_COLUMNS",
+    "VOLUME_RATIO_OUTPUT_COLUMNS",
+    "VolumeAverageMethod",
+    "VolumeRatioConfig",
+    "VolumeStatus",
+    "calculate_volume_ratio",
+    "calculate_volume_ratio_snapshot",
+    "classify_volume_status",
     "classify_swing_structure",
     "classify_market_status",
     "classify_low",
