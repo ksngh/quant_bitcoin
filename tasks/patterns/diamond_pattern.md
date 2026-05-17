@@ -4,7 +4,7 @@
 
 Define the Diamond Pattern mechanically.
 
-This module detects a volatility expansion-contraction structure built from confirmed pivots and determines direction only after a breakout or breakdown.
+This module detects a volatility expansion-contraction structure and validates directional breakout or breakdown from the contraction boundary.
 
 This document defines detection logic only.
 It does not define order execution.
@@ -13,7 +13,6 @@ It does not define order execution.
 
 ```text
 Diamond Pattern
-DIAMOND
 ```
 
 ## Pattern Categories
@@ -77,311 +76,99 @@ displacement candle snapshots
 ## Default Parameters
 
 ```yaml
-diamond_pattern:
-  minimum_pivot_count: 6
-  maximum_pivot_count: 10
-  minimum_pattern_duration: 12
-  maximum_pattern_duration: 200
-  minimum_pattern_height_atr: 1.0
-  maximum_pattern_height_atr: 8.0
-  breakout_atr_multiplier: 0.2
-  minimum_breakout_volume_ratio: 1.5
-  weak_breakout_volume_ratio: 1.3
-  require_liquidity_pass: true
-  require_spread_pass: true
-  require_displacement_breakout: false
-  minimum_pattern_score: 0.7
-  weak_pattern_score: 0.5
-  false_breakout_check_window: 3
-  default_risk_reward: 2.0
+minimum_pivot_count: 6
+maximum_pivot_count: 10
+minimum_pattern_duration: 20
+maximum_pattern_duration: 200
+minimum_expansion_range_change_atr: 1.0
+minimum_contraction_range_change_rate: 0.20
+minimum_pattern_height_atr: 1.0
+maximum_pattern_height_atr: 8.0
+maximum_boundary_touch_deviation_atr: 0.5
+breakout_atr_multiplier: 0.2
+minimum_breakout_volume_ratio: 1.5
+weak_breakout_volume_ratio: 1.3
+require_liquidity_pass: true
+require_spread_pass: true
+require_displacement_breakout: false
+minimum_pattern_score: 0.7
 ```
 
-## Core Concept
+## Core Structure
 
-A Diamond Pattern has two phases:
+A Diamond Pattern consists of two phases:
 
 ```text
-1. Expansion phase: pivot highs rise, pivot lows fall, and range expands.
-2. Contraction phase: pivot highs fall, pivot lows rise, and range contracts.
+expansion phase
+contraction phase
 ```
 
-The module must not assign bullish or bearish direction before breakout.
-
-Before breakout:
+Expansion phase:
 
 ```text
-direction = NONE
-pattern_status = PENDING
+pivot highs rise
+pivot lows fall
+local range expands
 ```
 
-After breakout or breakdown:
+Contraction phase:
 
 ```text
-BULLISH = close breaks above contracting upper boundary with ATR buffer
-BEARISH = close breaks below contracting lower boundary with ATR buffer
+pivot highs fall
+pivot lows rise
+local range contracts
 ```
 
-## Pivot Structure
+The trade direction is not determined during pattern formation.
+
+Direction is determined only after breakout or breakdown:
+
+```text
+break above contracting upper boundary = BULLISH
+break below contracting lower boundary = BEARISH
+no break = NONE
+```
+
+## Required Pivot Structure
 
 Use confirmed pivots only.
 
-Minimum pivot count:
+Minimum requirement:
+
+```text
+pivot_count >= minimum_pivot_count
+```
+
+Default:
 
 ```text
 minimum_pivot_count = 6
 ```
 
-Recommended pivot count:
+Recommended pivot sequence:
 
 ```text
-6 to 10 pivots
+P1 = pivot high or pivot low
+P2 = opposite pivot
+P3 = pivot high or pivot low
+P4 = opposite pivot
+P5 = pivot high or pivot low
+P6 = opposite pivot
 ```
 
-The pivot sequence should include at least:
+The exact first pivot type may vary.
+
+The selected pivot sequence must include:
 
 ```text
-pivot high 1
-pivot low 1
-pivot high 2
-pivot low 2
-pivot high 3
-pivot low 3
-```
-
-The exact high/low order may vary, but the accepted sequence must contain both pivot highs and pivot lows and must show early expansion followed by later contraction.
-
-If fewer than `minimum_pivot_count` confirmed pivots exist:
-
-```text
-pattern_status = INVALID
-reason = NOT_ENOUGH_PIVOTS
-```
-
-Unconfirmed pivots:
-
-```text
-ignore pivot
-```
-
-## Alternating Pivot Validation
-
-The candidate should alternate between pivot highs and pivot lows often enough to represent a boundary pattern.
-
-Recommended initial rule:
-
-```text
-alternating_transition_count >= minimum_pivot_count - 2
-```
-
-Where:
-
-```text
-alternating_transition_count = count of adjacent selected pivots where pivot_type changes
-```
-
-If alternation is weak:
-
-```text
-pattern_status = WEAK or INVALID
-```
-
-Recommended initial handling:
-
-```text
-weak alternation = INVALID
-```
-
-## Diamond Center
-
-The diamond center separates expansion and contraction phases.
-
-Possible methods:
-
-```text
-middle pivot index
-maximum range pivot pair
-largest high-low spread point
-```
-
-Recommended initial version:
-
-```text
-diamond_center = point where local pivot range is maximum
-```
-
-For each candidate center, calculate a local pivot range from the nearest confirmed pivot high and nearest confirmed pivot low around the same window:
-
-```text
-local_pivot_range = local_pivot_high.price - local_pivot_low.price
-```
-
-Select:
-
-```text
-diamond_center = pivot index or midpoint index of the maximum local_pivot_range
-```
-
-Split selected pivots into:
-
-```text
-expansion_pivots = pivots at or before diamond_center
-contraction_pivots = pivots at or after diamond_center
-```
-
-Both phases must contain at least one pivot high and one pivot low.
-
-## Expansion Phase
-
-Expansion phase must show widening volatility.
-
-Use pivot highs in the expansion phase to calculate:
-
-```text
-expansion_high_slope = slope of expansion pivot highs by index
-```
-
-Use pivot lows in the expansion phase to calculate:
-
-```text
-expansion_low_slope = slope of expansion pivot lows by index
-```
-
-Calculate expansion range change:
-
-```text
-expansion_range_start = early_expansion_high.price - early_expansion_low.price
-expansion_range_end = late_expansion_high.price - late_expansion_low.price
-expansion_range_change = expansion_range_end - expansion_range_start
-```
-
-Expected signs:
-
-```text
-expansion_high_slope > 0
-expansion_low_slope < 0
-expansion_range_change > 0
-```
-
-Equivalent pivot conditions:
-
-```text
-later pivot high > earlier pivot high
-later pivot low < earlier pivot low
-expansion_range_end > expansion_range_start
-```
-
-If expansion is not clear:
-
-```text
-pattern_status = INVALID
-reason = NO_CLEAR_EXPANSION_PHASE
-```
-
-## Contraction Phase
-
-Contraction phase must show narrowing volatility.
-
-Use pivot highs in the contraction phase to calculate:
-
-```text
-contraction_high_slope = slope of contraction pivot highs by index
-```
-
-Use pivot lows in the contraction phase to calculate:
-
-```text
-contraction_low_slope = slope of contraction pivot lows by index
-```
-
-Calculate contraction range change:
-
-```text
-contraction_range_start = early_contraction_high.price - early_contraction_low.price
-contraction_range_end = late_contraction_high.price - late_contraction_low.price
-contraction_range_change = contraction_range_end - contraction_range_start
-```
-
-Expected signs:
-
-```text
-contraction_high_slope < 0
-contraction_low_slope > 0
-contraction_range_change < 0
-```
-
-Equivalent pivot conditions:
-
-```text
-later pivot high < earlier pivot high
-later pivot low > earlier pivot low
-contraction_range_end < contraction_range_start
-```
-
-If contraction is not clear:
-
-```text
-pattern_status = INVALID
-reason = NO_CLEAR_CONTRACTION_PHASE
-```
-
-## Boundary Construction
-
-Upper boundaries are built from pivot highs.
-
-Lower boundaries are built from pivot lows.
-
-Expansion boundaries:
-
-```text
-expanding_upper_boundary = line fitted to expansion pivot highs
-expanding_lower_boundary = line fitted to expansion pivot lows
-```
-
-Contraction boundaries:
-
-```text
-contracting_upper_boundary = line fitted to contraction pivot highs
-contracting_lower_boundary = line fitted to contraction pivot lows
-```
-
-Recommended initial fitting method:
-
-```text
-Use two-point line from earliest and latest confirmed pivots in that phase.
-```
-
-Line formula:
-
-```text
-slope = (point_2.price - point_1.price) / (point_2.index - point_1.index)
-intercept = point_1.price - slope * point_1.index
-boundary_value[index] = slope * index + intercept
-```
-
-For breakout validation, use latest contraction boundaries:
-
-```text
-upper_boundary_value = contracting_upper_boundary.value_at(breakout.index)
-lower_boundary_value = contracting_lower_boundary.value_at(breakout.index)
-```
-
-Boundary sign expectations:
-
-```text
-contracting_upper_boundary.slope < 0
-contracting_lower_boundary.slope > 0
-```
-
-If a contraction boundary is flat or has the wrong sign:
-
-```text
-pattern_status = INVALID
+at least 3 pivot highs
+at least 3 pivot lows
 ```
 
 ## Pattern Duration
 
 ```text
-pattern_duration = contraction_end_index - expansion_start_index
+pattern_duration = last_pattern_pivot.index - first_pattern_pivot.index
 ```
 
 Valid duration:
@@ -393,20 +180,250 @@ minimum_pattern_duration <= pattern_duration <= maximum_pattern_duration
 Default:
 
 ```text
-minimum_pattern_duration = 12
+minimum_pattern_duration = 20
 maximum_pattern_duration = 200
+```
+
+If duration is outside valid range:
+
+```text
+pattern_status = INVALID
+```
+
+## Local Range Definition
+
+For a given segment of pivots:
+
+```text
+local_range = local_high - local_low
+```
+
+Where:
+
+```text
+local_high = highest pivot high in segment
+local_low = lowest pivot low in segment
+```
+
+## Diamond Center
+
+The diamond center is the point where the pivot-based local range is maximum.
+
+Mechanical definition:
+
+```text
+diamond_center = pivot area where local_range is maximum
+```
+
+Recommended method:
+
+```text
+1. Build rolling pivot windows.
+2. For each window, calculate local_range.
+3. Select the pivot index where local_range is maximum.
+```
+
+Alternative simple method:
+
+```text
+diamond_center = middle pivot of selected pivot sequence
+```
+
+Recommended initial version:
+
+```text
+diamond_center = maximum local range point
+```
+
+## Phase Split
+
+After determining `diamond_center`, split selected pivots into:
+
+```text
+expansion_pivots = pivots from pattern_start to diamond_center
+contraction_pivots = pivots from diamond_center to pattern_end
+```
+
+Required:
+
+```text
+expansion_pivots contains at least 2 pivot highs and 2 pivot lows
+contraction_pivots contains at least 2 pivot highs and 2 pivot lows
+```
+
+If not:
+
+```text
+pattern_status = INVALID
+```
+
+## Expansion Phase Definition
+
+Expansion phase must show widening price range.
+
+### Expansion High Condition
+
+Pivot highs should rise.
+
+```text
+latest_expansion_high.price > earliest_expansion_high.price
+```
+
+Expansion high slope:
+
+```text
+expansion_high_slope = linear_regression_slope(expansion_pivot_high_prices over pivot indices)
+```
+
+Valid:
+
+```text
+expansion_high_slope > 0
+```
+
+### Expansion Low Condition
+
+Pivot lows should fall.
+
+```text
+latest_expansion_low.price < earliest_expansion_low.price
+```
+
+Expansion low slope:
+
+```text
+expansion_low_slope = linear_regression_slope(expansion_pivot_low_prices over pivot indices)
+```
+
+Valid:
+
+```text
+expansion_low_slope < 0
+```
+
+### Expansion Range Change
+
+```text
+expansion_start_range = range near expansion start
+expansion_end_range = range near diamond center
+expansion_range_change = expansion_end_range - expansion_start_range
+```
+
+Valid:
+
+```text
+expansion_range_change > 0
+```
+
+ATR-normalized expansion:
+
+```text
+expansion_range_change_atr = expansion_range_change / ATR
+```
+
+Required:
+
+```text
+expansion_range_change_atr >= minimum_expansion_range_change_atr
+```
+
+Default:
+
+```text
+minimum_expansion_range_change_atr = 1.0
+```
+
+## Contraction Phase Definition
+
+Contraction phase must show narrowing price range.
+
+### Contraction High Condition
+
+Pivot highs should fall.
+
+```text
+latest_contraction_high.price < earliest_contraction_high.price
+```
+
+Contraction high slope:
+
+```text
+contraction_high_slope = linear_regression_slope(contraction_pivot_high_prices over pivot indices)
+```
+
+Valid:
+
+```text
+contraction_high_slope < 0
+```
+
+### Contraction Low Condition
+
+Pivot lows should rise.
+
+```text
+latest_contraction_low.price > earliest_contraction_low.price
+```
+
+Contraction low slope:
+
+```text
+contraction_low_slope = linear_regression_slope(contraction_pivot_low_prices over pivot indices)
+```
+
+Valid:
+
+```text
+contraction_low_slope > 0
+```
+
+### Contraction Range Change
+
+```text
+contraction_start_range = range near diamond center
+contraction_end_range = range near contraction end
+contraction_range_change = contraction_start_range - contraction_end_range
+```
+
+Valid:
+
+```text
+contraction_range_change > 0
+```
+
+Contraction range change rate:
+
+```text
+contraction_range_change_rate = contraction_range_change / contraction_start_range
+```
+
+Required:
+
+```text
+contraction_range_change_rate >= minimum_contraction_range_change_rate
+```
+
+Default:
+
+```text
+minimum_contraction_range_change_rate = 0.20
 ```
 
 ## Pattern Height
 
-Pattern height is measured at the widest part of the diamond.
+Pattern height is the maximum vertical range of the diamond.
 
 ```text
-pattern_height = maximum local_pivot_range
-pattern_height_atr = pattern_height / ATR[diamond_center_index]
+pattern_height = highest_pivot_high.price - lowest_pivot_low.price
 ```
 
-Valid range:
+Pattern height ATR:
+
+```text
+pattern_height_atr = pattern_height / ATR
+```
+
+Valid pattern height:
 
 ```text
 minimum_pattern_height_atr <= pattern_height_atr <= maximum_pattern_height_atr
@@ -419,24 +436,100 @@ minimum_pattern_height_atr = 1.0
 maximum_pattern_height_atr = 8.0
 ```
 
-If height is too small or too large:
+If pattern height is too small:
 
 ```text
 pattern_status = INVALID
 ```
 
-## Breakout and Breakdown Validation
+If pattern height is too large:
 
-### Bullish Breakout
+```text
+pattern_status = WEAK
+```
+
+## Boundary Construction
+
+Use contraction phase pivots for breakout boundaries.
+
+### Upper Boundary
+
+The upper boundary is built from contraction pivot highs.
+
+```text
+upper_boundary = trendline built from contraction pivot highs
+```
+
+Expected slope:
+
+```text
+upper_boundary_slope < 0
+```
+
+### Lower Boundary
+
+The lower boundary is built from contraction pivot lows.
+
+```text
+lower_boundary = trendline built from contraction pivot lows
+```
+
+Expected slope:
+
+```text
+lower_boundary_slope > 0
+```
+
+## Boundary Value
+
+At current candle index:
+
+```text
+upper_boundary_value = upper_boundary_slope * current_index + upper_boundary_intercept
+lower_boundary_value = lower_boundary_slope * current_index + lower_boundary_intercept
+```
+
+## Boundary Touch Validation
+
+Each contraction pivot should be close enough to its boundary.
+
+Deviation:
+
+```text
+deviation = abs(pivot.price - boundary_value_at_pivot_index)
+```
+
+Valid touch:
+
+```text
+deviation <= maximum_boundary_touch_deviation_atr * ATR
+```
+
+Default:
+
+```text
+maximum_boundary_touch_deviation_atr = 0.5
+```
+
+Required:
+
+```text
+upper_boundary_touch_count >= 2
+lower_boundary_touch_count >= 2
+```
+
+## Bullish Breakout Definition
+
+A bullish breakout occurs when price closes above the contracting upper boundary.
 
 ```text
 close > upper_boundary_value + breakout_atr_multiplier * ATR
 ```
 
-Direction:
+Default:
 
 ```text
-direction = BULLISH
+breakout_atr_multiplier = 0.2
 ```
 
 Breakout distance:
@@ -446,16 +539,24 @@ breakout_distance = close - upper_boundary_value
 breakout_distance_atr = breakout_distance / ATR
 ```
 
-### Bearish Breakdown
+If price is above upper boundary but does not exceed ATR buffer:
+
+```text
+pattern_status = PENDING
+```
+
+## Bearish Breakdown Definition
+
+A bearish breakdown occurs when price closes below the contracting lower boundary.
 
 ```text
 close < lower_boundary_value - breakout_atr_multiplier * ATR
 ```
 
-Direction:
+Default:
 
 ```text
-direction = BEARISH
+breakout_atr_multiplier = 0.2
 ```
 
 Breakout distance:
@@ -465,20 +566,7 @@ breakout_distance = lower_boundary_value - close
 breakout_distance_atr = breakout_distance / ATR
 ```
 
-Default:
-
-```text
-breakout_atr_multiplier = 0.2
-```
-
-If no boundary break exists:
-
-```text
-direction = NONE
-pattern_status = PENDING
-```
-
-If price crosses a boundary but does not exceed the ATR buffer:
+If price is below lower boundary but does not exceed ATR buffer:
 
 ```text
 pattern_status = PENDING
@@ -512,23 +600,49 @@ Default:
 weak_breakout_volume_ratio = 1.3
 ```
 
-If volume ratio is missing:
+If:
+
+```text
+volume_ratio < weak_breakout_volume_ratio
+```
+
+Then:
 
 ```text
 pattern_status = INVALID
 ```
 
-If volume is weak:
+## Optional Displacement Breakout
+
+If `require_displacement_breakout = true`, breakout candle must satisfy:
+
+For bullish breakout:
 
 ```text
-pattern_status = WEAK
+displacement_direction = BULLISH
+displacement_status = VALID
 ```
 
-If volume is below weak threshold:
+For bearish breakdown:
+
+```text
+displacement_direction = BEARISH
+displacement_status = VALID
+```
+
+If required and not satisfied:
 
 ```text
 pattern_status = INVALID
 ```
+
+If not required:
+
+```text
+displacement_confirmed = false
+```
+
+but the pattern can still be valid.
 
 ## Liquidity Filter
 
@@ -558,40 +672,6 @@ If not:
 pattern_status = INVALID
 ```
 
-## Optional Displacement Confirmation
-
-Recommended initial version:
-
-```text
-require_displacement_breakout = false
-```
-
-Bullish breakout displacement:
-
-```text
-displacement_direction = BULLISH
-displacement_status = VALID
-```
-
-Bearish breakdown displacement:
-
-```text
-displacement_direction = BEARISH
-displacement_status = VALID
-```
-
-If required and not satisfied:
-
-```text
-pattern_status = INVALID
-```
-
-If not required:
-
-```text
-displacement_confirmed affects displacement_score only
-```
-
 ## Pattern Status
 
 Allowed values:
@@ -603,65 +683,63 @@ INVALID
 PENDING
 ```
 
-### VALID
+## VALID
 
 ```text
 liquidity_pass = true
 spread_pass = true
 minimum pivot count satisfied
-alternating pivot structure valid
-clear expansion phase exists
-clear contraction phase exists
 pattern duration valid
+expansion phase valid
+contraction phase valid
 pattern height valid
-breakout or breakdown clears ATR buffer
+upper and lower boundaries valid
+breakout or breakdown exceeds ATR buffer
 volume_ratio >= minimum_breakout_volume_ratio
 pattern_score >= minimum_pattern_score
 ```
 
-### WEAK
+## WEAK
 
 ```text
-valid diamond structure exists
-but volume confirmation is weak
+core diamond structure exists
+but one or more non-critical conditions are weak
+```
+
+Examples:
+
+```text
+volume_ratio is between weak threshold and strong threshold
+pattern_height_atr > maximum_pattern_height_atr
+pattern_score >= 0.5 and pattern_score < minimum_pattern_score
+```
+
+## PENDING
+
+```text
+diamond structure is valid
+but no directional breakout or breakdown has occurred
 ```
 
 or:
 
 ```text
-pattern_score >= weak_pattern_score
-and
-pattern_score < minimum_pattern_score
+price crossed boundary but did not exceed ATR buffer
 ```
 
-### PENDING
-
-```text
-valid expansion-contraction structure exists
-but breakout or breakdown is missing
-```
-
-or:
-
-```text
-price crosses a boundary without ATR buffer confirmation
-```
-
-### INVALID
+## INVALID
 
 ```text
 liquidity filter fails
 spread filter fails
 not enough pivots
-unconfirmed pivots only
-no clear expansion phase
-no clear contraction phase
-expansion without contraction
-contraction without prior expansion
-flat or invalid contraction boundary
+unconfirmed pivots
 pattern duration invalid
-pattern height invalid
-volume ratio missing
+no expansion phase
+no contraction phase
+pattern height too small
+boundary construction fails
+breakout volume missing
 breakout volume too low
 ```
 
@@ -678,12 +756,11 @@ Recommended components:
 ```text
 expansion_quality_score: 0.20
 contraction_quality_score: 0.20
-boundary_quality_score: 0.15
-breakout_strength_score: 0.20
-volume_confirmation_score: 0.15
-liquidity_score: 0.05
-displacement_score: 0.03
-support_resistance_context_score: 0.02
+boundary_quality_score: 0.20
+breakout_strength_score: 0.15
+volume_confirmation_score: 0.10
+liquidity_score: 0.10
+displacement_score: 0.05
 ```
 
 Formula:
@@ -692,168 +769,243 @@ Formula:
 pattern_score =
     expansion_quality_score * 0.20
   + contraction_quality_score * 0.20
-  + boundary_quality_score * 0.15
-  + breakout_strength_score * 0.20
-  + volume_confirmation_score * 0.15
-  + liquidity_score * 0.05
-  + displacement_score * 0.03
-  + support_resistance_context_score * 0.02
+  + boundary_quality_score * 0.20
+  + breakout_strength_score * 0.15
+  + volume_confirmation_score * 0.10
+  + liquidity_score * 0.10
+  + displacement_score * 0.05
 ```
 
-## Score Components
-
-### Expansion Quality Score
+## Expansion Quality Score
 
 ```text
-if expansion_high_slope > 0 and expansion_low_slope < 0 and expansion_range_change > 0:
+if expansion_high_slope > 0
+and expansion_low_slope < 0
+and expansion_range_change_atr >= 1.5:
     expansion_quality_score = 1.0
+
+else if expansion_high_slope > 0
+and expansion_low_slope < 0
+and expansion_range_change_atr >= 1.0:
+    expansion_quality_score = 0.7
+
 else:
     expansion_quality_score = 0.0
 ```
 
-### Contraction Quality Score
+## Contraction Quality Score
 
 ```text
-if contraction_high_slope < 0 and contraction_low_slope > 0 and contraction_range_change < 0:
+if contraction_high_slope < 0
+and contraction_low_slope > 0
+and contraction_range_change_rate >= 0.35:
     contraction_quality_score = 1.0
+
+else if contraction_high_slope < 0
+and contraction_low_slope > 0
+and contraction_range_change_rate >= 0.20:
+    contraction_quality_score = 0.7
+
 else:
     contraction_quality_score = 0.0
 ```
 
-### Boundary Quality Score
+## Boundary Quality Score
 
 ```text
-if contracting_upper_boundary.slope < 0 and contracting_lower_boundary.slope > 0:
+if upper_boundary_touch_count >= 3
+and lower_boundary_touch_count >= 3:
     boundary_quality_score = 1.0
+
+else if upper_boundary_touch_count >= 2
+and lower_boundary_touch_count >= 2:
+    boundary_quality_score = 0.7
+
 else:
     boundary_quality_score = 0.0
 ```
 
-### Breakout Strength Score
+## Breakout Strength Score
 
 ```text
 if breakout_distance_atr >= 0.5:
     breakout_strength_score = 1.0
-else if breakout_distance_atr >= breakout_atr_multiplier:
+
+else if breakout_distance_atr >= 0.2:
     breakout_strength_score = 0.7
+
 else:
     breakout_strength_score = 0.0
 ```
 
-### Volume Confirmation Score
+If no breakout or breakdown has occurred:
+
+```text
+breakout_strength_score = 0.0
+```
+
+## Volume Confirmation Score
 
 ```text
 if volume_ratio >= 2.0:
     volume_confirmation_score = 1.0
-else if volume_ratio >= minimum_breakout_volume_ratio:
+
+else if volume_ratio >= 1.5:
     volume_confirmation_score = 0.8
-else if volume_ratio >= weak_breakout_volume_ratio:
+
+else if volume_ratio >= 1.3:
     volume_confirmation_score = 0.5
+
 else:
     volume_confirmation_score = 0.0
 ```
 
-### Liquidity Score
+## Liquidity Score
 
 ```text
 if liquidity_status = HIGH:
     liquidity_score = 1.0
+
 else if liquidity_status = NORMAL:
     liquidity_score = 0.8
+
 else:
     liquidity_score = 0.0
 ```
 
-### Displacement Score
+## Displacement Score
 
 ```text
-if breakout or breakdown candle displacement direction matches pattern direction:
+if displacement breakout is confirmed:
     displacement_score = 1.0
+
 else:
     displacement_score = 0.0
 ```
 
-### Support / Resistance Context Score
-
-Bullish:
-
-```text
-if breakout occurs above or near resistance zone:
-    support_resistance_context_score = 0.7
-else:
-    support_resistance_context_score = 0.5
-```
-
-Bearish:
-
-```text
-if breakdown occurs below or near support zone:
-    support_resistance_context_score = 0.7
-else:
-    support_resistance_context_score = 0.5
-```
+If `require_displacement_breakout = false`, absence of displacement does not invalidate the pattern.
 
 ## Entry Reference
 
 This module must not execute orders.
 
-Bullish:
+It only defines reference prices.
+
+### Bullish Entry Reference
+
+Recommended:
 
 ```text
-entry_reference = breakout close or next candle open
+entry_reference = breakout_close
 ```
 
-Bearish:
+Alternative:
 
 ```text
-entry_reference = breakdown close or next candle open
+entry_reference = next_candle_open
+```
+
+Retest-based alternative:
+
+```text
+entry_reference = upper_boundary retest area
+```
+
+### Bearish Entry Reference
+
+Recommended:
+
+```text
+entry_reference = breakdown_close
+```
+
+Alternative:
+
+```text
+entry_reference = next_candle_open
+```
+
+Retest-based alternative:
+
+```text
+entry_reference = lower_boundary retest area
 ```
 
 ## Stop Reference
 
-Bullish:
+### Bullish Stop Reference
+
+Recommended:
 
 ```text
-stop_reference = lower contraction boundary value or nearest swing low
+stop_reference = lower_boundary_value - breakout_atr_multiplier * ATR
 ```
 
-Bearish:
+Alternative:
 
 ```text
-stop_reference = upper contraction boundary value or nearest swing high
+stop_reference = nearest_recent_pivot_low
 ```
 
-If stop reference creates non-positive risk:
+### Bearish Stop Reference
+
+Recommended:
 
 ```text
-pattern_status = INVALID
-risk_reward = null
+stop_reference = upper_boundary_value + breakout_atr_multiplier * ATR
+```
+
+Alternative:
+
+```text
+stop_reference = nearest_recent_pivot_high
 ```
 
 ## Target Reference
 
-Bullish measured target:
+### Bullish Target Reference
+
+Classic measured target:
 
 ```text
 target_reference = breakout_price + pattern_height
 ```
 
-Bearish measured target:
+Risk-reward fallback:
 
 ```text
-target_reference = breakout_price - pattern_height
+target_reference = entry_reference + 2 * abs(entry_reference - stop_reference)
+```
+
+If nearest resistance zone exists before classic target:
+
+```text
+target_reference = nearest_resistance_zone
+```
+
+### Bearish Target Reference
+
+Classic measured target:
+
+```text
+target_reference = breakdown_price - pattern_height
 ```
 
 Risk-reward fallback:
 
 ```text
-BULLISH: target_reference = entry_reference + 2 * abs(entry_reference - stop_reference)
-BEARISH: target_reference = entry_reference - 2 * abs(entry_reference - stop_reference)
+target_reference = entry_reference - 2 * abs(stop_reference - entry_reference)
+```
+
+If nearest support zone exists before classic target:
+
+```text
+target_reference = nearest_support_zone
 ```
 
 ## Risk Reward
 
-Bullish:
+### Bullish
 
 ```text
 risk = entry_reference - stop_reference
@@ -861,7 +1013,7 @@ reward = target_reference - entry_reference
 risk_reward = reward / risk
 ```
 
-Bearish:
+### Bearish
 
 ```text
 risk = stop_reference - entry_reference
@@ -888,133 +1040,401 @@ pattern_status = INVALID
 {
   "symbol": "BTCUSDT",
   "timestamp": "2026-05-16T10:00:00Z",
-  "pattern_type": "DIAMOND",
+  "pattern_type": "DIAMOND_PATTERN",
   "direction": "BULLISH",
   "pattern_status": "VALID",
   "expansion_start_index": 100,
-  "diamond_center_index": 132,
-  "contraction_end_index": 164,
-  "upper_boundary_slope": -18.5,
-  "lower_boundary_slope": 16.2,
-  "upper_boundary_value": 65200.0,
-  "lower_boundary_value": 62600.0,
-  "expansion_range_change": 4200.0,
-  "contraction_range_change": -3100.0,
-  "pattern_height": 5400.0,
-  "pattern_height_atr": 4.5,
-  "breakout_index": 170,
-  "breakout_price": 65600.0,
-  "breakout_distance": 400.0,
-  "breakout_distance_atr": 0.33,
+  "diamond_center_index": 140,
+  "contraction_end_index": 175,
+  "upper_boundary_slope": -22.4,
+  "lower_boundary_slope": 18.7,
+  "upper_boundary_value": 64600.0,
+  "lower_boundary_value": 63100.0,
+  "expansion_high_slope": 31.5,
+  "expansion_low_slope": -28.2,
+  "contraction_high_slope": -22.4,
+  "contraction_low_slope": 18.7,
+  "expansion_range_change": 2400.0,
+  "expansion_range_change_atr": 3.0,
+  "contraction_range_change": 1800.0,
+  "contraction_range_change_rate": 0.42,
+  "pattern_height": 5200.0,
+  "pattern_height_atr": 6.5,
+  "breakout_index": 180,
+  "breakout_price": 64900.0,
+  "breakout_distance": 300.0,
+  "breakout_distance_atr": 0.375,
   "volume_ratio": 1.8,
   "liquidity_pass": true,
   "spread_pass": true,
   "displacement_confirmed": false,
   "pattern_score": 0.81,
-  "entry_reference": 65600.0,
-  "stop_reference": 62600.0,
-  "target_reference": 71000.0,
-  "risk_reward": 1.8,
-  "reason": "Bullish Diamond breakout detected after valid expansion-contraction structure with ATR buffer and volume confirmation."
+  "entry_reference": 64900.0,
+  "stop_reference": 62940.0,
+  "target_reference": 70100.0,
+  "risk_reward": 2.65,
+  "reason": "Bullish Diamond Pattern detected after valid expansion-contraction structure and breakout above upper boundary."
 }
 ```
 
 ## Output Fields
 
-- `pattern_type`: fixed value `DIAMOND`.
-- `direction`: `BULLISH`, `BEARISH`, or `NONE`.
-- `pattern_status`: `VALID`, `WEAK`, `INVALID`, or `PENDING`.
-- `expansion_start_index`: first selected pivot/candle index of the expansion phase.
-- `diamond_center_index`: index where local pivot range is maximum.
-- `contraction_end_index`: final selected pivot/candle index of the contraction phase.
-- `upper_boundary_slope`: slope of latest contraction upper boundary.
-- `lower_boundary_slope`: slope of latest contraction lower boundary.
-- `upper_boundary_value`: upper boundary value at breakout index.
-- `lower_boundary_value`: lower boundary value at breakout index.
-- `expansion_range_change`: expansion range end minus expansion range start.
-- `contraction_range_change`: contraction range end minus contraction range start.
-- `pattern_height`: maximum local pivot range.
-- `pattern_height_atr`: pattern height normalized by ATR.
-- `breakout_index`: breakout or breakdown candle index.
-- `breakout_price`: close price of breakout or breakdown candle.
-- `breakout_distance`: absolute distance from broken boundary.
-- `breakout_distance_atr`: breakout distance normalized by ATR.
-- `volume_ratio`: volume ratio at breakout or breakdown candle.
-- `liquidity_pass`: result from Liquidity module.
-- `spread_pass`: result from Bid-Ask Spread module.
-- `displacement_confirmed`: true when optional displacement confirmation matches direction.
-- `pattern_score`: final score between `0.0` and `1.0`.
-- `entry_reference`: reference price for possible entry.
-- `stop_reference`: reference price for invalidation.
-- `target_reference`: reference price for possible target.
-- `risk_reward`: reward-to-risk ratio.
-- `reason`: short explanation for detection result.
+### pattern_type
+
+Fixed value:
+
+```text
+DIAMOND_PATTERN
+```
+
+### direction
+
+One of:
+
+```text
+BULLISH
+BEARISH
+NONE
+```
+
+### pattern_status
+
+One of:
+
+```text
+VALID
+WEAK
+INVALID
+PENDING
+```
+
+### expansion_start_index
+
+Index where the expansion phase begins.
+
+### diamond_center_index
+
+Index around the maximum local range.
+
+### contraction_end_index
+
+Index where the contraction phase ends.
+
+### upper_boundary_slope
+
+Slope of the contraction upper boundary.
+
+### lower_boundary_slope
+
+Slope of the contraction lower boundary.
+
+### upper_boundary_value
+
+Upper boundary value at the breakout evaluation candle.
+
+### lower_boundary_value
+
+Lower boundary value at the breakout evaluation candle.
+
+### expansion_high_slope
+
+Slope of pivot highs during expansion phase.
+
+### expansion_low_slope
+
+Slope of pivot lows during expansion phase.
+
+### contraction_high_slope
+
+Slope of pivot highs during contraction phase.
+
+### contraction_low_slope
+
+Slope of pivot lows during contraction phase.
+
+### expansion_range_change
+
+Increase in local range during expansion phase.
+
+### expansion_range_change_atr
+
+Expansion range change normalized by ATR.
+
+### contraction_range_change
+
+Decrease in local range during contraction phase.
+
+### contraction_range_change_rate
+
+Contraction range decrease divided by contraction start range.
+
+### pattern_height
+
+Maximum vertical height of the diamond.
+
+### pattern_height_atr
+
+Pattern height normalized by ATR.
+
+### breakout_index
+
+Index of breakout or breakdown candle.
+
+### breakout_price
+
+Close price of breakout or breakdown candle.
+
+### breakout_distance
+
+Distance between close and broken boundary.
+
+### breakout_distance_atr
+
+Breakout distance normalized by ATR.
+
+### volume_ratio
+
+Volume ratio of breakout or breakdown candle.
+
+### liquidity_pass
+
+Result from Liquidity module.
+
+### spread_pass
+
+Result from Bid-Ask Spread module.
+
+### displacement_confirmed
+
+Boolean value.
+
+```text
+true = breakout candle is valid displacement candle in breakout direction
+false = breakout candle is not displacement candle
+```
+
+### pattern_score
+
+Final score between `0.0` and `1.0`.
+
+### entry_reference
+
+Reference price for possible entry.
+
+### stop_reference
+
+Reference price for invalidation.
+
+### target_reference
+
+Reference price for possible target.
+
+### risk_reward
+
+Reward-to-risk ratio.
+
+### reason
+
+Short explanation for detection result.
 
 ## Edge Cases
 
-### Not Enough Pivots
+### Not enough pivots
 
-If fewer than `minimum_pivot_count` confirmed pivots exist:
+If:
+
+```text
+pivot_count < minimum_pivot_count
+```
+
+Then:
 
 ```text
 pattern_status = INVALID
 ```
 
-### Unconfirmed Pivots
+### Unconfirmed pivots
 
-Unconfirmed pivots are ignored.
+If pivots are not confirmed:
 
-### No Clear Expansion Phase
+```text
+ignore pivots
+```
 
-If expansion slopes or range change do not satisfy expected signs:
+### No expansion phase
+
+If expansion high slope and expansion low slope do not diverge:
 
 ```text
 pattern_status = INVALID
 ```
 
-### No Clear Contraction Phase
+Required:
 
-If contraction slopes or range change do not satisfy expected signs:
+```text
+expansion_high_slope > 0
+expansion_low_slope < 0
+```
+
+### No contraction phase
+
+If contraction high slope and contraction low slope do not converge:
 
 ```text
 pattern_status = INVALID
 ```
 
-### Expansion Without Contraction
+Required:
 
-If expansion exists but no valid contraction phase follows:
+```text
+contraction_high_slope < 0
+contraction_low_slope > 0
+```
+
+### Expansion without contraction
+
+If expansion is valid but contraction is not valid:
 
 ```text
 pattern_status = INVALID
 ```
 
-### Contraction Without Prior Expansion
+### Contraction without prior expansion
 
-If contraction exists but no valid earlier expansion phase exists:
-
-```text
-pattern_status = INVALID
-```
-
-### Flat Upper Boundary
-
-If contraction upper boundary is flat or not downward sloping:
+If contraction is valid but prior expansion is missing:
 
 ```text
 pattern_status = INVALID
 ```
 
-### Flat Lower Boundary
+### Pattern duration too short
 
-If contraction lower boundary is flat or not upward sloping:
+If:
+
+```text
+pattern_duration < minimum_pattern_duration
+```
+
+Then:
 
 ```text
 pattern_status = INVALID
 ```
 
-### Overlapping Diamond Candidates
+### Pattern duration too long
 
-If multiple valid candidates overlap:
+If:
+
+```text
+pattern_duration > maximum_pattern_duration
+```
+
+Then:
+
+```text
+pattern_status = INVALID
+```
+
+### Pattern height too small
+
+If:
+
+```text
+pattern_height_atr < minimum_pattern_height_atr
+```
+
+Then:
+
+```text
+pattern_status = INVALID
+```
+
+### Pattern height too large
+
+If:
+
+```text
+pattern_height_atr > maximum_pattern_height_atr
+```
+
+Then:
+
+```text
+pattern_status = WEAK
+```
+
+### Boundary construction fails
+
+If upper or lower boundary cannot be built:
+
+```text
+pattern_status = INVALID
+```
+
+### Breakout missing
+
+If no breakout or breakdown occurs:
+
+```text
+pattern_status = PENDING
+direction = NONE
+```
+
+### Breakout without ATR buffer
+
+If price crosses boundary but does not exceed ATR buffer:
+
+```text
+pattern_status = PENDING
+```
+
+### Breakout volume weak
+
+If:
+
+```text
+weak_breakout_volume_ratio <= volume_ratio < minimum_breakout_volume_ratio
+```
+
+Then:
+
+```text
+pattern_status = WEAK
+```
+
+### Breakout volume too low
+
+If:
+
+```text
+volume_ratio < weak_breakout_volume_ratio
+```
+
+Then:
+
+```text
+pattern_status = INVALID
+```
+
+### Low liquidity
+
+If liquidity fails:
+
+```text
+pattern_status = INVALID
+```
+
+### Wide spread
+
+If spread fails:
+
+```text
+pattern_status = INVALID
+```
+
+### Multiple diamond candidates
+
+If multiple candidates exist:
 
 ```text
 select highest pattern_score
@@ -1023,100 +1443,43 @@ select highest pattern_score
 Tie-breakers:
 
 ```text
-1. stronger breakout volume_ratio
-2. larger breakout_distance_atr
-3. better expansion and contraction quality
-4. cleaner boundary slopes
+1. better contraction quality
+2. higher breakout volume_ratio
+3. larger breakout_distance_atr
+4. more balanced boundary touches
 5. more recent breakout
 ```
 
-### Pattern Duration Too Short Or Too Long
+### False breakout
 
-If pattern duration is outside configured limits:
+Optional post-break check:
 
-```text
-pattern_status = INVALID
+```yaml
+false_break_check_window: 3
 ```
 
-### Pattern Height Too Small Or Too Large
-
-If pattern height normalized by ATR is outside configured limits:
+Bullish false breakout candidate:
 
 ```text
-pattern_status = INVALID
+price closes back below upper_boundary within false_break_check_window
 ```
 
-### Breakout Missing
-
-If a valid diamond structure exists but neither boundary is broken:
+Bearish false breakout candidate:
 
 ```text
-pattern_status = PENDING
+price closes back above lower_boundary within false_break_check_window
 ```
 
-### Breakout Without ATR Buffer
-
-If price crosses a boundary but does not exceed ATR buffer:
-
-```text
-pattern_status = PENDING
-```
-
-### Breakout Without Volume Confirmation
-
-If volume is weak:
+If detected:
 
 ```text
 pattern_status = WEAK
 ```
 
-If volume is below weak threshold:
+or:
 
 ```text
-pattern_status = INVALID
-```
-
-### Low Liquidity
-
-If liquidity fails:
-
-```text
-pattern_status = INVALID
-```
-
-### Wide Spread
-
-If spread fails:
-
-```text
-pattern_status = INVALID
-```
-
-### False Breakout
-
-If price breaks a boundary and then closes back inside the contraction boundaries within `false_breakout_check_window` candles:
-
-```text
-mark as FALSE_BREAKOUT_CANDIDATE
-```
-
-### Conflicting Swing Structure
-
-If Swing Structure conflicts with breakout direction:
-
-```text
-reduce score
-```
-
-Do not invalidate by default.
-
-### Diamond Inside Major Support Or Resistance Zone
-
-If the diamond forms inside a major support or resistance zone:
-
-```text
-record support_resistance_context
-adjust support_resistance_context_score
+false_break_candidate = true
 ```
 
 ## Detection Logic
@@ -1124,23 +1487,25 @@ adjust support_resistance_context_score
 ```text
 1. Check liquidity_pass.
 2. Check spread_pass.
-3. Load confirmed pivot highs and confirmed pivot lows.
-4. Build candidate pivot sequences with 6 to 10 pivots.
-5. Validate alternating pivot structure.
-6. Find diamond_center where local pivot range is maximum.
+3. Load confirmed pivot highs and pivot lows.
+4. Build alternating pivot sequence candidates.
+5. Require minimum pivot count.
+6. Find diamond center by maximum local range.
 7. Split pivots into expansion and contraction phases.
-8. Validate expansion phase slopes and range change.
-9. Validate contraction phase slopes and range change.
-10. Build contraction upper and lower boundaries.
-11. Validate boundary slopes.
-12. Validate pattern duration and pattern height.
-13. Evaluate bullish breakout above upper boundary with ATR buffer.
-14. Evaluate bearish breakdown below lower boundary with ATR buffer.
-15. Apply volume confirmation.
-16. Optionally apply displacement confirmation.
-17. Calculate score.
-18. Define entry, stop, target, and risk/reward references.
-19. Return best VALID, WEAK, PENDING, or INVALID result.
+8. Validate expansion phase.
+9. Validate contraction phase.
+10. Calculate pattern height.
+11. Validate pattern duration.
+12. Build contraction upper boundary from pivot highs.
+13. Build contraction lower boundary from pivot lows.
+14. Check bullish breakout above upper boundary.
+15. Check bearish breakdown below lower boundary.
+16. Apply ATR breakout buffer.
+17. Apply volume confirmation.
+18. Optionally check displacement breakout.
+19. Calculate pattern score.
+20. Set pattern status.
+21. Return best valid, weak, or pending signal.
 ```
 
 ## Pseudocode
@@ -1153,73 +1518,341 @@ def detect_diamond_pattern(context, config):
     if config.require_spread_pass and not context.spread.spread_pass:
         return invalid_result("spread_failed")
 
-    pivots = merge_and_sort_confirmed_pivots(
+    pivots = merge_and_sort_pivots(
         context.confirmed_pivot_highs,
-        context.confirmed_pivot_lows,
+        context.confirmed_pivot_lows
     )
 
-    if len(pivots) < config.minimum_pivot_count:
+    candidates = build_diamond_candidates(
+        pivots,
+        config
+    )
+
+    evaluated_candidates = []
+
+    for candidate in candidates:
+        evaluated = evaluate_diamond_candidate(
+            candidate,
+            context,
+            config
+        )
+
+        if evaluated["pattern_status"] in ["VALID", "WEAK", "PENDING"]:
+            evaluated_candidates.append(evaluated)
+
+    if not evaluated_candidates:
+        return invalid_result("no_valid_diamond_pattern")
+
+    return select_best_candidate(evaluated_candidates)
+```
+
+## Candidate Evaluation
+
+```python
+def evaluate_diamond_candidate(candidate, context, config):
+    if len(candidate.pivots) < config.minimum_pivot_count:
         return invalid_result("not_enough_pivots")
 
-    candidates = []
+    duration = candidate.pivots[-1].index - candidate.pivots[0].index
 
-    for pivot_window in rolling_pivot_windows(
-        pivots,
-        min_size=config.minimum_pivot_count,
-        max_size=config.maximum_pivot_count,
-    ):
-        if not has_valid_alternation(pivot_window, config):
-            continue
+    if duration < config.minimum_pattern_duration:
+        return invalid_result("pattern_duration_too_short")
 
-        center = find_max_local_pivot_range_center(pivot_window)
-        expansion, contraction = split_by_center(pivot_window, center)
+    if duration > config.maximum_pattern_duration:
+        return invalid_result("pattern_duration_too_long")
 
-        if not validate_expansion(expansion):
-            continue
+    center = find_diamond_center(candidate.pivots)
 
-        if not validate_contraction(contraction):
-            continue
+    expansion_pivots = get_pivots_before_or_at(candidate.pivots, center)
+    contraction_pivots = get_pivots_after_or_at(candidate.pivots, center)
 
-        boundaries = build_contraction_boundaries(contraction)
+    expansion = evaluate_expansion_phase(
+        expansion_pivots,
+        context,
+        config
+    )
 
-        if not validate_boundaries(boundaries):
-            continue
+    if not expansion["valid"]:
+        return invalid_result("invalid_expansion_phase")
 
-        breakout_result = evaluate_breakout_or_breakdown(
-            boundaries,
-            context,
-            config,
-        )
+    contraction = evaluate_contraction_phase(
+        contraction_pivots,
+        context,
+        config
+    )
 
-        candidate = build_diamond_output(
-            pivot_window=pivot_window,
-            center=center,
-            boundaries=boundaries,
-            breakout_result=breakout_result,
-            context=context,
-            config=config,
-        )
+    if not contraction["valid"]:
+        return invalid_result("invalid_contraction_phase")
 
-        candidates.append(candidate)
+    boundaries = build_contraction_boundaries(
+        contraction_pivots,
+        context,
+        config
+    )
 
-    return select_best_candidate(candidates)
+    if not boundaries["valid"]:
+        return invalid_result("boundary_construction_failed")
+
+    breakout = evaluate_diamond_breakout(
+        boundaries,
+        context,
+        config
+    )
+
+    score = calculate_diamond_score(
+        expansion=expansion,
+        contraction=contraction,
+        boundaries=boundaries,
+        breakout=breakout,
+        context=context,
+        config=config
+    )
+
+    status = classify_diamond_status(
+        expansion=expansion,
+        contraction=contraction,
+        boundaries=boundaries,
+        breakout=breakout,
+        score=score,
+        config=config
+    )
+
+    return build_diamond_output(
+        candidate=candidate,
+        center=center,
+        expansion=expansion,
+        contraction=contraction,
+        boundaries=boundaries,
+        breakout=breakout,
+        score=score,
+        status=status,
+        context=context,
+        config=config
+    )
+```
+
+## Expansion Phase Evaluation
+
+```python
+def evaluate_expansion_phase(expansion_pivots, context, config):
+    highs = [p for p in expansion_pivots if p.type == "PIVOT_HIGH"]
+    lows = [p for p in expansion_pivots if p.type == "PIVOT_LOW"]
+
+    if len(highs) < 2 or len(lows) < 2:
+        return {"valid": False}
+
+    expansion_high_slope = linear_regression_slope(highs)
+    expansion_low_slope = linear_regression_slope(lows)
+
+    expansion_start_range = calculate_start_range(expansion_pivots)
+    expansion_end_range = calculate_end_range(expansion_pivots)
+
+    expansion_range_change = expansion_end_range - expansion_start_range
+    expansion_range_change_atr = expansion_range_change / context.current_atr
+
+    valid = (
+        expansion_high_slope > 0
+        and expansion_low_slope < 0
+        and expansion_range_change_atr >= config.minimum_expansion_range_change_atr
+    )
+
+    return {
+        "valid": valid,
+        "expansion_high_slope": expansion_high_slope,
+        "expansion_low_slope": expansion_low_slope,
+        "expansion_range_change": expansion_range_change,
+        "expansion_range_change_atr": expansion_range_change_atr
+    }
+```
+
+## Contraction Phase Evaluation
+
+```python
+def evaluate_contraction_phase(contraction_pivots, context, config):
+    highs = [p for p in contraction_pivots if p.type == "PIVOT_HIGH"]
+    lows = [p for p in contraction_pivots if p.type == "PIVOT_LOW"]
+
+    if len(highs) < 2 or len(lows) < 2:
+        return {"valid": False}
+
+    contraction_high_slope = linear_regression_slope(highs)
+    contraction_low_slope = linear_regression_slope(lows)
+
+    contraction_start_range = calculate_start_range(contraction_pivots)
+    contraction_end_range = calculate_end_range(contraction_pivots)
+
+    contraction_range_change = contraction_start_range - contraction_end_range
+    contraction_range_change_rate = contraction_range_change / contraction_start_range
+
+    valid = (
+        contraction_high_slope < 0
+        and contraction_low_slope > 0
+        and contraction_range_change_rate >= config.minimum_contraction_range_change_rate
+    )
+
+    return {
+        "valid": valid,
+        "contraction_high_slope": contraction_high_slope,
+        "contraction_low_slope": contraction_low_slope,
+        "contraction_range_change": contraction_range_change,
+        "contraction_range_change_rate": contraction_range_change_rate
+    }
+```
+
+## Breakout Evaluation
+
+```python
+def evaluate_diamond_breakout(boundaries, context, config):
+    current = context.current_candle
+    atr = context.current_atr
+    volume_ratio = context.current_volume_ratio
+
+    upper_value = boundaries["upper_boundary"].value_at(current.index)
+    lower_value = boundaries["lower_boundary"].value_at(current.index)
+
+    bullish_break_distance = current.close - upper_value
+    bearish_break_distance = lower_value - current.close
+
+    if bullish_break_distance > config.breakout_atr_multiplier * atr:
+        direction = "BULLISH"
+        breakout_distance = bullish_break_distance
+        breakout_distance_atr = breakout_distance / atr
+
+    elif bearish_break_distance > config.breakout_atr_multiplier * atr:
+        direction = "BEARISH"
+        breakout_distance = bearish_break_distance
+        breakout_distance_atr = breakout_distance / atr
+
+    else:
+        return {
+            "direction": "NONE",
+            "status": "PENDING",
+            "upper_boundary_value": upper_value,
+            "lower_boundary_value": lower_value
+        }
+
+    if volume_ratio < config.weak_breakout_volume_ratio:
+        status = "INVALID"
+
+    elif volume_ratio < config.minimum_breakout_volume_ratio:
+        status = "WEAK"
+
+    else:
+        status = "VALID"
+
+    return {
+        "direction": direction,
+        "status": status,
+        "breakout_index": current.index,
+        "breakout_price": current.close,
+        "breakout_distance": breakout_distance,
+        "breakout_distance_atr": breakout_distance_atr,
+        "upper_boundary_value": upper_value,
+        "lower_boundary_value": lower_value,
+        "volume_ratio": volume_ratio
+    }
+```
+
+## Java-style Domain Model Example
+
+```java
+public enum DiamondDirection {
+    BULLISH,
+    BEARISH,
+    NONE
+}
+```
+
+```java
+public enum DiamondPatternStatus {
+    VALID,
+    WEAK,
+    INVALID,
+    PENDING
+}
+```
+
+```java
+public record DiamondPatternSignal(
+    String symbol,
+    Instant timestamp,
+    String patternType,
+    DiamondDirection direction,
+    DiamondPatternStatus patternStatus,
+    int expansionStartIndex,
+    int diamondCenterIndex,
+    int contractionEndIndex,
+    BigDecimal upperBoundarySlope,
+    BigDecimal lowerBoundarySlope,
+    BigDecimal upperBoundaryValue,
+    BigDecimal lowerBoundaryValue,
+    BigDecimal expansionHighSlope,
+    BigDecimal expansionLowSlope,
+    BigDecimal contractionHighSlope,
+    BigDecimal contractionLowSlope,
+    BigDecimal expansionRangeChange,
+    BigDecimal expansionRangeChangeAtr,
+    BigDecimal contractionRangeChange,
+    BigDecimal contractionRangeChangeRate,
+    BigDecimal patternHeight,
+    BigDecimal patternHeightAtr,
+    int breakoutIndex,
+    BigDecimal breakoutPrice,
+    BigDecimal breakoutDistance,
+    BigDecimal breakoutDistanceAtr,
+    BigDecimal volumeRatio,
+    boolean liquidityPass,
+    boolean spreadPass,
+    boolean displacementConfirmed,
+    BigDecimal patternScore,
+    BigDecimal entryReference,
+    BigDecimal stopReference,
+    BigDecimal targetReference,
+    BigDecimal riskReward,
+    String reason
+) {
+}
+```
+
+## Recommended Initial Configuration
+
+```yaml
+diamond_pattern:
+  minimum_pivot_count: 6
+  maximum_pivot_count: 10
+  minimum_pattern_duration: 20
+  maximum_pattern_duration: 200
+  minimum_expansion_range_change_atr: 1.0
+  minimum_contraction_range_change_rate: 0.20
+  minimum_pattern_height_atr: 1.0
+  maximum_pattern_height_atr: 8.0
+  maximum_boundary_touch_deviation_atr: 0.5
+  breakout_atr_multiplier: 0.2
+  minimum_breakout_volume_ratio: 1.5
+  weak_breakout_volume_ratio: 1.3
+  require_liquidity_pass: true
+  require_spread_pass: true
+  require_displacement_breakout: false
+  minimum_pattern_score: 0.7
 ```
 
 ## Final Mechanical Rule
 
 ```text
 Diamond Pattern:
-1. Use confirmed pivots only.
+1. Use confirmed pivot highs and pivot lows.
 2. Require at least 6 pivots.
-3. Require early expansion: pivot highs rise, pivot lows fall, and range expands.
-4. Require later contraction: pivot highs fall, pivot lows rise, and range contracts.
-5. Set diamond_center to the maximum local pivot range point.
-6. Build contraction upper boundary from contraction pivot highs.
-7. Build contraction lower boundary from contraction pivot lows.
-8. For bullish breakout, require close > upper_boundary_value + 0.2 * ATR.
-9. For bearish breakdown, require close < lower_boundary_value - 0.2 * ATR.
-10. Require breakout or breakdown volume_ratio >= 1.5 for VALID, or >= 1.3 for WEAK.
-11. Require liquidity_pass = true.
-12. Require spread_pass = true.
-13. Define entry, stop, and target references only; do not execute orders.
+3. Find diamond center where local pivot range is maximum.
+4. Split pivots into expansion phase and contraction phase.
+5. Expansion phase requires rising pivot highs and falling pivot lows.
+6. Contraction phase requires falling pivot highs and rising pivot lows.
+7. Require expansion_range_change_atr >= 1.0.
+8. Require contraction_range_change_rate >= 0.20.
+9. Build upper boundary from contraction pivot highs.
+10. Build lower boundary from contraction pivot lows.
+11. Bullish breakout requires close > upper_boundary_value + 0.2 * ATR.
+12. Bearish breakdown requires close < lower_boundary_value - 0.2 * ATR.
+13. Require breakout volume_ratio >= 1.5.
+14. Require liquidity_pass = true.
+15. Require spread_pass = true.
 ```

@@ -6,15 +6,15 @@ Phase 38: Diamond Pattern Definition
 
 # Current Step
 
-Task 038 Diamond Pattern task document and mechanical definition drafted for review.
+Task 038 Diamond Pattern mechanical definition updated from owner-provided final document for review.
 
 # Current Goal
 
-Review the Task 038 Diamond Pattern mechanical definition without implementing pattern code.
+Review the updated Task 038 Diamond Pattern mechanical definition without implementing pattern code.
 
 # Current Active Task
 
-Task 038 Diamond Pattern mechanical definition. Owner-provided pattern requirements are documented only; no implementation code is in scope.
+Task 038 Diamond Pattern mechanical definition. Owner-provided final pattern document is saved under `tasks/patterns/`; no implementation code is in scope.
 
 # Last Completed Step
 
@@ -26,7 +26,7 @@ Previous completed step: Task 031: Volume Ratio.
 
 # Next Step
 
-Recommended next task: owner review of the Task 038 Diamond Pattern mechanical definition, then reconcile or create the remaining numbered pattern task 039 before any implementation. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
+Recommended next task: owner review of the updated Task 038 Diamond Pattern mechanical definition, then reconcile or create the remaining numbered pattern task 039 before any implementation. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
 
 # Parallel Work Status
 
@@ -114,7 +114,7 @@ Tasks 027-033 define multiple indicator implementation plans, but concrete indic
 - [x] Cup and Handle Pattern mechanical definition updated from owner-provided final document
 - [x] Owner-provided Cup and Handle Pattern source requirement saved under `tasks/patterns/cup_and_handle_pattern.md`
 - [x] Task 038: Diamond Pattern task document created
-- [x] Diamond Pattern mechanical definition drafted
+- [x] Diamond Pattern mechanical definition updated from owner-provided final document
 - [x] Owner-provided Diamond Pattern source requirement saved under `tasks/patterns/diamond_pattern.md`
 
 # Open Questions
