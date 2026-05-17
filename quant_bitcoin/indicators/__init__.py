@@ -11,6 +11,18 @@ from quant_bitcoin.indicators.atr import (
     classify_volatility,
 )
 
+from quant_bitcoin.indicators.displacement_candle import (
+    DISPLACEMENT_CANDLE_OUTPUT_COLUMNS,
+    REQUIRED_DISPLACEMENT_CANDLE_COLUMNS,
+    DisplacementCandleConfig,
+    DisplacementDirection,
+    DisplacementStatus,
+    calculate_displacement_candle_snapshot,
+    detect_displacement_candle,
+    detect_displacement_candles,
+    invalid_displacement_result,
+)
+
 from quant_bitcoin.indicators.pivots import (
     PivotConfig,
     PivotType,
@@ -60,6 +72,15 @@ __all__ = [
     "calculate_atr_snapshot",
     "calculate_true_range",
     "classify_volatility",
+    "DISPLACEMENT_CANDLE_OUTPUT_COLUMNS",
+    "REQUIRED_DISPLACEMENT_CANDLE_COLUMNS",
+    "DisplacementCandleConfig",
+    "DisplacementDirection",
+    "DisplacementStatus",
+    "calculate_displacement_candle_snapshot",
+    "detect_displacement_candle",
+    "detect_displacement_candles",
+    "invalid_displacement_result",
     "PivotConfig",
     "PivotType",
     "detect_pivots",
