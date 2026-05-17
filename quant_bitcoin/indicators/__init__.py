@@ -29,6 +29,18 @@ from quant_bitcoin.indicators.volume_ratio import (
     classify_volume_status,
 )
 
+from quant_bitcoin.indicators.support_resistance_zone import (
+    REQUIRED_SUPPORT_RESISTANCE_PIVOT_COLUMNS,
+    SUPPORT_RESISTANCE_ZONE_OUTPUT_COLUMNS,
+    SupportResistanceZoneConfig,
+    ZoneStatus,
+    ZoneType,
+    detect_support_resistance_zones,
+    merge_overlapping_zones,
+    merge_support_resistance_overlaps,
+    update_zone_status,
+)
+
 from quant_bitcoin.indicators.swing_structure import (
     MarketStructureStatus,
     SwingLabel,
@@ -60,6 +72,15 @@ __all__ = [
     "calculate_volume_ratio",
     "calculate_volume_ratio_snapshot",
     "classify_volume_status",
+    "REQUIRED_SUPPORT_RESISTANCE_PIVOT_COLUMNS",
+    "SUPPORT_RESISTANCE_ZONE_OUTPUT_COLUMNS",
+    "SupportResistanceZoneConfig",
+    "ZoneStatus",
+    "ZoneType",
+    "detect_support_resistance_zones",
+    "merge_overlapping_zones",
+    "merge_support_resistance_overlaps",
+    "update_zone_status",
     "classify_swing_structure",
     "classify_market_status",
     "classify_low",

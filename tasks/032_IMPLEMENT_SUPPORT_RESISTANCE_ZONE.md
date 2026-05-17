@@ -10,7 +10,7 @@ This task must identify price zones only. It must not fetch market data, place o
 
 Owner listed Support / Resistance Zone as one of the remaining indicators to add on 2026-05-16.
 
-Detailed formulas, default parameters, output schema, and edge-case behavior are not yet fully specified in an owner-provided indicator document. This task should not be implemented until Pivot High / Pivot Low behavior is approved and available, or until the owner explicitly provides an alternative zone definition.
+The owner provided detailed formulas, default parameters, output schema, and edge-case behavior on 2026-05-17. The saved indicator source document is `tasks/indicators/support_resistance_zone.md`.
 
 # Clean Requirement
 
@@ -75,17 +75,17 @@ Add a pure zone-detection module that groups owner-approved pivot highs and lows
 
 ## Before Implementation
 
-- [ ] Read required project files and this task.
-- [ ] Confirm required dependencies are complete or owner supplied a self-contained input contract.
-- [ ] Confirm owner-approved zone construction rules and parameters.
-- [ ] Confirm implementation is limited to Support / Resistance Zone only.
+- [x] Read required project files and this task.
+- [x] Confirm required dependencies are complete or owner supplied a self-contained input contract.
+- [x] Confirm owner-approved zone construction rules and parameters.
+- [x] Confirm implementation is limited to Support / Resistance Zone only.
 
 ## After Implementation
 
-- [ ] Add or update deterministic tests.
-- [ ] Run required verification.
-- [ ] Complete Codex self-review.
-- [ ] Update `STATUS.md` if active task, current step, next step, or completion state changed.
+- [x] Add or update deterministic tests.
+- [x] Run required verification.
+- [x] Complete Codex self-review.
+- [x] Update `STATUS.md` if active task, current step, next step, or completion state changed.
 
 # Acceptance Criteria
 
