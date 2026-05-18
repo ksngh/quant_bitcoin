@@ -98,6 +98,13 @@ from quant_bitcoin.patterns.cup_and_handle import (
     detect_cup_and_handle_patterns,
 )
 
+from quant_bitcoin.patterns.exit_simulation import (
+    PatternExitEvent,
+    PatternExitReason,
+    PatternExitSimulationResult,
+    SoftInvalidationRule,
+    simulate_pattern_exit,
+)
 from quant_bitcoin.patterns.fair_value_gap import (
     FairValueGapConfig,
     FairValueGapState,
@@ -111,6 +118,11 @@ from quant_bitcoin.patterns.fair_value_gap import (
 )
 
 __all__ = [
+    "simulate_pattern_exit",
+    "SoftInvalidationRule",
+    "PatternExitSimulationResult",
+    "PatternExitReason",
+    "PatternExitEvent",
     "create_adam_and_eve_risk_exit_plan",
     "AdamAndEveStopMode",
     "AdamAndEveRiskExitPlan",

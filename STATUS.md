@@ -2,38 +2,38 @@
 
 # Current Phase
 
-Phase 53: Adam And Eve Risk / Exit Plan Implementation
+Phase 54: Pattern Exit Simulation Integration
 
 # Current Step
 
-Task 053 Adam And Eve Risk / Exit Plan implemented and verified.
+Task 054 Pattern Exit Simulation Integration implemented and verified.
 
 # Current Goal
 
-Provide the Adam And Eve pattern-specific risk/exit planner using the shared Task 047 contract.
+Provide deterministic candle-by-candle exit simulation for pattern risk/exit plans.
 
 # Current Active Task
 
-Task 053 Adam And Eve Risk / Exit Plan implementation.
+Task 054 Pattern Exit Simulation Integration implementation.
 
 # Last Completed Step
 
-Task 053: Adam And Eve Risk / Exit Plan implementation.
+Task 054: Pattern Exit Simulation Integration implementation.
 
-Implemented an Adam And Eve-specific risk/exit planner that consumes existing bullish Adam And Eve events and the shared Task 047 contract. The planner supports practical Eve-low hard stops, optional wider Adam/Eve low stop mode, measured targets from neckline plus pattern height, neckline soft-exit metadata, optional structure targets, and explicit rejection of unsupported inverse directions. Verified with `pytest tests/patterns/test_adam_and_eve_risk_exit.py` and `pytest`.
+Implemented a pure candle-by-candle pattern exit simulator for shared risk/exit plans. The simulator supports deterministic stop/target precedence, long and short stops, TP sequencing, partial-exit recording, break-even and trailing-stop movement, time stops, soft invalidation, and caller-data immutability. Verified with `pytest tests/patterns/test_pattern_exit_simulation.py` and `pytest`.
 
-Previous completed step: Task 052 Diamond Risk / Exit Plan implementation.
+Previous completed step: Task 053 Adam And Eve Risk / Exit Plan implementation.
 
 # Next Step
 
-Recommended next task: owner review of the completed Task 053 Adam And Eve planner, then assign Task 054 Pattern Exit Simulation Integration for implementation. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
+Recommended next task: owner review of the completed Task 054 exit simulation integration, then create or assign the next task for integrating pattern exit simulation with a backtest runner or reporting workflow. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
 
 # Parallel Work Status
 
 Parallel work is not currently recommended.
 
 Reason:
-Task 047 completed the shared pattern risk/exit contract and Tasks 048-053 completed the dependent pattern planners. Task 054 integrates planner outputs into exit simulation and should be assigned as the next shared integration task rather than parallelized.
+Task 054 completed the shared exit simulation layer. The next step should be owner review and selection of a new integration or reporting task before parallel work resumes.
 
 # Phase Checklist
 
@@ -150,6 +150,7 @@ Task 047 completed the shared pattern risk/exit contract and Tasks 048-053 compl
 - [x] Task 053: Adam And Eve Risk / Exit Plan task document created
 - [x] Task 053: Adam And Eve Risk / Exit Plan implementation complete and verified
 - [x] Task 054: Pattern Exit Simulation Integration task document created
+- [x] Task 054: Pattern Exit Simulation Integration implementation complete and verified
 
 # Open Questions
 
