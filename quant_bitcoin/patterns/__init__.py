@@ -15,6 +15,13 @@ from quant_bitcoin.patterns.risk_exit import (
     combine_targets,
     create_risk_exit_plan,
 )
+from quant_bitcoin.patterns.adam_and_eve_risk_exit import (
+    AdamAndEveNecklineSoftExit,
+    AdamAndEveRiskExitConfig,
+    AdamAndEveRiskExitPlan,
+    AdamAndEveStopMode,
+    create_adam_and_eve_risk_exit_plan,
+)
 from quant_bitcoin.patterns.cup_and_handle_risk_exit import (
     CupAndHandleHardStopRule,
     CupAndHandleNecklineSoftExit,
@@ -104,6 +111,11 @@ from quant_bitcoin.patterns.fair_value_gap import (
 )
 
 __all__ = [
+    "create_adam_and_eve_risk_exit_plan",
+    "AdamAndEveStopMode",
+    "AdamAndEveRiskExitPlan",
+    "AdamAndEveRiskExitConfig",
+    "AdamAndEveNecklineSoftExit",
     "create_diamond_risk_exit_plan",
     "DiamondSoftInvalidation",
     "DiamondRiskExitPlan",
