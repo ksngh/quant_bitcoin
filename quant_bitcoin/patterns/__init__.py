@@ -1,5 +1,59 @@
 """Pattern detection engine exports."""
 
+from quant_bitcoin.patterns.risk_exit import (
+    BreakEvenSettings,
+    PartialExitSettings,
+    RiskExitConfig,
+    RiskExitDirection,
+    RiskExitPlan,
+    RiskExitPlanStatus,
+    RiskExitTarget,
+    RiskExitTargetSource,
+    TimeStopSettings,
+    TrailingStopSettings,
+    calculate_r_multiple_targets,
+    combine_targets,
+    create_risk_exit_plan,
+)
+from quant_bitcoin.patterns.adam_and_eve_risk_exit import (
+    AdamAndEveNecklineSoftExit,
+    AdamAndEveRiskExitConfig,
+    AdamAndEveRiskExitPlan,
+    AdamAndEveStopMode,
+    create_adam_and_eve_risk_exit_plan,
+)
+from quant_bitcoin.patterns.cup_and_handle_risk_exit import (
+    CupAndHandleHardStopRule,
+    CupAndHandleNecklineSoftExit,
+    CupAndHandleRiskExitConfig,
+    CupAndHandleRiskExitPlan,
+    create_cup_and_handle_risk_exit_plan,
+)
+from quant_bitcoin.patterns.diamond_risk_exit import (
+    DiamondRiskExitConfig,
+    DiamondRiskExitPlan,
+    DiamondSoftInvalidation,
+    create_diamond_risk_exit_plan,
+)
+from quant_bitcoin.patterns.fair_value_gap_risk_exit import (
+    FairValueGapReactionFailureRule,
+    FairValueGapRiskExitConfig,
+    FairValueGapRiskExitPlan,
+    create_fair_value_gap_risk_exit_plan,
+)
+from quant_bitcoin.patterns.order_block_risk_exit import (
+    OrderBlockEntryMode,
+    OrderBlockNoReactionStop,
+    OrderBlockRiskExitConfig,
+    OrderBlockRiskExitPlan,
+    create_order_block_risk_exit_plan,
+)
+from quant_bitcoin.patterns.trendline_break_risk_exit import (
+    TrendlineBreakRiskExitConfig,
+    TrendlineBreakRiskExitPlan,
+    TrendlineBreakSoftInvalidation,
+    create_trendline_break_risk_exit_plan,
+)
 
 from quant_bitcoin.patterns.order_block import (
     OrderBlockConfig,
@@ -19,9 +73,6 @@ from quant_bitcoin.patterns.trendline_break import (
     TrendlineType,
     detect_trendline_breaks,
 )
-
-
-
 
 from quant_bitcoin.patterns.adam_and_eve import (
     AdamAndEveConfig,
@@ -47,6 +98,13 @@ from quant_bitcoin.patterns.cup_and_handle import (
     detect_cup_and_handle_patterns,
 )
 
+from quant_bitcoin.patterns.exit_simulation import (
+    PatternExitEvent,
+    PatternExitReason,
+    PatternExitSimulationResult,
+    SoftInvalidationRule,
+    simulate_pattern_exit,
+)
 from quant_bitcoin.patterns.fair_value_gap import (
     FairValueGapConfig,
     FairValueGapState,
@@ -60,6 +118,51 @@ from quant_bitcoin.patterns.fair_value_gap import (
 )
 
 __all__ = [
+    "simulate_pattern_exit",
+    "SoftInvalidationRule",
+    "PatternExitSimulationResult",
+    "PatternExitReason",
+    "PatternExitEvent",
+    "create_adam_and_eve_risk_exit_plan",
+    "AdamAndEveStopMode",
+    "AdamAndEveRiskExitPlan",
+    "AdamAndEveRiskExitConfig",
+    "AdamAndEveNecklineSoftExit",
+    "create_diamond_risk_exit_plan",
+    "DiamondSoftInvalidation",
+    "DiamondRiskExitPlan",
+    "DiamondRiskExitConfig",
+    "create_cup_and_handle_risk_exit_plan",
+    "CupAndHandleRiskExitPlan",
+    "CupAndHandleRiskExitConfig",
+    "CupAndHandleNecklineSoftExit",
+    "CupAndHandleHardStopRule",
+    "create_fair_value_gap_risk_exit_plan",
+    "FairValueGapRiskExitPlan",
+    "FairValueGapRiskExitConfig",
+    "FairValueGapReactionFailureRule",
+    "create_order_block_risk_exit_plan",
+    "OrderBlockRiskExitPlan",
+    "OrderBlockRiskExitConfig",
+    "OrderBlockNoReactionStop",
+    "OrderBlockEntryMode",
+    "create_trendline_break_risk_exit_plan",
+    "TrendlineBreakSoftInvalidation",
+    "TrendlineBreakRiskExitPlan",
+    "TrendlineBreakRiskExitConfig",
+    "create_risk_exit_plan",
+    "combine_targets",
+    "calculate_r_multiple_targets",
+    "TrailingStopSettings",
+    "TimeStopSettings",
+    "RiskExitTargetSource",
+    "RiskExitTarget",
+    "RiskExitPlanStatus",
+    "RiskExitPlan",
+    "RiskExitDirection",
+    "RiskExitConfig",
+    "PartialExitSettings",
+    "BreakEvenSettings",
     "FairValueGapConfig",
     "FairValueGapState",
     "PatternDirection",
