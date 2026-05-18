@@ -2,38 +2,38 @@
 
 # Current Phase
 
-Phase 51: Cup And Handle Risk / Exit Plan Implementation
+Phase 52: Diamond Risk / Exit Plan Implementation
 
 # Current Step
 
-Task 051 Cup And Handle Risk / Exit Plan implemented and verified.
+Task 052 Diamond Risk / Exit Plan implemented and verified.
 
 # Current Goal
 
-Provide the Cup And Handle pattern-specific risk/exit planner using the shared Task 047 contract.
+Provide the Diamond pattern-specific risk/exit planner using the shared Task 047 contract.
 
 # Current Active Task
 
-Task 051 Cup And Handle Risk / Exit Plan implementation.
+Task 052 Diamond Risk / Exit Plan implementation.
 
 # Last Completed Step
 
-Task 051: Cup And Handle Risk / Exit Plan implementation.
+Task 052: Diamond Risk / Exit Plan implementation.
 
-Implemented a Cup And Handle-specific risk/exit planner that consumes existing bullish Cup And Handle events and the shared Task 047 contract. The planner supports handle-low ATR-buffered hard stops, neckline soft-exit metadata, measured targets from neckline plus cup depth, optional structure targets, and explicit rejection of unsupported inverse directions. Verified with `pytest tests/patterns/test_cup_and_handle_risk_exit.py` and `pytest`.
+Implemented a Diamond-specific risk/exit planner that consumes existing Diamond events and the shared Task 047 contract. The planner supports bullish and bearish internal-pivot hard stops with event stop-reference fallback, measured targets from breakout price plus/minus diamond height, close-back-inside soft invalidation metadata, and 1R-within-N-bars time-stop metadata. Verified with `pytest tests/patterns/test_diamond_risk_exit.py` and `pytest`.
 
-Previous completed step: Task 050 Fair Value Gap Risk / Exit Plan implementation.
+Previous completed step: Task 051 Cup And Handle Risk / Exit Plan implementation.
 
 # Next Step
 
-Recommended next task: owner review of the completed Task 051 Cup And Handle planner, then assign Task 052 Diamond Risk / Exit Plan for implementation. Task 053 may remain a dependent planner task that must not change the shared contract or existing pattern event contracts. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
+Recommended next task: owner review of the completed Task 052 Diamond planner, then assign Task 053 Adam And Eve Risk / Exit Plan for implementation. Task 054 should wait for the relevant planner outputs. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
 
 # Parallel Work Status
 
 Parallel work is conditionally allowed only for independent dependent planner tasks after owner assignment.
 
 Reason:
-Task 047 completed the shared pattern risk/exit contract and Tasks 048-051 completed dependent planners. Tasks 052-053 may be considered independent leaf tasks only if they consume the shared contract as-is and do not change the shared contract or existing pattern event contracts. Task 054 should wait for the relevant planner outputs.
+Task 047 completed the shared pattern risk/exit contract and Tasks 048-052 completed dependent planners. Task 053 may be considered an independent leaf task only if it consumes the shared contract as-is and does not change the shared contract or existing pattern event contracts. Task 054 should wait for the relevant planner outputs.
 
 # Phase Checklist
 
@@ -146,6 +146,7 @@ Task 047 completed the shared pattern risk/exit contract and Tasks 048-051 compl
 - [x] Task 051: Cup And Handle Risk / Exit Plan task document created
 - [x] Task 051: Cup And Handle Risk / Exit Plan implementation complete and verified
 - [x] Task 052: Diamond Risk / Exit Plan task document created
+- [x] Task 052: Diamond Risk / Exit Plan implementation complete and verified
 - [x] Task 053: Adam And Eve Risk / Exit Plan task document created
 - [x] Task 054: Pattern Exit Simulation Integration task document created
 

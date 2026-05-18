@@ -22,6 +22,12 @@ from quant_bitcoin.patterns.cup_and_handle_risk_exit import (
     CupAndHandleRiskExitPlan,
     create_cup_and_handle_risk_exit_plan,
 )
+from quant_bitcoin.patterns.diamond_risk_exit import (
+    DiamondRiskExitConfig,
+    DiamondRiskExitPlan,
+    DiamondSoftInvalidation,
+    create_diamond_risk_exit_plan,
+)
 from quant_bitcoin.patterns.fair_value_gap_risk_exit import (
     FairValueGapReactionFailureRule,
     FairValueGapRiskExitConfig,
@@ -98,6 +104,10 @@ from quant_bitcoin.patterns.fair_value_gap import (
 )
 
 __all__ = [
+    "create_diamond_risk_exit_plan",
+    "DiamondSoftInvalidation",
+    "DiamondRiskExitPlan",
+    "DiamondRiskExitConfig",
     "create_cup_and_handle_risk_exit_plan",
     "CupAndHandleRiskExitPlan",
     "CupAndHandleRiskExitConfig",
