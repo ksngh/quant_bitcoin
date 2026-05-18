@@ -2,38 +2,38 @@
 
 # Current Phase
 
-Phase 46: Indicator And Pattern Review Documents
+Phase 47: Pattern Risk / Exit Plan Task Split
 
 # Current Step
 
-Task 046 Indicator And Pattern Review Documents documentation created and verified.
+Tasks 047-054 Pattern Risk / Exit Plan task documents created and verified.
 
 # Current Goal
 
-Document the current indicator structure, pattern algorithms, and indicator/pattern class usage based on existing code behavior.
+Define future implementation tasks for pattern-specific stop-loss, take-profit, time-stop, break-even, trailing-stop, partial-exit, and exit simulation behavior without live trading.
 
 # Current Active Task
 
-Task 046 Indicator And Pattern Review Documents documentation task.
+Tasks 047-054 Pattern Risk / Exit Plan task-document creation.
 
 # Last Completed Step
 
-Task 046: Indicator And Pattern Review Documents documentation.
+Tasks 047-054: Pattern Risk / Exit Plan task split.
 
-Created documentation for current indicator package structure, pattern detector algorithms, and indicator/pattern class usage. Verified documentation-only scope with `git diff --check`.
+Created the owner-provided source requirement summary and future implementation task documents for the shared pattern risk/exit contract, six pattern-specific risk/exit planners, and exit simulation integration. Verified documentation-only scope with `git diff --check`.
 
-Previous completed step: Task 045 Adam and Eve Pattern Detection Engine implementation.
+Previous completed step: Task 046 Indicator And Pattern Review Documents documentation.
 
 # Next Step
 
-Recommended next task: owner review of Task 046 documentation outputs, then select the next implementation or documentation task. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
+Recommended next task: owner review of Tasks 047-054, then assign Task 047 Pattern Risk / Exit Plan Contract for implementation first. Pattern-specific risk/exit planner tasks should wait until Task 047 is complete. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
 
 # Parallel Work Status
 
 Parallel work is not currently recommended.
 
 Reason:
-Tasks 027-033 define multiple indicator implementation plans, but concrete indicator implementation should proceed one indicator at a time unless the owner explicitly approves independent parallel leaf tasks that do not change shared contracts. Pivot-derived tasks may depend on Task 028, and displacement tasks may depend on ATR or Volume Ratio decisions.
+Task 047 defines a shared pattern risk/exit contract and must not be parallelized with dependent planner work. After Task 047 is complete, Tasks 048-053 may be considered independent leaf tasks only if they do not change the shared contract or existing pattern event contracts. Task 054 should wait for the relevant planner outputs.
 
 # Phase Checklist
 
@@ -134,6 +134,15 @@ Tasks 027-033 define multiple indicator implementation plans, but concrete indic
 - [x] Task 045: Adam and Eve Pattern Detection Engine implementation complete and verified
 - [x] Task 046: Indicator And Pattern Review Documents task document created
 - [x] Task 046: Indicator And Pattern Review Documents documentation complete and verified
+- [x] Owner-provided Pattern Risk / Exit Management source requirement saved under `tasks/patterns/risk_exit_management.md`
+- [x] Task 047: Pattern Risk / Exit Plan Contract task document created
+- [x] Task 048: Trendline Break Risk / Exit Plan task document created
+- [x] Task 049: Order Block Risk / Exit Plan task document created
+- [x] Task 050: Fair Value Gap Risk / Exit Plan task document created
+- [x] Task 051: Cup And Handle Risk / Exit Plan task document created
+- [x] Task 052: Diamond Risk / Exit Plan task document created
+- [x] Task 053: Adam And Eve Risk / Exit Plan task document created
+- [x] Task 054: Pattern Exit Simulation Integration task document created
 
 # Open Questions
 
@@ -144,7 +153,7 @@ Tasks 027-033 define multiple indicator implementation plans, but concrete indic
 - What kill-switch or disable mechanism is required?
 - Task 024 decided the concrete PostgreSQL command-management path: `db/init/001_schema.sql` is the source-of-truth first-start schema DDL, `db/changes/` is reserved for future existing-database state-change SQL, repository initialization executes managed command files, and runtime persistence DML remains application-owned.
 - Task 025 defines the indicator document intake process. Future owner-provided indicator documents should be saved under `tasks/indicators/<INDICATOR_KEY>.md`, and concrete indicator code must wait for an explicit indicator-specific implementation task. Pattern definition documents may be saved under `tasks/patterns/` when explicitly assigned by the owner.
-- Tasks 027-033 define planned implementation tasks for the remaining indicator/filter modules. Task 028 Pivot High / Pivot Low, Task 029 Swing Structure, Task 030 ATR, Task 031 Volume Ratio, Task 032 Support / Resistance Zone, and Task 033 Displacement Candle have deterministic implementations pending review. Task 034 has been restored as the Trendline Break Pattern mechanical-definition task, Task 035 has been restored as the Order Block Pattern mechanical-definition task, Task 036 has been restored as the Fair Value Gap Pattern mechanical-definition task, Task 037 has been created as the Cup and Handle Pattern mechanical-definition task, Task 038 has been created as the Diamond Pattern mechanical-definition task and reviewed by the owner, and Task 039 has been created as the Adam and Eve Pattern mechanical-definition task and updated from the owner-provided final document. The Trendline Break, Order Block, Fair Value Gap, Cup and Handle, Diamond, and Adam and Eve patterns are documented as mechanical definitions. Task 040 implemented the first pattern detection engine batch focused on Fair Value Gap detection. Task 041 implemented the next pattern detection engine batch focused on Trendline Break detection. Task 042 implemented the next pattern detection engine batch focused on Order Block detection. Task 043 implemented the next pattern detection engine batch focused on Cup and Handle detection. Task 044 implemented the next pattern detection engine batch focused on Diamond Pattern detection. Task 045 implemented the next pattern detection engine batch focused on Adam and Eve Pattern detection. Task 046 completed the documentation-only review assignment for current indicator structure, pattern algorithms, and indicator/pattern class usage. Liquidity and bid-ask spread filters remain unavailable as reusable modules, so future pattern detectors must handle those filters explicitly rather than silently approximating them.
+- Tasks 027-033 define planned implementation tasks for the remaining indicator/filter modules. Task 028 Pivot High / Pivot Low, Task 029 Swing Structure, Task 030 ATR, Task 031 Volume Ratio, Task 032 Support / Resistance Zone, and Task 033 Displacement Candle have deterministic implementations pending review. Task 034 has been restored as the Trendline Break Pattern mechanical-definition task, Task 035 has been restored as the Order Block Pattern mechanical-definition task, Task 036 has been restored as the Fair Value Gap Pattern mechanical-definition task, Task 037 has been created as the Cup and Handle Pattern mechanical-definition task, Task 038 has been created as the Diamond Pattern mechanical-definition task and reviewed by the owner, and Task 039 has been created as the Adam and Eve Pattern mechanical-definition task and updated from the owner-provided final document. The Trendline Break, Order Block, Fair Value Gap, Cup and Handle, Diamond, and Adam and Eve patterns are documented as mechanical definitions. Task 040 implemented the first pattern detection engine batch focused on Fair Value Gap detection. Task 041 implemented the next pattern detection engine batch focused on Trendline Break detection. Task 042 implemented the next pattern detection engine batch focused on Order Block detection. Task 043 implemented the next pattern detection engine batch focused on Cup and Handle detection. Task 044 implemented the next pattern detection engine batch focused on Diamond Pattern detection. Task 045 implemented the next pattern detection engine batch focused on Adam and Eve Pattern detection. Task 046 completed the documentation-only review assignment for current indicator structure, pattern algorithms, and indicator/pattern class usage. Task 047 now defines the required first implementation step for a shared pattern risk/exit contract. Tasks 048-053 define dependent pattern-specific stop-loss/take-profit planner tasks for Trendline Break, Order Block, Fair Value Gap, Cup and Handle, Diamond, and Adam and Eve. Task 054 defines a later exit-simulation integration task. Liquidity and bid-ask spread filters remain unavailable as reusable modules, so future pattern detectors and risk/exit planners must handle those filters explicitly rather than silently approximating them.
 - Docker is not installed in the current cloud environment. Local PostgreSQL and WebSocket ingestor container startup are intentionally skipped here and remain optional local developer verification.
 
 # Blockers
