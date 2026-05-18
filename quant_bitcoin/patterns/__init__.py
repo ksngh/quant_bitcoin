@@ -1,5 +1,20 @@
 """Pattern detection engine exports."""
 
+from quant_bitcoin.patterns.risk_exit import (
+    BreakEvenSettings,
+    PartialExitSettings,
+    RiskExitConfig,
+    RiskExitDirection,
+    RiskExitPlan,
+    RiskExitPlanStatus,
+    RiskExitTarget,
+    RiskExitTargetSource,
+    TimeStopSettings,
+    TrailingStopSettings,
+    calculate_r_multiple_targets,
+    combine_targets,
+    create_risk_exit_plan,
+)
 
 from quant_bitcoin.patterns.order_block import (
     OrderBlockConfig,
@@ -19,9 +34,6 @@ from quant_bitcoin.patterns.trendline_break import (
     TrendlineType,
     detect_trendline_breaks,
 )
-
-
-
 
 from quant_bitcoin.patterns.adam_and_eve import (
     AdamAndEveConfig,
@@ -60,6 +72,19 @@ from quant_bitcoin.patterns.fair_value_gap import (
 )
 
 __all__ = [
+    "create_risk_exit_plan",
+    "combine_targets",
+    "calculate_r_multiple_targets",
+    "TrailingStopSettings",
+    "TimeStopSettings",
+    "RiskExitTargetSource",
+    "RiskExitTarget",
+    "RiskExitPlanStatus",
+    "RiskExitPlan",
+    "RiskExitDirection",
+    "RiskExitConfig",
+    "PartialExitSettings",
+    "BreakEvenSettings",
     "FairValueGapConfig",
     "FairValueGapState",
     "PatternDirection",

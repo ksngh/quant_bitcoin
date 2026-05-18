@@ -2,38 +2,38 @@
 
 # Current Phase
 
-Phase 47: Pattern Risk / Exit Plan Task Split
+Phase 47: Pattern Risk / Exit Plan Contract Implementation
 
 # Current Step
 
-Tasks 047-054 Pattern Risk / Exit Plan task documents created and verified.
+Task 047 Pattern Risk / Exit Plan Contract implemented and verified.
 
 # Current Goal
 
-Define future implementation tasks for pattern-specific stop-loss, take-profit, time-stop, break-even, trailing-stop, partial-exit, and exit simulation behavior without live trading.
+Provide the shared deterministic pattern risk/exit planning contract before dependent pattern-specific planner tasks.
 
 # Current Active Task
 
-Tasks 047-054 Pattern Risk / Exit Plan task-document creation.
+Task 047 Pattern Risk / Exit Plan Contract implementation.
 
 # Last Completed Step
 
-Tasks 047-054: Pattern Risk / Exit Plan task split.
+Task 047: Pattern Risk / Exit Plan Contract implementation.
 
-Created the owner-provided source requirement summary and future implementation task documents for the shared pattern risk/exit contract, six pattern-specific risk/exit planners, and exit simulation integration. Verified documentation-only scope with `git diff --check`.
+Implemented a pure shared pattern risk/exit planning contract with deterministic long/short ATR-buffered stops, R-multiple targets, optional structural/measured target combination, minimum first-target filtering, and serializable time-stop, break-even, trailing-stop, and partial-exit settings. Verified with `pytest tests/patterns/test_risk_exit.py` and `pytest`.
 
-Previous completed step: Task 046 Indicator And Pattern Review Documents documentation.
+Previous completed step: Tasks 047-054 Pattern Risk / Exit Plan task split.
 
 # Next Step
 
-Recommended next task: owner review of Tasks 047-054, then assign Task 047 Pattern Risk / Exit Plan Contract for implementation first. Pattern-specific risk/exit planner tasks should wait until Task 047 is complete. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
+Recommended next task: owner review of the completed Task 047 shared contract, then assign Task 048 Trendline Break Risk / Exit Plan for implementation. Tasks 049-053 may remain dependent planner tasks that must not change the shared contract. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
 
 # Parallel Work Status
 
-Parallel work is not currently recommended.
+Parallel work is conditionally allowed only for independent dependent planner tasks after owner assignment.
 
 Reason:
-Task 047 defines a shared pattern risk/exit contract and must not be parallelized with dependent planner work. After Task 047 is complete, Tasks 048-053 may be considered independent leaf tasks only if they do not change the shared contract or existing pattern event contracts. Task 054 should wait for the relevant planner outputs.
+Task 047 completed the shared pattern risk/exit contract. Tasks 048-053 may be considered independent leaf tasks only if they consume the shared contract as-is and do not change the shared contract or existing pattern event contracts. Task 054 should wait for the relevant planner outputs.
 
 # Phase Checklist
 
@@ -136,6 +136,7 @@ Task 047 defines a shared pattern risk/exit contract and must not be parallelize
 - [x] Task 046: Indicator And Pattern Review Documents documentation complete and verified
 - [x] Owner-provided Pattern Risk / Exit Management source requirement saved under `tasks/patterns/risk_exit_management.md`
 - [x] Task 047: Pattern Risk / Exit Plan Contract task document created
+- [x] Task 047: Pattern Risk / Exit Plan Contract implementation complete and verified
 - [x] Task 048: Trendline Break Risk / Exit Plan task document created
 - [x] Task 049: Order Block Risk / Exit Plan task document created
 - [x] Task 050: Fair Value Gap Risk / Exit Plan task document created
