@@ -2,23 +2,27 @@
 
 # Current Phase
 
-Phase 55: Pattern Strategy Backtest Implementation
+Phase 56: Pattern PostgreSQL Backtest CLI Task Definition
 
 # Current Step
 
-Task 055 Pattern Strategy Backtest implementation complete and verified.
+Task 056 Pattern PostgreSQL Backtest CLI task document created; awaiting owner approval for implementation.
 
 # Current Goal
 
-Provide a pure historical pattern strategy backtest workflow over completed minute candles using existing pattern detection, risk/exit planning, and exit simulation contracts.
+Define the next runnable workflow for executing the existing pattern strategy backtest against database-backed 1-minute candle data through a dedicated CLI command.
 
 # Current Active Task
 
-Task 055 Pattern Strategy Backtest implementation complete; awaiting owner review.
+Task 056 Pattern PostgreSQL Backtest CLI task document created; implementation not started.
 
 # Last Completed Step
 
-Task 055: Pattern Strategy Backtest implementation.
+Task 056: Pattern PostgreSQL Backtest CLI task document creation.
+
+Created `tasks/056_PATTERN_POSTGRES_BACKTEST_CLI.md` to define a future implementation for `quant-bitcoin-pattern-backtest`, PostgreSQL-backed `1m` candle retrieval through the existing provider, Task 055 pattern strategy backtest reuse, deterministic CLI tests, and strict no-live-trading safety boundaries. No application behavior was implemented.
+
+Previous completed step: Task 055 Pattern Strategy Backtest implementation.
 
 Implemented `quant_bitcoin/backtesting/pattern_strategy.py` as a pure historical pattern strategy backtest workflow. The first implementation supports Fair Value Gap entries over completed minute-candle prefixes, creates valid FVG risk/exit plans, prevents duplicate event entries, delegates exits to the Task 054 simulator, and returns pattern, entry, exit, and simulated outcome metadata. Added deterministic tests in `tests/backtesting/test_pattern_strategy_backtest.py` and verified with `pytest tests/backtesting/test_pattern_strategy_backtest.py -q` and `pytest`.
 
@@ -26,14 +30,14 @@ Previous completed step: Task 054 Pattern Exit Simulation Integration implementa
 
 # Next Step
 
-Recommended next task: owner review of Task 055 Pattern Strategy Backtest implementation and selection or creation of the next task. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
+Recommended next task: owner review and approval of Task 056 Pattern PostgreSQL Backtest CLI for implementation. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
 
 # Parallel Work Status
 
 Parallel work is not currently recommended.
 
 Reason:
-Task 055 is complete; the next shared integration or contract task should not be parallelized until the owner approves the exact implementation scope.
+Task 056 is a CLI integration task around PostgreSQL candle loading and the existing pattern strategy backtest; implementation should not be parallelized across shared CLI/provider/backtest boundaries unless independent leaf tests are clearly separated.
 
 # Phase Checklist
 
@@ -154,6 +158,7 @@ Task 055 is complete; the next shared integration or contract task should not be
 - [x] Task 055: Pattern Strategy Backtest task document created
 - [x] Task 055: Pattern Strategy Backtest approved for implementation by owner prompt on 2026-05-18
 - [x] Task 055: Pattern Strategy Backtest implementation complete and verified
+- [x] Task 056: Pattern PostgreSQL Backtest CLI task document created
 
 # Open Questions
 
@@ -164,7 +169,7 @@ Task 055 is complete; the next shared integration or contract task should not be
 - What kill-switch or disable mechanism is required?
 - Task 024 decided the concrete PostgreSQL command-management path: `db/init/001_schema.sql` is the source-of-truth first-start schema DDL, `db/changes/` is reserved for future existing-database state-change SQL, repository initialization executes managed command files, and runtime persistence DML remains application-owned.
 - Task 025 defines the indicator document intake process. Future owner-provided indicator documents should be saved under `tasks/indicators/<INDICATOR_KEY>.md`, and concrete indicator code must wait for an explicit indicator-specific implementation task. Pattern definition documents may be saved under `tasks/patterns/` when explicitly assigned by the owner.
-- Tasks 027-033 define planned implementation tasks for the remaining indicator/filter modules. Task 028 Pivot High / Pivot Low, Task 029 Swing Structure, Task 030 ATR, Task 031 Volume Ratio, Task 032 Support / Resistance Zone, and Task 033 Displacement Candle have deterministic implementations pending review. Task 034 has been restored as the Trendline Break Pattern mechanical-definition task, Task 035 has been restored as the Order Block Pattern mechanical-definition task, Task 036 has been restored as the Fair Value Gap Pattern mechanical-definition task, Task 037 has been created as the Cup and Handle Pattern mechanical-definition task, Task 038 has been created as the Diamond Pattern mechanical-definition task and reviewed by the owner, and Task 039 has been created as the Adam and Eve Pattern mechanical-definition task and updated from the owner-provided final document. The Trendline Break, Order Block, Fair Value Gap, Cup and Handle, Diamond, and Adam and Eve patterns are documented as mechanical definitions. Task 040 implemented the first pattern detection engine batch focused on Fair Value Gap detection. Task 041 implemented the next pattern detection engine batch focused on Trendline Break detection. Task 042 implemented the next pattern detection engine batch focused on Order Block detection. Task 043 implemented the next pattern detection engine batch focused on Cup and Handle detection. Task 044 implemented the next pattern detection engine batch focused on Diamond Pattern detection. Task 045 implemented the next pattern detection engine batch focused on Adam and Eve Pattern detection. Task 046 completed the documentation-only review assignment for current indicator structure, pattern algorithms, and indicator/pattern class usage. Task 047 now defines the required first implementation step for a shared pattern risk/exit contract. Tasks 048-053 define dependent pattern-specific stop-loss/take-profit planner tasks for Trendline Break, Order Block, Fair Value Gap, Cup and Handle, Diamond, and Adam and Eve. Task 054 completed exit-simulation integration. Task 055 completed the first pattern strategy backtest integration for Fair Value Gap entries, valid FVG risk/exit plans, duplicate event prevention, and Task 054 exit simulation. The Task 055 first-batch assumptions are: Fair Value Gap only by default, one simulated open position at a time, entry on the pattern confirmation candle, exit evaluation starts on the next completed candle, and same-candle eligible events are ordered by pattern type, direction, then event id. Liquidity and bid-ask spread filters remain unavailable as reusable modules, so future pattern detectors and risk/exit planners must handle those filters explicitly rather than silently approximating them.
+- Tasks 027-033 define planned implementation tasks for the remaining indicator/filter modules. Task 028 Pivot High / Pivot Low, Task 029 Swing Structure, Task 030 ATR, Task 031 Volume Ratio, Task 032 Support / Resistance Zone, and Task 033 Displacement Candle have deterministic implementations pending review. Task 034 has been restored as the Trendline Break Pattern mechanical-definition task, Task 035 has been restored as the Order Block Pattern mechanical-definition task, Task 036 has been restored as the Fair Value Gap Pattern mechanical-definition task, Task 037 has been created as the Cup and Handle Pattern mechanical-definition task, Task 038 has been created as the Diamond Pattern mechanical-definition task and reviewed by the owner, and Task 039 has been created as the Adam and Eve Pattern mechanical-definition task and updated from the owner-provided final document. The Trendline Break, Order Block, Fair Value Gap, Cup and Handle, Diamond, and Adam and Eve patterns are documented as mechanical definitions. Task 040 implemented the first pattern detection engine batch focused on Fair Value Gap detection. Task 041 implemented the next pattern detection engine batch focused on Trendline Break detection. Task 042 implemented the next pattern detection engine batch focused on Order Block detection. Task 043 implemented the next pattern detection engine batch focused on Cup and Handle detection. Task 044 implemented the next pattern detection engine batch focused on Diamond Pattern detection. Task 045 implemented the next pattern detection engine batch focused on Adam and Eve Pattern detection. Task 046 completed the documentation-only review assignment for current indicator structure, pattern algorithms, and indicator/pattern class usage. Task 047 now defines the required first implementation step for a shared pattern risk/exit contract. Tasks 048-053 define dependent pattern-specific stop-loss/take-profit planner tasks for Trendline Break, Order Block, Fair Value Gap, Cup and Handle, Diamond, and Adam and Eve. Task 054 completed exit-simulation integration. Task 055 completed the first pattern strategy backtest integration for Fair Value Gap entries, valid FVG risk/exit plans, duplicate event prevention, and Task 054 exit simulation. Task 056 defines the next proposed implementation task for a `quant-bitcoin-pattern-backtest` CLI that loads PostgreSQL-backed `1m` candles through the existing provider and reuses the Task 055 pattern strategy backtest without adding live trading, order execution, scheduler, dashboard, or schema-redesign behavior. The Task 055 first-batch assumptions are: Fair Value Gap only by default, one simulated open position at a time, entry on the pattern confirmation candle, exit evaluation starts on the next completed candle, and same-candle eligible events are ordered by pattern type, direction, then event id. Liquidity and bid-ask spread filters remain unavailable as reusable modules, so future pattern detectors and risk/exit planners must handle those filters explicitly rather than silently approximating them.
 - Docker is not installed in the current cloud environment. Local PostgreSQL and WebSocket ingestor container startup are intentionally skipped here and remain optional local developer verification.
 
 # Blockers
