@@ -2,46 +2,40 @@
 
 # Current Phase
 
-Phase 56: Pattern PostgreSQL Backtest CLI Implementation
+Phase 57: Pattern Backtest CLI Clarity and Pattern Selection Task Definition
 
 # Current Step
 
-Task 056 Pattern PostgreSQL Backtest CLI implementation complete and verified.
+Task 057 Pattern Backtest CLI clarity and pattern selection task document created; awaiting owner approval for implementation.
 
 # Current Goal
 
-Provide a runnable workflow for executing the existing pattern strategy backtest against database-backed 1-minute candle data through a dedicated CLI command.
+Define the next implementation task to clarify the default Fair Value Gap pattern backtest CLI wording/output and prepare the same CLI/backtest workflow for explicit pattern selection.
 
 # Current Active Task
 
-Task 056 Pattern PostgreSQL Backtest CLI implementation complete and verified.
+Task 057 Pattern Backtest CLI clarity and pattern selection task document creation complete. No implementation has been started.
 
 # Last Completed Step
 
-Task 056: Pattern PostgreSQL Backtest CLI implementation.
+Task 057: Pattern Backtest CLI clarity and pattern selection task document creation.
+
+Created `tasks/057_PATTERN_BACKTEST_CLI_CLARITY_AND_PATTERN_SELECTION.md` to define future implementation work for clearer Fair Value Gap default CLI description/help text, `FAIR_VALUE_GAP_PATTERN_STRATEGY` JSON output naming, README usage documentation, and a tested pattern-selection seam for additional supported pattern backtests while preserving the no-live-trading safety boundary.
+
+Previous completed step: Task 056 Pattern PostgreSQL Backtest CLI implementation.
 
 Implemented `quant-bitcoin-pattern-backtest` as a project script entrypoint backed by `quant_bitcoin/backtesting/pattern_postgres_runner_cli.py`. The CLI loads completed `1m` candles through `PostgresCandleDataProvider`, rejects non-`1m` intervals, delegates simulation to the Task 055 pattern strategy backtest workflow, and prints a deterministic JSON summary. Added fake-backed CLI wiring, help, empty-candle, entrypoint-registration, reuse-contract, and safety tests in `tests/backtesting/test_pattern_postgres_runner_cli.py`. Verified with targeted CLI tests, `python -m quant_bitcoin.backtesting.pattern_postgres_runner_cli --help`, and the full `pytest` suite. Direct `quant-bitcoin-pattern-backtest --help` could not be executed in this environment before package installation because the script was not installed; editable installation was blocked by package build dependency availability/network restrictions. The script registration is verified in `pyproject.toml`.
 
-Previous completed step: Task 056 Pattern PostgreSQL Backtest CLI task document creation.
-
-Created `tasks/056_PATTERN_POSTGRES_BACKTEST_CLI.md` to define the implementation for `quant-bitcoin-pattern-backtest`, PostgreSQL-backed `1m` candle retrieval through the existing provider, Task 055 pattern strategy backtest reuse, deterministic CLI tests, and strict no-live-trading safety boundaries.
-
-Previous completed step: Task 055 Pattern Strategy Backtest implementation.
-
-Implemented `quant_bitcoin/backtesting/pattern_strategy.py` as a pure historical pattern strategy backtest workflow. The first implementation supports Fair Value Gap entries over completed minute-candle prefixes, creates valid FVG risk/exit plans, prevents duplicate event entries, delegates exits to the Task 054 simulator, and returns pattern, entry, exit, and simulated outcome metadata. Added deterministic tests in `tests/backtesting/test_pattern_strategy_backtest.py` and verified with `pytest tests/backtesting/test_pattern_strategy_backtest.py -q` and `pytest`.
-
-Previous completed step: Task 054 Pattern Exit Simulation Integration implementation. Task 054 implemented a pure candle-by-candle pattern exit simulator for shared risk/exit plans and was verified with `pytest tests/patterns/test_pattern_exit_simulation.py` and `pytest`.
-
 # Next Step
 
-Recommended next task: owner review of Task 056 implementation and selection or creation of the next task document. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
+Recommended next task: owner review and implementation assignment for `tasks/057_PATTERN_BACKTEST_CLI_CLARITY_AND_PATTERN_SELECTION.md`. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
 
 # Parallel Work Status
 
 Parallel work is not currently recommended.
 
 Reason:
-Task 056 implementation is complete; no active parallel work is recommended until the owner selects or creates the next task document.
+Task 057 task document creation is complete; no active parallel work is recommended until the owner approves implementation or selects another task document.
 
 # Phase Checklist
 
@@ -165,6 +159,7 @@ Task 056 implementation is complete; no active parallel work is recommended unti
 - [x] Task 056: Pattern PostgreSQL Backtest CLI task document created
 - [x] Task 056: Pattern PostgreSQL Backtest CLI approved for implementation by owner prompt on 2026-05-18
 - [x] Task 056: Pattern PostgreSQL Backtest CLI implementation complete and verified
+- [x] Task 057: Pattern Backtest CLI clarity and pattern selection task document created
 
 # Open Questions
 
