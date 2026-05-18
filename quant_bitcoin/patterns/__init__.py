@@ -15,6 +15,12 @@ from quant_bitcoin.patterns.risk_exit import (
     combine_targets,
     create_risk_exit_plan,
 )
+from quant_bitcoin.patterns.trendline_break_risk_exit import (
+    TrendlineBreakRiskExitConfig,
+    TrendlineBreakRiskExitPlan,
+    TrendlineBreakSoftInvalidation,
+    create_trendline_break_risk_exit_plan,
+)
 
 from quant_bitcoin.patterns.order_block import (
     OrderBlockConfig,
@@ -72,6 +78,10 @@ from quant_bitcoin.patterns.fair_value_gap import (
 )
 
 __all__ = [
+    "create_trendline_break_risk_exit_plan",
+    "TrendlineBreakSoftInvalidation",
+    "TrendlineBreakRiskExitPlan",
+    "TrendlineBreakRiskExitConfig",
     "create_risk_exit_plan",
     "combine_targets",
     "calculate_r_multiple_targets",
