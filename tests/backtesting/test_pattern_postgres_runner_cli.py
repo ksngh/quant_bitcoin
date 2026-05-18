@@ -1,0 +1,221 @@
+from __future__ import annotations
+
+import ast
+import json
+import socket
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+import pandas as pd
+import pytest
+
+from quant_bitcoin.backtesting import pattern_postgres_runner_cli
+from quant_bitcoin.backtesting.pattern_strategy import PatternStrategyBacktestResult
+
+
+class FakeProvider:
+    def __init__(self, candles: pd.DataFrame) -> None:
+        self.candles = candles
+        self.load_calls = 0
+
+    def load(self) -> pd.DataFrame:
+        self.load_calls += 1
+        return self.candles
+
+
+def make_candles(closes: list[float]) -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "timestamp": pd.date_range(
+                "2026-05-18T00:00:00Z", periods=len(closes), freq="min"
+            ),
+            "open": closes,
+            "high": [close + 1 for close in closes],
+            "low": [close - 1 for close in closes],
+            "close": closes,
+            "volume": [1.0] * len(closes),
+        }
+    )
+
+
+def test_pattern_postgres_backtest_help_succeeds_without_provider(capsys) -> None:
+    def fail_provider_factory(*args: Any, **kwargs: Any) -> FakeProvider:
+        raise AssertionError("--help must not connect to PostgreSQL")
+
+    with pytest.raises(SystemExit) as exc_info:
+        pattern_postgres_runner_cli.main(
+            ["--help"],
+            provider_factory=fail_provider_factory,
+        )
+
+    assert exc_info.value.code == 0
+    assert "quant-bitcoin-pattern-backtest" in capsys.readouterr().out
+
+
+def test_pattern_postgres_backtest_parser_defaults_to_one_minute_interval() -> None:
+    args = pattern_postgres_runner_cli.build_parser().parse_args([])
+
+    assert args.interval == "1m"
+
+
+def test_pattern_postgres_backtest_parser_rejects_non_one_minute_interval() -> None:
+    with pytest.raises(SystemExit):
+        pattern_postgres_runner_cli.build_parser().parse_args(["--interval", "5m"])
+
+
+def test_pattern_postgres_backtest_cli_wires_provider_and_runner(capsys) -> None:
+    calls: dict[str, Any] = {}
+    provider = FakeProvider(make_candles([100, 101, 103]))
+
+    def provider_factory(database_url: str, **kwargs: Any) -> FakeProvider:
+        calls["provider"] = {"database_url": database_url, **kwargs}
+        return provider
+
+    def backtest_runner(candles: pd.DataFrame, *, config: Any) -> PatternStrategyBacktestResult:
+        calls["backtest"] = {
+            "columns": tuple(candles.columns),
+            "candle_count": len(candles),
+            "symbol": config.symbol,
+            "timeframe": config.timeframe,
+            "patterns": config.patterns,
+        }
+        return PatternStrategyBacktestResult(
+            trades=(),
+            evaluated_candle_count=len(candles),
+            seen_event_ids=("fvg-1",),
+        )
+
+    exit_code = pattern_postgres_runner_cli.main(
+        [
+            "--database-url",
+            "postgresql://example/test",
+            "--source",
+            "binance_spot",
+            "--symbol",
+            "BTCUSDT",
+            "--start-time",
+            "2026-05-18T00:00:00Z",
+            "--end-time",
+            "2026-05-18T00:02:00Z",
+        ],
+        provider_factory=provider_factory,
+        backtest_runner=backtest_runner,
+    )
+
+    output = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert provider.load_calls == 1
+    assert calls["provider"] == {
+        "database_url": "postgresql://example/test",
+        "source": "binance_spot",
+        "symbol": "BTCUSDT",
+        "interval": "1m",
+        "start_time": datetime(2026, 5, 18, tzinfo=timezone.utc),
+        "end_time": datetime(2026, 5, 18, 0, 2, tzinfo=timezone.utc),
+    }
+    assert calls["backtest"] == {
+        "columns": ("timestamp", "open", "high", "low", "close", "volume"),
+        "candle_count": 3,
+        "symbol": "BTCUSDT",
+        "timeframe": "1m",
+        "patterns": ("FAIR_VALUE_GAP",),
+    }
+    assert output == {
+        "candle_count": 3,
+        "input": {
+            "source": "binance_spot",
+            "symbol": "BTCUSDT",
+            "interval": "1m",
+            "start_time": "2026-05-18T00:00:00Z",
+            "end_time": "2026-05-18T00:02:00Z",
+        },
+        "seen_event_ids": ["fvg-1"],
+        "strategy": {
+            "name": "PATTERN_STRATEGY",
+            "patterns": ["FAIR_VALUE_GAP"],
+            "entry_rule": "pattern_confirmation_candle",
+            "exit_evaluation": "starts_on_candle_after_entry",
+        },
+        "summary": {
+            "evaluated_candle_count": 3,
+            "seen_event_count": 1,
+            "trade_count": 0,
+        },
+        "trades": [],
+    }
+
+
+def test_pattern_postgres_backtest_cli_reports_empty_candles(capsys) -> None:
+    empty_candles = pd.DataFrame(
+        columns=["timestamp", "open", "high", "low", "close", "volume"]
+    )
+
+    exit_code = pattern_postgres_runner_cli.main(
+        [],
+        provider_factory=lambda database_url, **kwargs: FakeProvider(empty_candles),
+    )
+
+    output = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert output["candle_count"] == 0
+    assert output["summary"] == {
+        "evaluated_candle_count": 0,
+        "seen_event_count": 0,
+        "trade_count": 0,
+    }
+    assert output["trades"] == []
+
+
+def test_pattern_postgres_backtest_cli_does_not_open_network_connections(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    def fail_socket_creation(*args: Any, **kwargs: Any) -> None:
+        raise AssertionError("pattern backtest tests must not open network sockets")
+
+    monkeypatch.setattr(socket, "socket", fail_socket_creation)
+
+    exit_code = pattern_postgres_runner_cli.main(
+        [],
+        provider_factory=lambda database_url, **kwargs: FakeProvider(make_candles([100])),
+    )
+
+    assert exit_code == 0
+    assert json.loads(capsys.readouterr().out)["candle_count"] == 1
+
+
+def test_pattern_postgres_backtest_entrypoint_is_registered() -> None:
+    pyproject = Path("pyproject.toml").read_text()
+
+    assert (
+        'quant-bitcoin-pattern-backtest = "quant_bitcoin.backtesting.'
+        'pattern_postgres_runner_cli:main"'
+    ) in pyproject
+
+
+def test_pattern_postgres_backtest_cli_reuses_existing_pattern_backtest_api() -> None:
+    source_path = Path("quant_bitcoin/backtesting/pattern_postgres_runner_cli.py")
+    tree = ast.parse(source_path.read_text())
+    imported_names: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and node.module == "quant_bitcoin.backtesting.pattern_strategy":
+            imported_names.update(alias.name for alias in node.names)
+
+    source = source_path.read_text()
+    assert "run_pattern_strategy_backtest" in imported_names
+    assert "detect_fair_value_gaps(" not in source
+    assert "simulate_pattern_exit(" not in source
+
+
+def test_pattern_postgres_backtest_cli_does_not_use_order_or_secret_terms() -> None:
+    source = Path("quant_bitcoin/backtesting/pattern_postgres_runner_cli.py").read_text().lower()
+
+    assert "api_key" not in source
+    assert "dotenv" not in source
+    assert "load_dotenv" not in source
+    assert "create_order" not in source
+    assert "place_order" not in source
+    assert "enable_live_trading" not in source
+    assert "api.binance.com/api/v3/order" not in source
+    assert "paper_trader" not in source
