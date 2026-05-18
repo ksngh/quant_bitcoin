@@ -223,6 +223,29 @@ Common backtest options and matching environment variables:
 `2024-01-01T00:00:00Z`. Do not commit `.env` files; set overrides in your shell
 or local process manager instead.
 
+
+## Run a Fair Value Gap pattern backtest from PostgreSQL candles
+
+After PostgreSQL already contains stored closed `BTCUSDT` `1m` candles, run
+the default Fair Value Gap pattern strategy backtest with an explicit safe UTC
+time window:
+
+```bash
+quant-bitcoin-pattern-backtest \
+  --start-time 2024-01-01T00:00:00Z \
+  --end-time 2024-01-02T00:00:00Z
+```
+
+The default pattern selection is `FAIR_VALUE_GAP`, and the current CLI behavior
+is FVG-only. The command supports the explicit seam `--pattern FAIR_VALUE_GAP`
+for tested pattern selection; unsupported pattern names fail before the
+backtest runner is invoked. Output is deterministic JSON with strategy metadata
+such as `FAIR_VALUE_GAP_PATTERN_STRATEGY` and the selected pattern list.
+
+This is a historical simulation over stored standard candles. It does not place
+orders, does not call exchange order or account endpoints, does not sign
+requests, and does not require API keys or `.env` files.
+
 ## Read saved backtest results for graph inputs
 
 Future graphing workflows should read persisted simulated output through the

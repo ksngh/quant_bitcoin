@@ -5,8 +5,12 @@ import pandas as pd
 import pytest
 
 from quant_bitcoin.backtesting import (
+    DEFAULT_PATTERN,
+    SUPPORTED_PATTERNS,
     PatternStrategyBacktestConfig,
     run_pattern_strategy_backtest,
+    strategy_name_for_patterns,
+    validate_pattern_selection,
 )
 from quant_bitcoin.indicators import AtrConfig, VolumeRatioConfig
 from quant_bitcoin.patterns import (
@@ -49,6 +53,29 @@ def _bullish_fvg_base() -> list[tuple[str, float, float, float, float, float]]:
         ("2026-05-18 00:01:00", 100.0, 112.0, 99.0, 111.0, 10.0),
         ("2026-05-18 00:02:00", 106.0, 110.0, 105.0, 108.0, 10.0),
     ]
+
+
+def test_pattern_strategy_default_selection_is_fair_value_gap() -> None:
+    config = PatternStrategyBacktestConfig()
+
+    assert DEFAULT_PATTERN == "FAIR_VALUE_GAP"
+    assert SUPPORTED_PATTERNS == ("FAIR_VALUE_GAP",)
+    assert config.patterns == ("FAIR_VALUE_GAP",)
+
+
+def test_pattern_selection_validation_accepts_supported_patterns() -> None:
+    assert validate_pattern_selection(("FAIR_VALUE_GAP",)) == ("FAIR_VALUE_GAP",)
+    assert strategy_name_for_patterns(("FAIR_VALUE_GAP",)) == (
+        "FAIR_VALUE_GAP_PATTERN_STRATEGY"
+    )
+
+
+def test_pattern_selection_validation_rejects_unsupported_patterns() -> None:
+    with pytest.raises(ValueError, match="unsupported pattern selection: ORDER_BLOCK"):
+        validate_pattern_selection(("ORDER_BLOCK",))
+
+    with pytest.raises(ValueError, match="unsupported pattern selection: ORDER_BLOCK"):
+        PatternStrategyBacktestConfig(patterns=("ORDER_BLOCK",))
 
 
 def test_no_trade_when_no_configured_pattern_is_detected() -> None:

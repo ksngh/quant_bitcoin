@@ -53,6 +53,42 @@ def test_pattern_postgres_backtest_help_succeeds_without_provider(capsys) -> Non
     assert "quant-bitcoin-pattern-backtest" in capsys.readouterr().out
 
 
+def test_pattern_postgres_backtest_help_names_default_fvg_strategy(capsys) -> None:
+    with pytest.raises(SystemExit) as exc_info:
+        pattern_postgres_runner_cli.build_parser().parse_args(["--help"])
+
+    help_text = capsys.readouterr().out
+    assert exc_info.value.code == 0
+    normalized_help = " ".join(help_text.split())
+    assert "Run the default Fair Value Gap pattern strategy backtest" in help_text
+    assert "Current default behavior is FVG-only" in normalized_help
+    assert "default is FAIR_VALUE_GAP" in help_text
+
+
+def test_pattern_postgres_backtest_parser_rejects_unsupported_pattern() -> None:
+    with pytest.raises(SystemExit):
+        pattern_postgres_runner_cli.build_parser().parse_args(["--pattern", "ORDER_BLOCK"])
+
+
+def test_pattern_postgres_backtest_default_output_strategy_name() -> None:
+    output = pattern_postgres_runner_cli.build_output(
+        PatternStrategyBacktestResult(
+            trades=(),
+            evaluated_candle_count=0,
+            seen_event_ids=(),
+        ),
+        candle_count=0,
+        source="binance_spot",
+        symbol="BTCUSDT",
+        interval="1m",
+        start_time=None,
+        end_time=None,
+    )
+
+    assert output["strategy"]["name"] == "FAIR_VALUE_GAP_PATTERN_STRATEGY"
+    assert output["strategy"]["patterns"] == ["FAIR_VALUE_GAP"]
+
+
 def test_pattern_postgres_backtest_parser_defaults_to_one_minute_interval() -> None:
     args = pattern_postgres_runner_cli.build_parser().parse_args([])
 
@@ -94,6 +130,8 @@ def test_pattern_postgres_backtest_cli_wires_provider_and_runner(capsys) -> None
             "binance_spot",
             "--symbol",
             "BTCUSDT",
+            "--pattern",
+            "FAIR_VALUE_GAP",
             "--start-time",
             "2026-05-18T00:00:00Z",
             "--end-time",
@@ -132,7 +170,7 @@ def test_pattern_postgres_backtest_cli_wires_provider_and_runner(capsys) -> None
         },
         "seen_event_ids": ["fvg-1"],
         "strategy": {
-            "name": "PATTERN_STRATEGY",
+            "name": "FAIR_VALUE_GAP_PATTERN_STRATEGY",
             "patterns": ["FAIR_VALUE_GAP"],
             "entry_rule": "pattern_confirmation_candle",
             "exit_evaluation": "starts_on_candle_after_entry",
@@ -144,6 +182,30 @@ def test_pattern_postgres_backtest_cli_wires_provider_and_runner(capsys) -> None
         },
         "trades": [],
     }
+
+
+def test_pattern_postgres_backtest_cli_defaults_to_fvg_selection(capsys) -> None:
+    captured: dict[str, Any] = {}
+
+    def backtest_runner(candles: pd.DataFrame, *, config: Any) -> PatternStrategyBacktestResult:
+        captured["patterns"] = config.patterns
+        return PatternStrategyBacktestResult(
+            trades=(),
+            evaluated_candle_count=len(candles),
+            seen_event_ids=(),
+        )
+
+    exit_code = pattern_postgres_runner_cli.main(
+        [],
+        provider_factory=lambda database_url, **kwargs: FakeProvider(make_candles([100])),
+        backtest_runner=backtest_runner,
+    )
+
+    output = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert captured["patterns"] == ("FAIR_VALUE_GAP",)
+    assert output["strategy"]["patterns"] == ["FAIR_VALUE_GAP"]
+    assert output["strategy"]["name"] == "FAIR_VALUE_GAP_PATTERN_STRATEGY"
 
 
 def test_pattern_postgres_backtest_cli_reports_empty_candles(capsys) -> None:
@@ -165,6 +227,18 @@ def test_pattern_postgres_backtest_cli_reports_empty_candles(capsys) -> None:
         "trade_count": 0,
     }
     assert output["trades"] == []
+
+
+def test_pattern_postgres_backtest_readme_example_matches_cli_options() -> None:
+    readme = Path("README.md").read_text()
+    help_text = pattern_postgres_runner_cli.build_parser().format_help()
+
+    assert "quant-bitcoin-pattern-backtest" in readme
+    assert "--start-time" in readme and "--start-time" in help_text
+    assert "--end-time" in readme and "--end-time" in help_text
+    assert "--pattern FAIR_VALUE_GAP" in readme
+    assert "historical simulation over stored standard candles" in readme
+    assert "does not place" in readme
 
 
 def test_pattern_postgres_backtest_cli_does_not_open_network_connections(

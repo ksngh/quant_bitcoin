@@ -21,10 +21,14 @@ from typing import Any
 import pandas as pd
 
 from quant_bitcoin.backtesting.pattern_strategy import (
+    DEFAULT_PATTERN,
+    SUPPORTED_PATTERNS,
     PatternStrategyBacktestConfig,
     PatternStrategyBacktestResult,
     PatternStrategyBacktestTrade,
     run_pattern_strategy_backtest,
+    strategy_name_for_patterns,
+    validate_pattern_selection,
 )
 from quant_bitcoin.market_data import PostgresCandleDataProvider
 from quant_bitcoin.market_data.postgres_provider import STANDARD_CANDLE_COLUMNS
@@ -59,6 +63,7 @@ def main(
     )
     candles = provider.load()
     config = PatternStrategyBacktestConfig(
+        patterns=_selected_patterns(args.patterns),
         symbol=args.symbol,
         timeframe=args.interval,
     )
@@ -73,6 +78,7 @@ def main(
             interval=args.interval,
             start_time=args.start_time,
             end_time=args.end_time,
+            patterns=config.patterns,
         )
     )
     return 0
@@ -84,8 +90,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="quant-bitcoin-pattern-backtest",
         description=(
-            "Run a pattern strategy backtest from completed 1-minute candles "
-            "already stored in PostgreSQL."
+            "Run the default Fair Value Gap pattern strategy backtest from "
+            "completed 1-minute candles already stored in PostgreSQL. "
+            "Current default behavior is FVG-only."
+        ),
+        epilog=(
+            "Pattern selection: the default is FAIR_VALUE_GAP. "
+            "This task currently supports FVG-only backtests; unsupported "
+            "pattern selections fail before any provider or backtest runs."
         ),
     )
     parser.add_argument(
@@ -108,6 +120,19 @@ def build_parser() -> argparse.ArgumentParser:
         type=_one_minute_interval,
         default=os.environ.get("INTERVAL", DEFAULT_INTERVAL),
         help="stored candle interval to read; only 1m is supported by this task",
+    )
+    parser.add_argument(
+        "--pattern",
+        dest="patterns",
+        action="append",
+        type=_pattern_name,
+        default=None,
+        metavar="PATTERN",
+        help=(
+            "pattern strategy to backtest; default is FAIR_VALUE_GAP "
+            "(current default behavior is FVG-only; supported choices: "
+            f"{', '.join(SUPPORTED_PATTERNS)})"
+        ),
     )
     parser.add_argument(
         "--start-time",
@@ -133,6 +158,7 @@ def build_output(
     interval: str,
     start_time: datetime | None,
     end_time: datetime | None,
+    patterns: Sequence[str] = (DEFAULT_PATTERN,),
 ) -> dict[str, Any]:
     """Return a deterministic JSON-serializable pattern backtest output object."""
 
@@ -146,8 +172,8 @@ def build_output(
             "end_time": _serialize_optional_datetime(end_time),
         },
         "strategy": {
-            "name": "PATTERN_STRATEGY",
-            "patterns": ["FAIR_VALUE_GAP"],
+            "name": strategy_name_for_patterns(patterns),
+            "patterns": list(validate_pattern_selection(patterns)),
             "entry_rule": "pattern_confirmation_candle",
             "exit_evaluation": "starts_on_candle_after_entry",
         },
@@ -188,6 +214,17 @@ def _serialize_trade(trade: PatternStrategyBacktestTrade) -> dict[str, Any]:
         },
         "metadata": dict(trade.metadata),
     }
+
+
+def _selected_patterns(values: Sequence[str] | None) -> tuple[str, ...]:
+    return validate_pattern_selection(values or (DEFAULT_PATTERN,))
+
+
+def _pattern_name(value: str) -> str:
+    try:
+        return validate_pattern_selection((value,))[0]
+    except ValueError as error:
+        raise argparse.ArgumentTypeError(str(error)) from error
 
 
 def _one_minute_interval(value: str) -> str:

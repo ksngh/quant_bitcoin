@@ -23,7 +23,7 @@ First-batch assumptions:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Iterable, Literal
+from typing import Any, Iterable, Literal, cast
 
 import pandas as pd
 
@@ -44,13 +44,48 @@ from quant_bitcoin.patterns import (
 )
 
 PatternName = Literal["FAIR_VALUE_GAP"]
+DEFAULT_PATTERN: PatternName = "FAIR_VALUE_GAP"
+SUPPORTED_PATTERNS: tuple[PatternName, ...] = (DEFAULT_PATTERN,)
+PATTERN_STRATEGY_NAMES: dict[PatternName, str] = {
+    "FAIR_VALUE_GAP": "FAIR_VALUE_GAP_PATTERN_STRATEGY",
+}
+
+
+def validate_pattern_selection(patterns: Iterable[str]) -> tuple[PatternName, ...]:
+    """Return supported pattern identifiers or raise a clear validation error.
+
+    The first selection seam intentionally enables only Fair Value Gap until
+    additional pattern event/risk contracts are adapted and tested in this
+    backtest workflow.
+    """
+
+    selected = tuple(str(pattern).upper() for pattern in patterns)
+    unsupported = [pattern for pattern in selected if pattern not in SUPPORTED_PATTERNS]
+    if unsupported:
+        supported = ", ".join(SUPPORTED_PATTERNS)
+        raise ValueError(
+            "unsupported pattern selection: "
+            f"{', '.join(unsupported)}. Supported patterns: {supported}"
+        )
+    return cast(tuple[PatternName, ...], selected)
+
+
+def strategy_name_for_patterns(patterns: Iterable[str]) -> str:
+    """Return the deterministic strategy name for a supported pattern selection."""
+
+    selected = validate_pattern_selection(patterns)
+    if selected == ("FAIR_VALUE_GAP",):
+        return PATTERN_STRATEGY_NAMES["FAIR_VALUE_GAP"]
+    if not selected:
+        return "NO_PATTERN_STRATEGY"
+    return "MULTI_PATTERN_STRATEGY"
 
 
 @dataclass(frozen=True)
 class PatternStrategyBacktestConfig:
     """Configuration for the first pattern strategy backtest workflow."""
 
-    patterns: tuple[PatternName, ...] = ("FAIR_VALUE_GAP",)
+    patterns: tuple[PatternName, ...] = (DEFAULT_PATTERN,)
     symbol: str | None = None
     timeframe: str | None = None
     fair_value_gap: FairValueGapConfig = field(default_factory=FairValueGapConfig)
@@ -59,9 +94,7 @@ class PatternStrategyBacktestConfig:
     )
 
     def __post_init__(self) -> None:
-        unsupported = [pattern for pattern in self.patterns if pattern != "FAIR_VALUE_GAP"]
-        if unsupported:
-            raise ValueError(f"unsupported configured patterns: {', '.join(unsupported)}")
+        object.__setattr__(self, "patterns", validate_pattern_selection(self.patterns))
 
 
 @dataclass(frozen=True)
