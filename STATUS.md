@@ -2,38 +2,38 @@
 
 # Current Phase
 
-Phase 54: Pattern Exit Simulation Integration
+Phase 55: Pattern Strategy Backtest Task Definition
 
 # Current Step
 
-Task 054 Pattern Exit Simulation Integration implemented and verified.
+Task 055 Pattern Strategy Backtest task document created; implementation pending owner approval.
 
 # Current Goal
 
-Provide deterministic candle-by-candle exit simulation for pattern risk/exit plans.
+Define the next integration task for pattern-based strategy backtesting over completed minute candles.
 
 # Current Active Task
 
-Task 054 Pattern Exit Simulation Integration implementation.
+Task 055 Pattern Strategy Backtest awaiting owner approval for implementation.
 
 # Last Completed Step
 
-Task 054: Pattern Exit Simulation Integration implementation.
+Task 055: Pattern Strategy Backtest task document creation.
 
-Implemented a pure candle-by-candle pattern exit simulator for shared risk/exit plans. The simulator supports deterministic stop/target precedence, long and short stops, TP sequencing, partial-exit recording, break-even and trailing-stop movement, time stops, soft invalidation, and caller-data immutability. Verified with `pytest tests/patterns/test_pattern_exit_simulation.py` and `pytest`.
+Created `tasks/055_PATTERN_STRATEGY_BACKTEST.md` to define the next proposed integration task for pattern-based strategy backtesting over completed minute candles. Implementation remains pending owner approval.
 
-Previous completed step: Task 053 Adam And Eve Risk / Exit Plan implementation.
+Previous completed step: Task 054 Pattern Exit Simulation Integration implementation. Task 054 implemented a pure candle-by-candle pattern exit simulator for shared risk/exit plans and was verified with `pytest tests/patterns/test_pattern_exit_simulation.py` and `pytest`.
 
 # Next Step
 
-Recommended next task: owner review of the completed Task 054 exit simulation integration, then create or assign the next task for integrating pattern exit simulation with a backtest runner or reporting workflow. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
+Recommended next task: owner review and approval of Task 055 Pattern Strategy Backtest for implementation. Local Docker Compose runtime startup verification for Task 014/018 remains deferred to a Docker-capable developer environment.
 
 # Parallel Work Status
 
 Parallel work is not currently recommended.
 
 Reason:
-Task 054 completed the shared exit simulation layer. The next step should be owner review and selection of a new integration or reporting task before parallel work resumes.
+Task 055 is a shared integration task that may touch strategy/backtest orchestration and should not be parallelized until the owner approves the exact implementation scope.
 
 # Phase Checklist
 
@@ -151,6 +151,8 @@ Task 054 completed the shared exit simulation layer. The next step should be own
 - [x] Task 053: Adam And Eve Risk / Exit Plan implementation complete and verified
 - [x] Task 054: Pattern Exit Simulation Integration task document created
 - [x] Task 054: Pattern Exit Simulation Integration implementation complete and verified
+- [x] Task 055: Pattern Strategy Backtest task document created
+- [ ] Task 055: Pattern Strategy Backtest approved for implementation
 
 # Open Questions
 
@@ -161,7 +163,7 @@ Task 054 completed the shared exit simulation layer. The next step should be own
 - What kill-switch or disable mechanism is required?
 - Task 024 decided the concrete PostgreSQL command-management path: `db/init/001_schema.sql` is the source-of-truth first-start schema DDL, `db/changes/` is reserved for future existing-database state-change SQL, repository initialization executes managed command files, and runtime persistence DML remains application-owned.
 - Task 025 defines the indicator document intake process. Future owner-provided indicator documents should be saved under `tasks/indicators/<INDICATOR_KEY>.md`, and concrete indicator code must wait for an explicit indicator-specific implementation task. Pattern definition documents may be saved under `tasks/patterns/` when explicitly assigned by the owner.
-- Tasks 027-033 define planned implementation tasks for the remaining indicator/filter modules. Task 028 Pivot High / Pivot Low, Task 029 Swing Structure, Task 030 ATR, Task 031 Volume Ratio, Task 032 Support / Resistance Zone, and Task 033 Displacement Candle have deterministic implementations pending review. Task 034 has been restored as the Trendline Break Pattern mechanical-definition task, Task 035 has been restored as the Order Block Pattern mechanical-definition task, Task 036 has been restored as the Fair Value Gap Pattern mechanical-definition task, Task 037 has been created as the Cup and Handle Pattern mechanical-definition task, Task 038 has been created as the Diamond Pattern mechanical-definition task and reviewed by the owner, and Task 039 has been created as the Adam and Eve Pattern mechanical-definition task and updated from the owner-provided final document. The Trendline Break, Order Block, Fair Value Gap, Cup and Handle, Diamond, and Adam and Eve patterns are documented as mechanical definitions. Task 040 implemented the first pattern detection engine batch focused on Fair Value Gap detection. Task 041 implemented the next pattern detection engine batch focused on Trendline Break detection. Task 042 implemented the next pattern detection engine batch focused on Order Block detection. Task 043 implemented the next pattern detection engine batch focused on Cup and Handle detection. Task 044 implemented the next pattern detection engine batch focused on Diamond Pattern detection. Task 045 implemented the next pattern detection engine batch focused on Adam and Eve Pattern detection. Task 046 completed the documentation-only review assignment for current indicator structure, pattern algorithms, and indicator/pattern class usage. Task 047 now defines the required first implementation step for a shared pattern risk/exit contract. Tasks 048-053 define dependent pattern-specific stop-loss/take-profit planner tasks for Trendline Break, Order Block, Fair Value Gap, Cup and Handle, Diamond, and Adam and Eve. Task 054 defines a later exit-simulation integration task. Liquidity and bid-ask spread filters remain unavailable as reusable modules, so future pattern detectors and risk/exit planners must handle those filters explicitly rather than silently approximating them.
+- Tasks 027-033 define planned implementation tasks for the remaining indicator/filter modules. Task 028 Pivot High / Pivot Low, Task 029 Swing Structure, Task 030 ATR, Task 031 Volume Ratio, Task 032 Support / Resistance Zone, and Task 033 Displacement Candle have deterministic implementations pending review. Task 034 has been restored as the Trendline Break Pattern mechanical-definition task, Task 035 has been restored as the Order Block Pattern mechanical-definition task, Task 036 has been restored as the Fair Value Gap Pattern mechanical-definition task, Task 037 has been created as the Cup and Handle Pattern mechanical-definition task, Task 038 has been created as the Diamond Pattern mechanical-definition task and reviewed by the owner, and Task 039 has been created as the Adam and Eve Pattern mechanical-definition task and updated from the owner-provided final document. The Trendline Break, Order Block, Fair Value Gap, Cup and Handle, Diamond, and Adam and Eve patterns are documented as mechanical definitions. Task 040 implemented the first pattern detection engine batch focused on Fair Value Gap detection. Task 041 implemented the next pattern detection engine batch focused on Trendline Break detection. Task 042 implemented the next pattern detection engine batch focused on Order Block detection. Task 043 implemented the next pattern detection engine batch focused on Cup and Handle detection. Task 044 implemented the next pattern detection engine batch focused on Diamond Pattern detection. Task 045 implemented the next pattern detection engine batch focused on Adam and Eve Pattern detection. Task 046 completed the documentation-only review assignment for current indicator structure, pattern algorithms, and indicator/pattern class usage. Task 047 now defines the required first implementation step for a shared pattern risk/exit contract. Tasks 048-053 define dependent pattern-specific stop-loss/take-profit planner tasks for Trendline Break, Order Block, Fair Value Gap, Cup and Handle, Diamond, and Adam and Eve. Task 054 completed exit-simulation integration. Task 055 now defines the next proposed pattern strategy backtest integration task. Liquidity and bid-ask spread filters remain unavailable as reusable modules, so future pattern detectors and risk/exit planners must handle those filters explicitly rather than silently approximating them.
 - Docker is not installed in the current cloud environment. Local PostgreSQL and WebSocket ingestor container startup are intentionally skipped here and remain optional local developer verification.
 
 # Blockers
